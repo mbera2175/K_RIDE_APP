@@ -1370,7 +1370,12 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
                             gradient: const LinearGradient(colors: [kOrange, kOrangeDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
                             boxShadow: [BoxShadow(color: kOrange.withOpacity(0.27), blurRadius: 12, offset: const Offset(0, 4))],
                           ),
-                          child: Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: GoogleFonts.sora(fontSize: 15, fontWeight: FontWeight.w800, color: kWhite))),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: AuthService.profilePic.isNotEmpty
+                                ? Image.network(AuthService.profilePic, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: GoogleFonts.sora(fontSize: 15, fontWeight: FontWeight.w800, color: kWhite))))
+                                : Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: GoogleFonts.sora(fontSize: 15, fontWeight: FontWeight.w800, color: kWhite))),
+                          ),
                         ),
                       ],
                     ),

@@ -996,27 +996,33 @@ class _QuickAction extends StatelessWidget {
   const _QuickAction({required this.icon, required this.label, required this.danger, required this.onTap});
 
   @override
-  Widget build(BuildContext context) => Expanded(
-    child: GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-        decoration: BoxDecoration(
-          color: danger ? kError.withOpacity(0.06) : kGray,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: danger ? kError.withOpacity(0.14) : kGray2),
-        ),
+  Widget build(BuildContext context) {
+    final bgColor = danger ? const Color(0xFFFFF0F0) : kOrangeLight;
+    final accentColor = danger ? const Color(0xFFE53935) : kOrange;
+    
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(icon, style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 5),
-            Text(label, style: GoogleFonts.sora(fontSize: 10, fontWeight: FontWeight.w600, color: danger ? kError : kMuted)),
+            Container(
+              width: 64, height: 64,
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [BoxShadow(color: accentColor.withOpacity(0.13), blurRadius: 14, offset: const Offset(0, 4))],
+                border: Border.all(color: accentColor.withOpacity(0.13), width: 1.5),
+              ),
+              child: Center(child: Text(icon, style: const TextStyle(fontSize: 28))),
+            ),
+            const SizedBox(height: 8),
+            Text(label, style: GoogleFonts.sora(fontSize: 11, fontWeight: FontWeight.w600, color: kDark), textAlign: TextAlign.center, maxLines: 1),
           ],
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 // ── Today stat cell ──
@@ -1394,10 +1400,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
 
                   Positioned(
                     right: 16,
-                    top: MediaQuery.of(context).size.height * 0.25,
+                    bottom: 20,
                     child: Column(
                       children: [
-                        for (final lbl in ['+', '−', '◎'])
+                        for (final icon in [Icons.add, Icons.remove, Icons.my_location])
                           Container(
                             margin: const EdgeInsets.only(bottom: 8),
                             width: 38, height: 38,
@@ -1407,7 +1413,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
                               border: Border.all(color: kGray2),
                               boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 2))],
                             ),
-                            child: Center(child: Text(lbl, style: TextStyle(fontSize: lbl == '◎' ? 14 : 18, color: kDark))),
+                            child: Center(child: Icon(icon, size: 20, color: kDark)),
                           ),
                       ],
                     ),

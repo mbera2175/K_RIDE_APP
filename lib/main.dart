@@ -1,0 +1,63 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'utils/app_colors.dart';
+import 'services/auth_service.dart';
+import 'screens/rider/rider_home_screen.dart';
+import 'screens/driver/driver_home_screen.dart';
+import 'screens/auth/role_selection_screen.dart';
+
+// Global navigator key for force logout
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AuthService.init(); // ← load saved session
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.dark,
+  ));
+  runApp(const KRideApp());
+}
+
+class KRideApp extends StatelessWidget {
+  const KRideApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'KRide',
+      navigatorKey: navigatorKey,
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
+        textTheme: GoogleFonts.soraTextTheme(),
+        useMaterial3: true,
+        scaffoldBackgroundColor: AppColors.background,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.white,
+          foregroundColor: AppColors.textPrimary,
+          elevation: 0,
+          centerTitle: true,
+        ),
+      ),
+      // Auto-login: if token exists go to home, else show role selection
+      home: AuthService.isLoggedIn
+          ? const _AutoLoginRedirect()
+          : const RoleSelectionScreen(),
+    );
+  }
+}
+
+// Redirects to correct home based on saved role
+class _AutoLoginRedirect extends StatelessWidget {
+  const _AutoLoginRedirect();
+
+  @override
+  Widget build(BuildContext context) {
+    if (AuthService.isRider)  return const RiderHomeScreen();
+    if (AuthService.isDriver) return const DriverHomeScreen();
+    return const RoleSelectionScreen();
+  }
+}

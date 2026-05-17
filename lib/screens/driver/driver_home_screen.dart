@@ -10,6 +10,7 @@ import '../../utils/app_colors.dart';
 import '../../services/auth_service.dart';
 import '../../services/api_service.dart';
 import '../auth/role_selection_screen.dart';
+import 'my_documents_screen.dart';
 
 // ── Colour tokens ────────────────────────────────────────────
 const kOrange      = Color(0xFFFF6B00);
@@ -1599,6 +1600,22 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
           ]),
         ),
 
+        const SizedBox(height: 30),
+        
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: kOrangeLight, borderRadius: BorderRadius.circular(10)),
+            child: const Icon(Icons.description_rounded, color: kOrange),
+          ),
+          title: Text('My Documents', style: GoogleFonts.sora(fontSize: 15, fontWeight: FontWeight.w600, color: kDark)),
+          trailing: const Icon(Icons.chevron_right_rounded, color: kMuted),
+          onTap: () {
+            Navigator.push(context, MaterialPageRoute(builder: (_) => MyDocumentsScreen(driverId: AuthService.driverId)));
+          },
+        ),
+        
         const SizedBox(height: 40),
         SizedBox(
           width: double.infinity,

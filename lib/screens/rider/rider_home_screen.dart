@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../services/auth_service.dart';
 import '../auth/role_selection_screen.dart';
 // ── Constants ──
@@ -234,6 +235,123 @@ class _TotoPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+class AutoIcon extends StatelessWidget {
+  final double size;
+  const AutoIcon({super.key, this.size = 32});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _AutoPainter()),
+    );
+  }
+}
+
+class _AutoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.width / 128;
+    final p = Paint()..style = PaintingStyle.fill;
+
+    // Background rounded rect
+    p.color = const Color(0xFFFFF7F0);
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.width, size.height), Radius.circular(28 * s)), p);
+
+    // Border
+    final border = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2 * s
+      ..color = const Color(0xFFFFD7B8);
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(6 * s, 6 * s, 116 * s, 116 * s), Radius.circular(24 * s)), border);
+
+    final stroke2 = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2 * s
+      ..color = const Color(0xFF222222);
+
+    // Roof
+    p.color = const Color(0xFFFFCC00);
+    final roofPath = Path()
+      ..moveTo(32 * s, 34 * s)
+      ..cubicTo(32 * s, 30 * s, 35 * s, 27 * s, 39 * s, 27 * s)
+      ..lineTo(85 * s, 27 * s)
+      ..cubicTo(92 * s, 27 * s, 98 * s, 31 * s, 101 * s, 37 * s)
+      ..lineTo(104 * s, 43 * s)
+      ..lineTo(33 * s, 43 * s)
+      ..close();
+    canvas.drawPath(roofPath, p);
+
+    // Windshield
+    p.color = const Color(0xFFDDF5FF);
+    final wsPath = Path()
+      ..moveTo(28 * s, 44 * s)
+      ..cubicTo(28 * s, 38 * s, 33 * s, 33 * s, 39 * s, 33 * s)
+      ..lineTo(50 * s, 33 * s)
+      ..lineTo(50 * s, 70 * s)
+      ..lineTo(28 * s, 70 * s)
+      ..close();
+    canvas.drawPath(wsPath, p);
+    canvas.drawPath(wsPath, stroke2);
+
+    // Body
+    p.color = const Color(0xFFFFCC00);
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(35 * s, 52 * s, 60 * s, 36 * s), Radius.circular(8 * s)), p);
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(35 * s, 52 * s, 60 * s, 36 * s), Radius.circular(8 * s)), stroke2);
+
+    // Front
+    p.color = const Color(0xFFFFD600);
+    final frontPath = Path()
+      ..moveTo(24 * s, 58 * s)
+      ..cubicTo(24 * s, 53 * s, 28 * s, 49 * s, 33 * s, 49 * s)
+      ..lineTo(43 * s, 49 * s)
+      ..lineTo(43 * s, 88 * s)
+      ..lineTo(31 * s, 88 * s)
+      ..cubicTo(27 * s, 88 * s, 24 * s, 85 * s, 24 * s, 81 * s)
+      ..close();
+    canvas.drawPath(frontPath, p);
+    canvas.drawPath(frontPath, stroke2);
+
+    // Seats
+    p.color = const Color(0xFF2A2A2A);
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(48 * s, 57 * s, 18 * s, 12 * s), Radius.circular(3 * s)), p);
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(70 * s, 57 * s, 18 * s, 12 * s), Radius.circular(3 * s)), p);
+
+    // Frame lines
+    final framePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2 * s
+      ..color = const Color(0xFF222222);
+    canvas.drawLine(Offset(46 * s, 34 * s), Offset(46 * s, 88 * s), framePaint);
+    canvas.drawLine(Offset(68 * s, 34 * s), Offset(68 * s, 88 * s), framePaint);
+    canvas.drawLine(Offset(90 * s, 38 * s), Offset(90 * s, 88 * s), framePaint);
+
+    // Headlight
+    p.color = const Color(0xFFFFF3B0);
+    canvas.drawCircle(Offset(28 * s, 67 * s), 6 * s, p);
+    canvas.drawCircle(Offset(28 * s, 67 * s), 6 * s, stroke2);
+
+    // Wheels
+    void drawWheel(double cx, double cy, double r) {
+      p.color = const Color(0xFF222222);
+      canvas.drawCircle(Offset(cx * s, cy * s), r * s, p);
+      p.color = const Color(0xFFD9D9D9);
+      canvas.drawCircle(Offset(cx * s, cy * s), 5 * s, p);
+    }
+    drawWheel(42, 95, 10);
+    drawWheel(89, 95, 10);
+    drawWheel(24, 92, 11);
+
+    // Shadow
+    p.color = Colors.black.withOpacity(0.08);
+    canvas.drawOval(Rect.fromCenter(center: Offset(64 * s, 108 * s), width: 68 * s, height: 8 * s), p);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 // ══════════════════════════════════════════════════════════════
 //  SERVICE ICON
 // ══════════════════════════════════════════════════════════════
@@ -245,7 +363,7 @@ class ServiceIconWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (icon == 'toto') return TotoIcon(size: size);
-    return Text(icon, style: TextStyle(fontSize: size));
+    return Text(icon, style: TextStyle(fontSize: size, fontFamily: 'Roboto', fontFamilyFallback: const ['Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']));
   }
 }
 
@@ -1256,7 +1374,11 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                           children: [
                             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                               Text('$_greeting 👋', style: const TextStyle(fontSize: 13, color: kMuted, fontWeight: FontWeight.w500)),
-                              RichText(text: const TextSpan(text: 'Arjun ', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: kDark, fontFamily: 'Sora'), children: [TextSpan(text: 'Kumar', style: TextStyle(color: kOrange))])),
+                              RichText(text: TextSpan(
+                                text: '${AuthService.name.split(' ').first} ',
+                                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: kDark, fontFamily: 'Sora'),
+                                children: [TextSpan(text: AuthService.name.split(' ').length > 1 ? AuthService.name.split(' ').sublist(1).join(' ') : '', style: const TextStyle(color: kOrange))],
+                              )),
                             ]),
                             Row(children: [
                               Stack(children: [
@@ -1264,7 +1386,19 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                                 Positioned(top: 8, right: 9, child: Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: kOrange, border: Border.all(color: kWhite, width: 2)))),
                               ]),
                               const SizedBox(width: 10),
-                              Container(width: 42, height: 42, decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [kOrange, kOrangeDark], begin: Alignment.topLeft, end: Alignment.bottomRight)), child: const Center(child: Text('A', style: TextStyle(color: kWhite, fontWeight: FontWeight.w800, fontSize: 16)))),
+                              Container(
+                                width: 42, height: 42,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(14),
+                                  gradient: const LinearGradient(colors: [kOrange, kOrangeDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: AuthService.profilePic.isNotEmpty
+                                      ? Image.network(AuthService.profilePic, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'U', style: const TextStyle(color: kWhite, fontWeight: FontWeight.w800, fontSize: 16))))
+                                      : Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'U', style: const TextStyle(color: kWhite, fontWeight: FontWeight.w800, fontSize: 16))),
+                                ),
+                              ),
                             ]),
                           ],
                         ),

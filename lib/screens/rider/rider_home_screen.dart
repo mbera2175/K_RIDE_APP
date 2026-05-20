@@ -1284,7 +1284,9 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
 
     _promoTimer = Timer.periodic(const Duration(seconds: 3), (_) {
       setState(() { _promoIdx = (_promoIdx + 1) % promos.length; });
-      _promoPageCtrl.animateToPage(_promoIdx, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+      if (_promoPageCtrl.hasClients) {
+        _promoPageCtrl.animateToPage(_promoIdx, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+      }
     });
   }
 

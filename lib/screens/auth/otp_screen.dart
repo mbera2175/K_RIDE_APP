@@ -61,9 +61,9 @@ class _OtpScreenState extends State<OtpScreen> {
         setState(() => _error = data['detail'] ?? 'Failed to send OTP');
       }
     } catch (e) {
-      setState(() => _error = 'Network error. Check your connection.');
+      if (mounted) setState(() => _error = 'Network error. Check your connection.');
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -110,9 +110,9 @@ class _OtpScreenState extends State<OtpScreen> {
         }
       }
     } catch (e) {
-      setState(() => _error = 'Network error. Try again.');
+      if (mounted) setState(() => _error = 'Network error. Try again.');
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 

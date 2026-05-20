@@ -1,4 +1,4 @@
-package com.example.kloqride_flutter
+package com.kride.app
 
 import io.flutter.embedding.android.FlutterActivity
 

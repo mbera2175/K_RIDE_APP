@@ -1144,6 +1144,8 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
       final tripData =
           data['data'];
 
+      RideAlertService.startAlert();
+
       if (mounted) {
 
         setState(() {

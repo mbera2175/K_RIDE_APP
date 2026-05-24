@@ -1,0 +1,73 @@
+import 'dart:convert';
+import 'dart:async';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/status.dart' as status;
+
+class DriverSocketService {
+  static WebSocketChannel? _channel;
+
+  static Function(Map<String, dynamic>)? onMessage;
+
+  static bool _isConnected = false;
+
+  static bool get isConnected => _isConnected;
+
+  static Future<void> connect(int driverId) async {
+    try {
+      disconnect();
+
+      final wsUrl =
+          'ws://YOUR_SERVER_IP:8000/ws/driver/$driverId';
+
+      _channel = WebSocketChannel.connect(
+        Uri.parse(wsUrl),
+      );
+
+      _isConnected = true;
+
+      _channel!.stream.listen(
+        (message) {
+          try {
+            final data = jsonDecode(message);
+
+            if (onMessage != null) {
+              onMessage!(data);
+            }
+          } catch (e) {
+            print('Socket parse error: $e');
+          }
+        },
+        onDone: () {
+          _isConnected = false;
+          print('WebSocket disconnected');
+        },
+        onError: (e) {
+          _isConnected = false;
+          print('WebSocket error: $e');
+        },
+      );
+
+      print('WebSocket connected');
+    } catch (e) {
+      print('Socket connection error: $e');
+    }
+  }
+
+  static void send(Map<String, dynamic> data) {
+    if (_channel != null && _isConnected) {
+      _channel!.sink.add(
+        jsonEncode(data),
+      );
+    }
+  }
+
+  static void disconnect() {
+    _isConnected = false;
+
+    _channel?.sink.close(
+      status.goingAway,
+    );
+
+    _channel = null;
+  }
+}

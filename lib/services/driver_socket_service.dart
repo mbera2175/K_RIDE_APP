@@ -17,7 +17,7 @@ class DriverSocketService {
       disconnect();
 
       final wsUrl =
-          'ws://YOUR_SERVER_IP:8000/ws/driver/$driverId';
+          'ws://13.232.171.208/ws/driver/$driverId';
 
       _channel = WebSocketChannel.connect(
         Uri.parse(wsUrl),

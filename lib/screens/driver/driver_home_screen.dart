@@ -421,10 +421,30 @@ class _IncomingTripModalState extends State<IncomingTripModal> with SingleTicker
                                 Text('PICKUP', style: GoogleFonts.sora(fontSize: 10, color: kMuted, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
                                 const SizedBox(height: 3),
                                 Text(widget.trip.pickup, style: GoogleFonts.sora(fontSize: 13, color: kDark, fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 4),
+
+                                Text(
+                                  '${widget.trip.pickupDistanceKm.toStringAsFixed(1)} km away',
+                                  style: GoogleFonts.sora(
+                                    fontSize: 11,
+                                    color: kOrange,
+                                    fontWeight: FontWeight.w700,
+                                   ),
+                                 ),
                                 const SizedBox(height: 12),
                                 Text('DROP-OFF', style: GoogleFonts.sora(fontSize: 10, color: kMuted, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
                                 const SizedBox(height: 3),
                                 Text(widget.trip.drop, style: GoogleFonts.sora(fontSize: 13, color: kDark, fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 4),
+
+                                Text(
+                                  '${widget.trip.tripDistanceKm.toStringAsFixed(1)} km trip',
+                                  style: GoogleFonts.sora(
+                                    fontSize: 11,
+                                    color: kGreen,
+                                    fontWeight: FontWeight.w700,
+                                   ),
+                                ),
                               ],
                             ),
                           ),

@@ -1226,10 +1226,12 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
     final res = await ApiService.acceptTrip(_incomingTrip!.id);
     if (res['success']) {
       _showSnack('Trip accepted! Head to pickup. 📍', isError: false);
+      await RideAlertService.stopAlert();
       setState(() => _incomingTrip = null);
       await _checkActiveTrip();
     } else {
       _showSnack(res['error'], isError: true);
+      await RideAlertService.stopAlert();
       setState(() => _incomingTrip = null);
     }
   }

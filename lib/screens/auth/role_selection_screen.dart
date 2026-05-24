@@ -62,8 +62,8 @@ class RoleSelectionScreen extends StatelessWidget {
                   iconBg: AppColors.primary,
                   title: 'I\'m a Rider',
                   subtitle: 'Book rides & deliveries anywhere in India',
-                  badge: '₹50 free on signup!',
-                  badgeColor: AppColors.success,
+                  badge: 'First ride free on signup!',
+                  badgeColor: AppColors.primary,
                   onTap: () => Navigator.push(context, MaterialPageRoute(
                     builder: (_) => const OtpScreen(role: 'rider'),
                   )),

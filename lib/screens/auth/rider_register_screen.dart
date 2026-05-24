@@ -89,9 +89,9 @@ class _RiderRegisterScreenState extends State<RiderRegisterScreen> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.08),
+                    color: AppColors.primary.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.success.withOpacity(0.3)),
+                    border: Border.all(color: AppColors.primary.withOpacity(0.3)),
                   ),
                   child: Row(children: [
                     const Text('🎉', style: TextStyle(fontSize: 22)),
@@ -99,11 +99,11 @@ class _RiderRegisterScreenState extends State<RiderRegisterScreen> {
                     Expanded(child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('₹50 Signup Bonus!',
+                        Text('First Ride Free!',
                           style: GoogleFonts.sora(
                             fontSize: 14, fontWeight: FontWeight.w700,
-                            color: AppColors.success)),
-                        Text('Added to wallet on registration',
+                            color: AppColors.primary)),
+                        Text('Enjoy your first ride free on signup',
                           style: GoogleFonts.sora(
                             fontSize: 12, color: AppColors.textSecondary)),
                       ],

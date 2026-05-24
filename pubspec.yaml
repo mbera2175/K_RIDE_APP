@@ -27,6 +27,9 @@ dependencies:
   permission_handler: ^11.3.0
   cupertino_icons: ^1.0.6
 
+  audioplayers: ^5.2.1
+vibration: ^1.8.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

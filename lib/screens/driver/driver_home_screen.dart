@@ -1123,13 +1123,72 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
       setState(() => _isOnline = res['data']['is_online']);
       _showSnack(res['data']['message'], isError: false);
       if (_isOnline) {
-        _loadAvailableTrips();
-        _tripPollingTimer = Timer.periodic(const Duration(seconds: 10), (_) => _loadAvailableTrips());
-      } else {
-        _tripPollingTimer?.cancel();
-        setState(() => _incomingTrip = null);
+
+  await DriverSocketService.connect(
+    AuthService.driverId,
+  );
+
+  DriverSocketService.onMessage = (
+    data,
+  ) {
+
+    print(
+      'Socket message: $data',
+    );
+
+    if (
+      data['type'] == 'new_trip'
+    ) {
+
+      final tripData =
+          data['data'];
+
+      if (mounted) {
+
+        setState(() {
+
+          _incomingTrip =
+              _mapToTripData(
+            tripData,
+          );
+
+        });
+
       }
-    } else {
+
+    }
+
+    if (
+      data['type'] ==
+          'trip_taken'
+    ) {
+
+      _showSnack(
+        'Trip already taken',
+        isError: true,
+      );
+
+      if (mounted) {
+
+        setState(() {
+
+          _incomingTrip = null;
+
+        });
+
+      }
+
+    }
+
+  };
+
+} else {
+
+  DriverSocketService.disconnect();
+
+  setState(() => _incomingTrip = null);
+
+}
       _showSnack(res['error'], isError: true);
     }
     setState(() => _toggling = false);

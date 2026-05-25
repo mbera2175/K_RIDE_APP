@@ -65,9 +65,15 @@ class TripData {
     required this.status,
   });
 
-  TripData copyWith({String? status}) => TripData(
+  TripData copyWith({
+    String? status,
+    double? pickupDistanceKm,
+    double? tripDistanceKm,
+  }) => TripData(
     id: id, fare: fare, driverEarnings: driverEarnings,
     pickup: pickup, drop: drop, distance: distance, duration: duration,
+    pickupDistanceKm: pickupDistanceKm ?? this.pickupDistanceKm,
+    tripDistanceKm: tripDistanceKm ?? this.tripDistanceKm,
     payment: payment, riderRating: riderRating, riderName: riderName,
     vehicle: vehicle, status: status ?? this.status,
   );
@@ -460,7 +466,7 @@ class _IncomingTripModalState extends State<IncomingTripModal> with SingleTicker
                                   '${widget.trip.tripDistanceKm.toStringAsFixed(1)} km trip',
                                   style: GoogleFonts.sora(
                                     fontSize: 11,
-                                    color: kGreen,
+                                    color: kSuccess,
                                     fontWeight: FontWeight.w700,
                                    ),
                                 ),

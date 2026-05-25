@@ -5,6 +5,25 @@ import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
 import 'driver_step4_documents.dart';
 
+// ── Emoji vehicle icon widget ─────────────────────────────────
+class _VehicleEmoji extends StatelessWidget {
+  final String emoji;
+  final double size;
+  const _VehicleEmoji({required this.emoji, this.size = 28});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      emoji,
+      style: TextStyle(
+        fontSize: size,
+        fontFamily: 'Roboto',
+        fontFamilyFallback: const ['Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji'],
+      ),
+    );
+  }
+}
+
 class DriverStep2Vehicle extends StatefulWidget {
   final String  phone;
   final String  otp;
@@ -36,19 +55,17 @@ class _DriverStep2VehicleState extends State<DriverStep2Vehicle> {
   final _cityCtrl  = TextEditingController();
   final _stateCtrl = TextEditingController();
 
-  String _vehicleType      = 'auto';
-  List<String> _selectedServices = ['ride'];
-  bool   _loading          = false;
-  String _error            = '';
+  String _vehicleType = 'cab_ac';
+  bool   _loading     = false;
+  String _error       = '';
 
+  // Each entry has 'type', 'emoji', 'label'
   final List<Map<String, dynamic>> _vehicles = [
-    {'type': 'bike',      'icon': Icons.two_wheeler_rounded,       'label': 'Bike'},
-    {'type': 'auto',      'icon': Icons.local_taxi_rounded,        'label': 'Auto'},
-    {'type': 'toto',      'icon': Icons.electric_rickshaw_rounded, 'label': 'Toto'},
-    {'type': 'mini',      'icon': Icons.directions_car_rounded,    'label': 'Mini'},
-    {'type': 'sedan',     'icon': Icons.time_to_leave_rounded,     'label': 'Sedan'},
-    {'type': 'suv',       'icon': Icons.airport_shuttle_rounded,   'label': 'SUV'},
-    {'type': 'ambulance', 'icon': Icons.medical_services_rounded,  'label': 'Ambulance'},
+    {'type': 'cab_ac',        'emoji': '🚖', 'label': 'Cab AC'},
+    {'type': 'cab_non_ac',    'emoji': '🚕', 'label': 'Cab Non-AC'},
+    {'type': 'bike',          'emoji': '🏍️', 'label': 'Bike'},
+    {'type': 'three_wheeler', 'emoji': '🛺', 'label': 'Three Wheeler'},
+    {'type': 'ambulance',     'emoji': '🚑', 'label': 'Ambulance'},
   ];
 
   // ── Validate + submit to backend ──────────────────────
@@ -74,7 +91,7 @@ class _DriverStep2VehicleState extends State<DriverStep2Vehicle> {
       'language'     : widget.language,
       'referral_code': widget.referral,
       'vehicle_type' : _vehicleType,
-      'service_type' : _selectedServices.join(','),
+      'service_type' : 'ride',
       'brand'        : _brandCtrl.text.trim(),
       'model'        : _modelCtrl.text.trim(),
       'color'        : _colorCtrl.text.trim(),
@@ -145,31 +162,9 @@ class _DriverStep2VehicleState extends State<DriverStep2Vehicle> {
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
-                  childAspectRatio: 1.1,
+                  childAspectRatio: 1.0,
                   children: _vehicles.map((v) =>
-                    _vehicleCard(v['type'], v['icon'], v['label'])).toList(),
-                ),
-
-                const SizedBox(height: 16),
-
-                // ── Service Type ──────────────────────
-                _label('Service Type *'),
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 2.5,
-                  children: [
-                    _serviceCard('ride', Icons.person_rounded, 'Rides', 'Passengers'),
-                    if (_vehicleType == 'bike' || _vehicleType == 'toto')
-                      _serviceCard('delivery', Icons.inventory_2_rounded, 'Delivery', 'Packages'),
-                    if (_vehicleType == 'bike') ...[
-                      _serviceCard('food', Icons.fastfood_rounded, 'Food', 'Meals'),
-                      _serviceCard('medicine', Icons.medical_information_rounded, 'Medicine', 'Meds'),
-                    ]
-                  ],
+                    _vehicleCard(v['type'], v['emoji'], v['label'])).toList(),
                 ),
 
                 const SizedBox(height: 16),
@@ -277,16 +272,14 @@ class _DriverStep2VehicleState extends State<DriverStep2Vehicle> {
 
   // ── Small widgets ──────────────────────────────────────
 
-  Widget _vehicleCard(String type, IconData iconData, String label) {
+  Widget _vehicleCard(String type, String emoji, String label) {
     final selected = _vehicleType == type;
     return GestureDetector(
       onTap: _loading ? null : () {
-        setState(() {
-          _vehicleType = type;
-          _selectedServices = ['ride'];
-        });
+        setState(() => _vehicleType = type);
       },
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
         decoration: BoxDecoration(
           color: selected
               ? AppColors.driverColor.withOpacity(0.08)
@@ -294,67 +287,33 @@ class _DriverStep2VehicleState extends State<DriverStep2Vehicle> {
           border: Border.all(
             color: selected ? AppColors.driverColor : AppColors.divider,
             width: selected ? 2 : 1.5),
-          borderRadius: BorderRadius.circular(12)),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: selected ? [
+            BoxShadow(
+              color: AppColors.driverColor.withOpacity(0.15),
+              blurRadius: 10, offset: const Offset(0, 4))
+          ] : [],
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(iconData, size: 26,
-              color: selected ? AppColors.driverColor : AppColors.textPrimary),
-            const SizedBox(height: 4),
-            Text(label, style: GoogleFonts.sora(
-              fontSize: 11, fontWeight: FontWeight.w600,
-              color: selected ? AppColors.driverColor : AppColors.textPrimary)),
-          ]),
+            _VehicleEmoji(emoji: emoji, size: 28),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: GoogleFonts.sora(
+                fontSize: 10, fontWeight: FontWeight.w600,
+                color: selected ? AppColors.driverColor : AppColors.textPrimary),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _serviceCard(String type, IconData iconData, String title, String sub) {
-    final selected = _selectedServices.contains(type);
-    return GestureDetector(
-      onTap: _loading ? null : () {
-        setState(() {
-          if (selected) {
-            if (_selectedServices.length > 1) _selectedServices.remove(type);
-          } else {
-            if (_vehicleType != 'bike' && _vehicleType != 'toto') {
-              _selectedServices = ['ride'];
-            } else {
-              _selectedServices.add(type);
-            }
-          }
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.driverColor.withOpacity(0.08)
-              : AppColors.white,
-          border: Border.all(
-            color: selected ? AppColors.driverColor : AppColors.divider,
-            width: selected ? 2 : 1.5),
-          borderRadius: BorderRadius.circular(12)),
-        child: Row(children: [
-          Icon(iconData, size: 24,
-            color: selected ? AppColors.driverColor : AppColors.textSecondary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(title, style: GoogleFonts.sora(
-                  fontSize: 12, fontWeight: FontWeight.w600,
-                  color: selected ? AppColors.driverColor : AppColors.textPrimary)),
-                Text(sub, style: GoogleFonts.sora(
-                  fontSize: 10, color: AppColors.textSecondary)),
-            ]),
-          )
-        ]),
-      ),
-    );
-  }
+
 
   Widget _stepBar(int current) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

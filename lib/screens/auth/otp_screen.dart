@@ -69,36 +69,17 @@ class _OtpScreenState extends State<OtpScreen> {
 
   // ── Verify OTP ─────────────────────────────────────────
   Future<void> _verifyOtp() async {
-    final otp = _otpController.text.trim();
-    if (otp.length != 6) {
-      setState(() => _error = 'Enter the 6-digit OTP');
-      return;
-    }
-    setState(() { _loading = true; _error = ''; });
+  final otp = _otpController.text.trim();
 
-    final phone = _phoneController.text.trim();
+  if (otp.length != 6) {
+    setState(() => _error = 'Enter the 6-digit OTP');
+    return;
+  }
 
-    try {
-      // ⚠️ FORCE REGISTRATION FLOW FOR TESTING ⚠️
-      // Currently, if you use a phone number already in the database, 
-      // the app skips registration. We are forcing it here so you can test the UI.
-      bool forceRegistrationScreens = false; 
+  final phone = _phoneController.text.trim();
 
-      final res = await http.post(
-  Uri.parse('${AppConstants.baseUrl}/auth/otp/login'),
-  headers: {'Content-Type': 'application/json'},
-  body: jsonEncode({
-    'phone': phone,
-    'otp': otp,
-    'role': widget.role,
-  }),
-);
-
-final data = jsonDecode(res.body);
-
-if (res.statusCode == 200) {
-
-  if (data['new_user'] == true) {
+  // NEW USER → GO DIRECTLY TO REGISTER SCREEN
+  if (!_userExists) {
 
     if (widget.role == 'rider') {
 
@@ -126,25 +107,55 @@ if (res.statusCode == 200) {
 
     }
 
-  } else {
-
-    _handleLoginSuccess(data);
-
+    return;
   }
 
-} else {
+  // EXISTING USER → LOGIN
+  setState(() {
+    _loading = true;
+    _error = '';
+  });
 
-  setState(() =>
-    _error = data['detail'] ?? 'Invalid OTP'
-  );
+  try {
 
-}
-    } catch (e) {
-      if (mounted) setState(() => _error = 'Network error. Try again.');
-    } finally {
-      if (mounted) setState(() => _loading = false);
+    final res = await http.post(
+      Uri.parse('${AppConstants.baseUrl}/auth/otp/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'phone': phone,
+        'otp': otp,
+        'role': widget.role,
+      }),
+    );
+
+    final data = jsonDecode(res.body);
+
+    if (res.statusCode == 200) {
+
+      _handleLoginSuccess(data);
+
+    } else {
+
+      setState(() =>
+        _error = data['detail'] ?? 'Invalid OTP'
+      );
+
     }
+
+  } catch (e) {
+
+    if (mounted) {
+      setState(() => _error = 'Network error. Try again.');
+    }
+
+  } finally {
+
+    if (mounted) {
+      setState(() => _loading = false);
+    }
+
   }
+}
 
   void _handleLoginSuccess(Map data) async {
     // Override role with what the user selected — prevents auto-switching

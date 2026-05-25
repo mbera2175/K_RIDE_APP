@@ -36,6 +36,10 @@ class TripData {
   final String drop;
   final String distance;
   final String duration;
+
+  final double pickupDistanceKm;
+  final double tripDistanceKm;
+  
   final String payment;
   final String riderRating;
   final String riderName;
@@ -50,6 +54,10 @@ class TripData {
     required this.drop,
     required this.distance,
     required this.duration,
+
+    required this.pickupDistanceKm,
+    required this.tripDistanceKm,
+    
     required this.payment,
     required this.riderRating,
     required this.riderName,
@@ -87,6 +95,17 @@ TripData _mapToTripData(Map<String, dynamic> data) {
     drop: data['drop_address'] ?? 'Unknown',
     distance: data['distance_km']?.toString() ?? '0',
     duration: data['duration_min']?.toString() ?? '0',
+
+    pickupDistanceKm:
+       double.tryParse(
+          data['pickup_distance_km']?.toString() ?? '0',
+       ) ?? 0,
+
+    tripDistanceKm:
+        double.tryParse(
+          data['distance_km']?.toString() ?? '0',
+        ) ?? 0,
+    
     payment: data['payment_method'] ?? 'Cash',
     riderRating: '5.0',
     riderName: data['rider'] != null ? data['rider']['name'] : 'Rider',

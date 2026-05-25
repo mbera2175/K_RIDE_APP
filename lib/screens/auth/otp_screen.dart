@@ -84,31 +84,61 @@ class _OtpScreenState extends State<OtpScreen> {
       // the app skips registration. We are forcing it here so you can test the UI.
       bool forceRegistrationScreens = false; 
 
-      if (_userExists && !forceRegistrationScreens) {
-        // Existing user → login
-        final res = await http.post(
-          Uri.parse('${AppConstants.baseUrl}/auth/otp/login'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'phone': phone, 'otp': otp, 'role': widget.role}),
-        );
-        final data = jsonDecode(res.body);
-        if (res.statusCode == 200) {
-          _handleLoginSuccess(data);
-        } else {
-          setState(() => _error = data['detail'] ?? 'Invalid OTP');
-        }
-      } else {
-        // New user (or Forced) → go to registration screen
-        if (widget.role == 'rider') {
-          Navigator.pushReplacement(context, MaterialPageRoute(
-            builder: (_) => RiderRegisterScreen(phone: phone, otp: otp),
-          ));
-        } else {
-          Navigator.pushReplacement(context, MaterialPageRoute(
-            builder: (_) => DriverRegisterScreen(phone: phone, otp: otp),
-          ));
-        }
-      }
+      final res = await http.post(
+  Uri.parse('${AppConstants.baseUrl}/auth/otp/login'),
+  headers: {'Content-Type': 'application/json'},
+  body: jsonEncode({
+    'phone': phone,
+    'otp': otp,
+    'role': widget.role,
+  }),
+);
+
+final data = jsonDecode(res.body);
+
+if (res.statusCode == 200) {
+
+  if (data['new_user'] == true) {
+
+    if (widget.role == 'rider') {
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => RiderRegisterScreen(
+            phone: phone,
+            otp: otp,
+          ),
+        ),
+      );
+
+    } else {
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DriverRegisterScreen(
+            phone: phone,
+            otp: otp,
+          ),
+        ),
+      );
+
+    }
+
+  } else {
+
+    _handleLoginSuccess(data);
+
+  }
+
+} else {
+
+  setState(() =>
+    _error = data['detail'] ?? 'Invalid OTP'
+  );
+
+}
     } catch (e) {
       if (mounted) setState(() => _error = 'Network error. Try again.');
     } finally {

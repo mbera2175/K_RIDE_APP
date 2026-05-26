@@ -1315,6 +1315,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
     final res = await ApiService.getMe();
     if (res['success']) {
       final data = res['data'];
+      debugPrint('GETME DATA: $data');
       final driver = data['driver'];
       if (driver != null) {
         await AuthService.updateApprovalStatus(driver['is_approved'] == true);

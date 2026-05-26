@@ -1235,7 +1235,16 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
 
 }
     }
-    setState(() => _toggling = false);
+    if (mounted) {
+  Future.delayed(
+    const Duration(milliseconds: 300),
+    () {
+      if (mounted) {
+        setState(() => _toggling = false);
+      }
+    },
+  );
+}
   }
 
   Future<void> _loadAvailableTrips() async {

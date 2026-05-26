@@ -1158,94 +1158,131 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
   }
 
   Future<void> _handleToggle() async {
-    setState(() => _toggling = true);
+
+  try {
+
+    if (mounted) {
+      setState(() => _toggling = true);
+    }
+
     final res = await ApiService.toggleOnline();
+
     if (res['success']) {
-      setState(() => _isOnline = res['data']['is_online']);
-      _showSnack(res['data']['message'], isError: false);
-      if (_isOnline) {
 
-  await DriverSocketService.connect(
-    AuthService.driverId,
-  );
-
-  DriverSocketService.onMessage = (
-    data,
-  ) {
-
-    print(
-      'Socket message: $data',
-    );
-
-    if (
-      data['type'] == 'new_trip'
-    ) {
-
-      final tripData =
-          data['data'];
-
-      RideAlertService.startAlert();
+      final online = res['data']['is_online'] == true;
 
       if (mounted) {
+        setState(() => _isOnline = online);
+      }
 
-        setState(() {
+      _showSnack(
+        res['data']['message'],
+        isError: false,
+      );
 
-          _incomingTrip =
-              _mapToTripData(
-            tripData,
-          );
+      if (online) {
 
-        });
+        await ApiService.updateLocation(
+          _currentLat,
+          _currentLng,
+        );
+
+        await DriverSocketService.connect(
+          AuthService.driverId,
+        );
+
+        DriverSocketService.onMessage = (data) {
+
+          debugPrint('Socket message: $data');
+
+          if (data['type'] == 'new_trip') {
+
+            final tripData = data['data'];
+
+            RideAlertService.startAlert();
+
+            if (mounted) {
+
+              setState(() {
+
+                _incomingTrip =
+                    _mapToTripData(tripData);
+
+              });
+
+            }
+
+          }
+
+          if (data['type'] == 'trip_taken') {
+
+            if (mounted) {
+
+              setState(() {
+
+                _incomingTrip = null;
+
+              });
+
+            }
+
+            _showSnack(
+              'Trip already taken',
+              isError: true,
+            );
+
+          }
+
+        };
+
+      } else {
+
+        await RideAlertService.stopAlert();
+
+        DriverSocketService.disconnect();
+
+        if (mounted) {
+
+          setState(() {
+
+            _incomingTrip = null;
+            _activeTrip = null;
+
+          });
+
+        }
 
       }
 
-    }
-
-    if (
-      data['type'] ==
-          'trip_taken'
-    ) {
+    } else {
 
       _showSnack(
-        'Trip already taken',
+        res['error'] ?? 'Toggle failed',
         isError: true,
       );
 
-      if (mounted) {
+    }
 
-        setState(() {
+  } catch (e) {
 
-          _incomingTrip = null;
+    debugPrint('Toggle error: $e');
 
-        });
+    _showSnack(
+      'Something went wrong',
+      isError: true,
+    );
 
-      }
+  } finally {
+
+    if (mounted) {
+
+      setState(() => _toggling = false);
 
     }
 
-  };
-
-} else {
-
-  DriverSocketService.disconnect();
-
-  setState(() => _incomingTrip = null);
-
-  _showSnack(res['error'], isError: true);
-
-}
-    } catch (e) {
-
-  debugPrint('Toggle error: $e');
-
-} finally {
-
-  if (mounted) {
-    setState(() => _toggling = false);
   }
 
 }
-  }
 
   Future<void> _loadAvailableTrips() async {
     if (!_isOnline || _activeTrip != null || _incomingTrip != null) return;

@@ -1214,7 +1214,7 @@ class _WhereToScreenState extends State<WhereToScreen> {
     "drop_lat": 22.5850,
     "drop_lng": 88.3950,
 
-    "vehicle_type": widget.service.name,
+    "vehicle_type": widget.service.name.toLowerCase(),
     "payment_method": _paymentMethod.id,
   };
 

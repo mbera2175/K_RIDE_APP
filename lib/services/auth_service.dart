@@ -83,12 +83,10 @@ class AuthService {
     await _prefs?.setBool('is_approved', approved);
   }
 
-  static String? profilePic;
 
-static Future<void> updateProfilePic(String url) async {
-  profilePic = url;
-  await _prefs?.setString('profile_pic', url);
-}
+  static Future<void> updateProfilePic(String url) async {
+    await _prefs?.setString('profile_pic', url);
+  }
 
   // ── Logout ───────────────────────────────────────────────
   static Future<void> logout({bool forced = false}) async {

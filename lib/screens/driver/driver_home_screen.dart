@@ -994,18 +994,12 @@ class _ToggleButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (toggling)
-              RotationTransition(
-                turns: spinCtrl,
-                child: Container(
-                  width: 26, height: 26,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border(
-                      top:    BorderSide(color: isOnline ? kSuccess : kWhite, width: 3),
-                      right:  const BorderSide(color: Colors.transparent, width: 3),
-                      bottom: const BorderSide(color: Colors.transparent, width: 3),
-                      left:   const BorderSide(color: Colors.transparent, width: 3),
-                    ),
+              SizedBox(
+                width: 26, height: 26,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    isOnline ? kSuccess : kWhite,
                   ),
                 ),
               )

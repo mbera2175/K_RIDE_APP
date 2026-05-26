@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../utils/app_colors.dart';
+import '../../utils/constants.dart';
 import '../../services/api_service.dart';
 
 class MyDocumentsScreen extends StatefulWidget {
@@ -62,7 +63,15 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
       final urls = <String, String>{};
       for (final key in _newFiles.keys) {
         final v = data[key] ?? data['${key}_url'] ?? '';
-        if (v != null && (v as String).isNotEmpty) urls[key] = v;
+        if (v != null && (v as String).isNotEmpty) {
+          if (v.startsWith('http://') || v.startsWith('https://')) {
+            urls[key] = v;
+          } else {
+            final base = AppConstants.baseUrl;
+            final cleanPath = v.startsWith('/') ? v : '/$v';
+            urls[key] = '$base$cleanPath';
+          }
+        }
       }
       setState(() => _uploadedUrls = urls);
 
@@ -159,7 +168,13 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
         // Update local preview with new URL
         final url = res['data']?['url'] ?? res['data']?['${entry.key}_url'] ?? '';
         if ((url as String).isNotEmpty) {
-          _uploadedUrls[entry.key] = url;
+          if (url.startsWith('http://') || url.startsWith('https://')) {
+            _uploadedUrls[entry.key] = url;
+          } else {
+            final base = AppConstants.baseUrl;
+            final cleanPath = url.startsWith('/') ? url : '/$url';
+            _uploadedUrls[entry.key] = '$base$cleanPath';
+          }
         }
         _newFiles[entry.key] = null;
       } else {

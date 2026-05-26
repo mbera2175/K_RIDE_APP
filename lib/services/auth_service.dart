@@ -67,7 +67,14 @@ class AuthService {
   static bool   get isDriver      => role == 'driver';
   static bool   get isRider       => role == 'rider';
   static bool   get isApproved    => _prefs?.getBool('is_approved')              ?? false;
-  static String get profilePic    => _prefs?.getString('profile_pic')            ?? '';
+  static String get profilePic {
+    final pic = _prefs?.getString('profile_pic') ?? '';
+    if (pic.isEmpty) return '';
+    if (pic.startsWith('http://') || pic.startsWith('https://')) return pic;
+    final base = AppConstants.baseUrl;
+    final cleanPic = pic.startsWith('/') ? pic : '/$pic';
+    return '$base$cleanPic';
+  }
 
   // ── Role-specific block status ───────────────────────────
   static bool get isBlockedAsRider  => _prefs?.getBool('is_blocked_as_rider')  ?? false;

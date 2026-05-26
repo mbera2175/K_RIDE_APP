@@ -14,7 +14,6 @@ class DriverStep3License extends StatefulWidget {
   final String  language;
   final String? referral;
   final String  vehicleType;
-  final String  serviceType;
   final String  plateNumber;
   final String  brand;
   final String  model;
@@ -32,7 +31,6 @@ class DriverStep3License extends StatefulWidget {
     required this.language,
     this.referral,
     required this.vehicleType,
-    required this.serviceType,
     required this.plateNumber,
     required this.brand,
     required this.model,

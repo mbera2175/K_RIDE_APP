@@ -96,7 +96,6 @@ class _DriverStep3LicenseState extends State<DriverStep3License> {
       'language'       : widget.language,
       'referral_code'  : widget.referral,
       'vehicle_type'   : widget.vehicleType,
-      'service_type'   : widget.serviceType,
       'plate_number'   : widget.plateNumber,
       'brand'          : widget.brand,
       'model'          : widget.model,

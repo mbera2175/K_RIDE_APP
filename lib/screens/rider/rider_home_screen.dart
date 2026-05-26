@@ -1202,7 +1202,59 @@ class _WhereToScreenState extends State<WhereToScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () => setState(() => _booked = true),
+                        onPressed: () async {
+
+  final body = {
+    "pickup_address": _pickupCtrl.text,
+    "drop_address": _destCtrl.text,
+
+    "pickup_lat": 22.5726,
+    "pickup_lng": 88.3639,
+
+    "drop_lat": 22.5850,
+    "drop_lng": 88.3950,
+
+    "vehicle_type": widget.service.name,
+    "payment_method": _paymentMethod.id,
+  };
+
+  try {
+
+    final result = await ApiService.bookTrip(body);
+
+    print("BOOK RESPONSE:");
+    print(result);
+
+    if (result["success"] == true) {
+
+      setState(() => _booked = true);
+
+    } else {
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result["error"] ?? "Booking failed",
+          ),
+        ),
+      );
+
+    }
+
+  } catch (e) {
+
+    print("BOOK ERROR:");
+    print(e);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Booking error: $e"),
+      ),
+    );
+
+  }
+
+},
                         style: ElevatedButton.styleFrom(backgroundColor: widget.service.accent, foregroundColor: kWhite, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 8, shadowColor: widget.service.accent.withOpacity(0.27)),
                         child: Text('Confirm ${widget.service.name} · ₹89', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                       ),

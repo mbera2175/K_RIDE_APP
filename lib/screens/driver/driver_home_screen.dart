@@ -1478,7 +1478,23 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: AuthService.profilePic.isNotEmpty
-                                ? Image.network(AuthService.profilePic, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: GoogleFonts.sora(fontSize: 15, fontWeight: FontWeight.w800, color: kWhite))))
+                                ? CachedNetworkImage(
+    imageUrl:
+        '${AuthService.profilePic}?t=${DateTime.now().millisecondsSinceEpoch}',
+    fit: BoxFit.cover,
+
+    placeholder: (context, url) =>
+        const Center(child: CircularProgressIndicator()),
+
+    errorWidget: (context, url, error) => Center(
+      child: Text(
+        AuthService.name.isNotEmpty
+            ? AuthService.name[0].toUpperCase()
+            : 'R',
+        style: GoogleFonts.sora(),
+      ),
+    ),
+  )
                                 : Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: GoogleFonts.sora(fontSize: 15, fontWeight: FontWeight.w800, color: kWhite))),
                           ),
                         ),

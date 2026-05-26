@@ -1234,16 +1234,16 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
   _showSnack(res['error'], isError: true);
 
 }
-    }
-    if (mounted) {
-  Future.delayed(
-    const Duration(milliseconds: 300),
-    () {
-      if (mounted) {
-        setState(() => _toggling = false);
-      }
-    },
-  );
+    } catch (e) {
+
+  debugPrint('Toggle error: $e');
+
+} finally {
+
+  if (mounted) {
+    setState(() => _toggling = false);
+  }
+
 }
   }
 

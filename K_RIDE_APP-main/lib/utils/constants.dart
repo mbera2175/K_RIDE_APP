@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppConstants {
   // ── API ──────────────────────────────────────────────
-  static const String baseUrl = 'http://13.232.171.208:8000';
+  static const String baseUrl = 'https://kridebackend-production.up.railway.app';
 
   // ── App Info ─────────────────────────────────────────
   static const String appName    = 'KRide';

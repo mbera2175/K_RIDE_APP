@@ -1689,6 +1689,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
   Widget _profileTab() {
     final isApproved = AuthService.isApproved;
     final profilePic = AuthService.profilePic;
+    debugPrint('PROFILE PIC URL: $profilePic');
 
     return SafeArea(child: SingleChildScrollView(
       padding: const EdgeInsets.all(20),

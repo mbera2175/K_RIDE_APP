@@ -1231,8 +1231,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
 
   setState(() => _incomingTrip = null);
 
+  _showSnack(res['error'], isError: true);
+
 }
-      _showSnack(res['error'], isError: true);
     }
     setState(() => _toggling = false);
   }

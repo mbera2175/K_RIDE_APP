@@ -1700,8 +1700,21 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
             decoration: BoxDecoration(shape: BoxShape.circle,
                 border: Border.all(color: isApproved ? kSuccess : kOrange, width: 3)),
             child: ClipOval(child: profilePic.isNotEmpty
-                ? Image.network(profilePic, fit: BoxFit.cover, width: 90, height: 90,
-                    errorBuilder: (_, __, ___) => _avatarFallback())
+                ? CachedNetworkImage(
+    imageUrl:
+        '$profilePic?t=${DateTime.now().millisecondsSinceEpoch}',
+    fit: BoxFit.cover,
+    width: 90,
+    height: 90,
+
+    placeholder: (context, url) =>
+        const Center(
+          child: CircularProgressIndicator(),
+        ),
+
+    errorWidget: (context, url, error) =>
+        _avatarFallback(),
+)
                 : _avatarFallback()),
           ),
           Positioned(bottom: 0, right: 0,

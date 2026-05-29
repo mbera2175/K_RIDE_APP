@@ -20,6 +20,7 @@ class AuthService {
     await _prefs?.setString(AppConstants.keyPhone,  data['phone']        ?? '');
     await _prefs?.setInt(   'user_id',              data['user_id']      ?? 0);
     await _prefs?.setDouble('wallet_balance', (data['wallet_balance'] ?? 0.0).toDouble());
+    await _prefs?.setInt('kcoin_balance', (data['kcoin_balance'] ?? 0));
 
     if (data['driver_id'] != null) {
       await _prefs?.setInt('driver_id', data['driver_id']);
@@ -63,6 +64,7 @@ class AuthService {
   static int    get driverId      => _prefs?.getInt('driver_id')                 ?? 0;
   static int    get riderId       => _prefs?.getInt('rider_id')                  ?? 0;
   static double get walletBalance => _prefs?.getDouble('wallet_balance')         ?? 0.0;
+  static int    get kcoinBalance   => _prefs?.getInt('kcoin_balance')              ?? 0;
   static bool   get isLoggedIn    => token.isNotEmpty;
   static bool   get isDriver      => role == 'driver';
   static bool   get isRider       => role == 'rider';

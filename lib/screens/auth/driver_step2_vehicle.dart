@@ -60,13 +60,24 @@ class _DriverStep2VehicleState extends State<DriverStep2Vehicle> {
   String _error       = '';
 
   // Each entry has 'type', 'emoji', 'label'
-  final List<Map<String, dynamic>> _vehicles = [
-    {'type': 'cab_ac',        'emoji': '🚖', 'label': 'Cab AC'},
-    {'type': 'cab_non_ac',    'emoji': '🚕', 'label': 'Cab Non-AC'},
-    {'type': 'bike',          'emoji': '🏍️', 'label': 'Bike'},
-    {'type': 'three_wheeler', 'emoji': '🛺', 'label': 'Three Wheeler'},
-    {'type': 'ambulance',     'emoji': '🚑', 'label': 'Ambulance'},
+  final _vehicles = [
+    {'type': 'ac_cab',     'emoji': '🚖', 'label': 'AC Cab'},
+    {'type': 'non_ac_cab', 'emoji': '🚕', 'label': 'Non-AC Cab'},
+    {'type': 'bike',       'emoji': '🏍️', 'label': 'Bike'},
+    {'type': 'auto',       'emoji': '🛺', 'label': 'Auto'},
+    {'type': 'toto',       'emoji': '🛵', 'label': 'Toto'},
+    {'type': 'ambulance',  'emoji': '🚑', 'label': 'Ambulance'},
   ];
+
+  final _fuelTypes = [
+    {'type': 'petrol',  'label': 'Petrol'},
+    {'type': 'diesel',  'label': 'Diesel'},
+    {'type': 'gas',     'label': 'Gas/CNG'},
+    {'type': 'ev',      'label': 'Electric (EV)'},
+    {'type': 'hybrid',  'label': 'Hybrid'},
+  ];
+
+  String _fuelType = 'petrol';
 
   // ── Validate + submit to backend ──────────────────────
   Future<void> _submitAndNext() async {
@@ -91,6 +102,7 @@ class _DriverStep2VehicleState extends State<DriverStep2Vehicle> {
       'language'     : widget.language,
       'referral_code': widget.referral,
       'vehicle_type' : _vehicleType,
+      'fuel_type'    : _fuelType,
       'service_type' : 'ride',
       'brand'        : _brandCtrl.text.trim(),
       'model'        : _modelCtrl.text.trim(),

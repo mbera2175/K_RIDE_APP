@@ -65,16 +65,6 @@ class ApiService {
     return _handle(res);
   }
 
-  /// Password Login — now includes role ('rider' or 'driver')
-  static Future<Map<String, dynamic>> passwordLogin(
-      String phone, String password, String role) async {
-    final res = await http.post(Uri.parse('$_base/auth/password/login'),
-      headers: _headers,
-      body: jsonEncode({'phone': phone, 'password': password, 'role': role}))
-      .timeout(_timeout);
-    return _handle(res);
-  }
-
   static Future<Map<String, dynamic>> registerRider(Map<String, dynamic> body) async {
     final res = await http.post(Uri.parse('$_base/auth/register/rider'),
       headers: _headers, body: jsonEncode(body))
@@ -274,14 +264,14 @@ class ApiService {
 
   static Future<Map<String, dynamic>> getEarningsSummary() async {
     final res = await http.get(
-      Uri.parse('$_base/driver/earnings/summary'),
+      Uri.parse('$_base/driver/earnings'),
       headers: _authHeaders).timeout(_timeout);
     return _handle(res);
   }
 
   static Future<Map<String, dynamic>> requestWithdrawal(
       double amount, String? upiId) async {
-    final res = await http.post(Uri.parse('$_base/driver/earnings/withdraw'),
+    final res = await http.post(Uri.parse('$_base/payments/withdraw'),
       headers: _authHeaders,
       body: jsonEncode({'amount': amount, 'upi_id': upiId}))
       .timeout(_timeout);
@@ -331,6 +321,160 @@ class ApiService {
     final res = await http.post(Uri.parse('$_base/wallet/add'),
       headers: _authHeaders, body: jsonEncode({'amount': amount}))
       .timeout(_timeout);
+    return _handle(res);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  BONUS SYSTEM
+  // ═══════════════════════════════════════════════════════
+
+  static Future<Map<String, dynamic>> addBonus(int tripId, double bonusAmount) async {
+    final res = await http.post(Uri.parse('$_base/trips/$tripId/bonus'),
+      headers: _authHeaders,
+      body: jsonEncode({'bonus_amount': bonusAmount})).timeout(_timeout);
+    return _handle(res);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  K COINS
+  // ═══════════════════════════════════════════════════════
+
+  static Future<Map<String, dynamic>> getKCoinConfig() async {
+    final res = await http.get(Uri.parse('$_base/wallet/kcoin-config'),
+      headers: _authHeaders).timeout(_timeout);
+    return _handle(res);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  SOS
+  // ═══════════════════════════════════════════════════════
+
+  static Future<Map<String, dynamic>> raiseSOS(int tripId) async {
+    final res = await http.post(Uri.parse('$_base/trips/$tripId/sos'),
+      headers: _authHeaders).timeout(_timeout);
+    return _handle(res);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  CHAT
+  // ═══════════════════════════════════════════════════════
+
+  static Future<Map<String, dynamic>> sendChatMessage(
+      int tripId, String messageType, String? messageText, String? quickMsgKey) async {
+    final res = await http.post(Uri.parse('$_base/trips/$tripId/chat'),
+      headers: _authHeaders,
+      body: jsonEncode({
+        'message_type' : messageType,
+        'message_text' : messageText,
+        'quick_msg_key': quickMsgKey,
+      })).timeout(_timeout);
+    return _handle(res);
+  }
+
+  static Future<Map<String, dynamic>> getChatMessages(int tripId) async {
+    final res = await http.get(Uri.parse('$_base/trips/$tripId/chat'),
+      headers: _authHeaders).timeout(_timeout);
+    return _handle(res);
+  }
+
+  static Future<Map<String, dynamic>> getQuickMessages() async {
+    final res = await http.get(Uri.parse('$_base/quick-messages'),
+      headers: _authHeaders).timeout(_timeout);
+    return _handle(res);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  TRIP SHARE
+  // ═══════════════════════════════════════════════════════
+
+  static Future<Map<String, dynamic>> createTripShare(int tripId) async {
+    final res = await http.post(Uri.parse('$_base/trips/$tripId/share'),
+      headers: _authHeaders).timeout(_timeout);
+    return _handle(res);
+  }
+
+  static Future<Map<String, dynamic>> trackSharedTrip(String shareCode) async {
+    final res = await http.get(Uri.parse('$_base/track/$shareCode'),
+      headers: _headers).timeout(_timeout);
+    return _handle(res);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  DISPUTE
+  // ═══════════════════════════════════════════════════════
+
+  static Future<Map<String, dynamic>> raiseDispute(int tripId, String reason) async {
+    final res = await http.post(Uri.parse('$_base/trips/$tripId/dispute'),
+      headers: _authHeaders,
+      body: jsonEncode({'reason': reason})).timeout(_timeout);
+    return _handle(res);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  BLACKLIST
+  // ═══════════════════════════════════════════════════════
+
+  static Future<Map<String, dynamic>> blacklistDriver(int driverId) async {
+    final res = await http.post(Uri.parse('$_base/drivers/$driverId/blacklist'),
+      headers: _authHeaders).timeout(_timeout);
+    return _handle(res);
+  }
+
+  static Future<Map<String, dynamic>> getBlacklist() async {
+    final res = await http.get(Uri.parse('$_base/blacklist'),
+      headers: _authHeaders).timeout(_timeout);
+    return _handle(res);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  TRIP RECEIPT & EARNINGS
+  // ═══════════════════════════════════════════════════════
+
+  static Future<Map<String, dynamic>> getTripReceipt(int tripId) async {
+    final res = await http.get(Uri.parse('$_base/trips/$tripId/receipt'),
+      headers: _authHeaders).timeout(_timeout);
+    return _handle(res);
+  }
+
+  static Future<Map<String, dynamic>> getTripEarnings(int tripId) async {
+    final res = await http.get(Uri.parse('$_base/trips/$tripId/earnings'),
+      headers: _authHeaders).timeout(_timeout);
+    return _handle(res);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  DRIVER ACTIONS
+  // ═══════════════════════════════════════════════════════
+
+  static Future<Map<String, dynamic>> rejectTrip(int tripId) async {
+    final res = await http.post(Uri.parse('$_base/trips/$tripId/reject'),
+      headers: _authHeaders).timeout(_timeout);
+    return _handle(res);
+  }
+
+  static Future<Map<String, dynamic>> markCashCollected(int tripId) async {
+    final res = await http.post(Uri.parse('$_base/trips/$tripId/cash-collected'),
+      headers: _authHeaders).timeout(_timeout);
+    return _handle(res);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  PRICING
+  // ═══════════════════════════════════════════════════════
+
+  static Future<Map<String, dynamic>> getPricing(String city) async {
+    final res = await http.get(Uri.parse('$_base/pricing/?city=$city'),
+      headers: _headers).timeout(_timeout);
+    return _handle(res);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  PROMOS
+  // ═══════════════════════════════════════════════════════
+
+  static Future<Map<String, dynamic>> getActivePromos() async {
+    final res = await http.get(Uri.parse('$_base/promos/active'),
+      headers: _headers).timeout(_timeout);
     return _handle(res);
   }
 }

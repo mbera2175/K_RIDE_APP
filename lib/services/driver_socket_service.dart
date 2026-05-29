@@ -12,12 +12,12 @@ class DriverSocketService {
 
   static bool get isConnected => _isConnected;
 
-  static Future<void> connect(int driverId) async {
+  static Future<void> connect(int driverId, String token) async {
     try {
       disconnect();
 
       final wsUrl =
-    'ws://13.232.171.208:8000/ws/driver/$driverId';
+    'ws://13.232.171.208:8000/ws/driver/$driverId?token=$token';
 
       _channel = WebSocketChannel.connect(
         Uri.parse(wsUrl),

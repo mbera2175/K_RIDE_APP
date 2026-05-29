@@ -27,12 +27,35 @@ class AppConstants {
 
   // ── Vehicle Types ─────────────────────────────────────
   static const List<Map<String, dynamic>> vehicleTypes = [
-    {'type': 'bike',       'label': 'Bike',        'icon': Icons.two_wheeler_rounded,       'capacity': 1},
-    {'type': 'cab_ac',     'label': 'Cab AC',      'icon': Icons.ac_unit_rounded,           'capacity': 4},
-    {'type': 'cab_non_ac', 'label': 'Cab Non AC',  'icon': Icons.directions_car_rounded,    'capacity': 4},
-    {'type': 'three_wheeler', 'label': 'Three Wheeler', 'icon': Icons.electric_rickshaw_rounded, 'capacity': 3},
-    {'type': 'ambulance',  'label': 'Ambulance',   'icon': Icons.medical_services_rounded,  'capacity': 2},
+    {'type': 'bike',        'label': 'Bike',        'emoji': '🏍️', 'capacity': 1},
+    {'type': 'auto',        'label': 'Auto',        'emoji': '🛺',  'capacity': 3},
+    {'type': 'toto',        'label': 'Toto',        'emoji': '🛵',  'capacity': 3},
+    {'type': 'ac_cab',      'label': 'AC Cab',      'emoji': '🚖',  'capacity': 4},
+    {'type': 'non_ac_cab',  'label': 'Non-AC Cab',  'emoji': '🚕',  'capacity': 4},
+    {'type': 'ambulance',   'label': 'Ambulance',   'emoji': '🚑',  'capacity': 2},
   ];
+
+  // ── Fuel Types ────────────────────────────────────────
+  static const List<Map<String, String>> fuelTypes = [
+    {'type': 'petrol',  'label': 'Petrol'},
+    {'type': 'diesel',  'label': 'Diesel'},
+    {'type': 'gas',     'label': 'Gas/CNG'},
+    {'type': 'ev',      'label': 'Electric (EV)'},
+    {'type': 'hybrid',  'label': 'Hybrid'},
+  ];
+
+  // ── Cities ────────────────────────────────────────────
+  static const List<String> cities = [
+    'Bardhaman',
+    'Kolkata',
+    'Medinipur',
+  ];
+
+  // ── Bonus Options ────────────────────────────────────
+  static const List<int> bonusOptions = [10, 20, 30, 40, 50, 100];
+
+  // ── WebSocket ────────────────────────────────────────
+  static const String wsBaseUrl = 'ws://13.232.171.208:8000';
 
   // ── Services ──────────────────────────────────────────
   static const List<Map<String, dynamic>> services = [

@@ -920,10 +920,15 @@ class WhereToScreen extends StatefulWidget {
 class _WhereToScreenState extends State<WhereToScreen> {
   final _pickupCtrl = TextEditingController(text: 'Connaught Place, New Delhi');
   late TextEditingController _destCtrl;
-  String _step = 'input'; // 'input' | 'confirm'
+  String _step = 'input';
   PaymentMethod _paymentMethod = paymentMethods[0];
   bool _booked = false;
   bool _showPaymentModal = false;
+  String _selectedCity = 'Bardhaman';
+  double _bonusAmount = 0.0;
+  bool _useKCoins = false;
+  int? _tripId;
+  bool _searching = false;
 
   final _quickDests = const [
     PlaceItem(icon: '🏠', label: 'Home',        sub: 'Sector 15, Noida'),
@@ -948,19 +953,101 @@ class _WhereToScreenState extends State<WhereToScreen> {
   @override
   Widget build(BuildContext context) {
     if (_booked) {
-      return BookingSuccessScreen(
-        service: widget.service,
-        destination: _destCtrl.text,
-        payment: _paymentMethod,
-        onDone: widget.onBack,
-      );
+      return _searching
+          ? _buildSearchingState()
+          : BookingSuccessScreen(
+              service: widget.service,
+              destination: _destCtrl.text,
+              payment: _paymentMethod,
+              onDone: widget.onBack,
+            );
     }
 
     if (_step == 'confirm') return _buildConfirmStep();
     return _buildInputStep();
   }
 
-  Widget _buildInputStep() {
+  
+  Widget _buildSearchingState() {
+    final isAmbulance = widget.service.vehicleType == 'ambulance';
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+              Container(
+                width: 80, height: 80,
+                decoration: const BoxDecoration(color: Color(0xFFFFF3E0), shape: BoxShape.circle),
+                child: Center(child: Text(widget.service.icon, style: const TextStyle(fontSize: 40))),
+              ),
+              const SizedBox(height: 20),
+              const Text('Finding your driver...', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
+              const SizedBox(height: 8),
+              Text('Looking for drivers near you', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+              const SizedBox(height: 32),
+              if (!isAmbulance) ...[
+                const Text('No one accepting? Add a bonus!', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8, runSpacing: 8,
+                  alignment: WrapAlignment.center,
+                  children: [10, 20, 30, 40, 50, 100].map((amount) => GestureDetector(
+                    onTap: () async {
+                      if (_tripId == null) return;
+                      try {
+                        await ApiService.addBonus(_tripId!, amount.toDouble());
+                        setState(() => _bonusAmount += amount);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('+₹$amount bonus added!')));
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Failed to add bonus')));
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF3E0),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: const Color(0xFFFF6B35), width: 1.5),
+                      ),
+                      child: Text('+₹$amount', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFFFF6B35))),
+                    ),
+                  )).toList(),
+                ),
+                if (_bonusAmount > 0) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(color: const Color(0xFFFFF3E0), borderRadius: BorderRadius.circular(12)),
+                    child: Text('Total Bonus: ₹$_bonusAmount', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFFFF6B35))),
+                  ),
+                ],
+                const SizedBox(height: 24),
+              ],
+              GestureDetector(
+                onTap: () async {
+                  if (_tripId != null) await ApiService.cancelTrip(_tripId!, 'Cancelled by rider');
+                  RiderSocketService.disconnect();
+                  setState(() { _booked = false; _searching = false; _tripId = null; _bonusAmount = 0; });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                  decoration: BoxDecoration(color: const Color(0xFFFFF3F3), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.red.shade300)),
+                  child: const Text('Cancel Search', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.red)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+Widget _buildInputStep() {
     return Container(
       color: kWhite,
       child: Column(
@@ -1168,6 +1255,53 @@ class _WhereToScreenState extends State<WhereToScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
+                    // City dropdown
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      decoration: BoxDecoration(color: const Color(0xFFFFF3E0), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFFF6B35).withOpacity(0.3))),
+                      child: Row(children: [
+                        const Text('📍', style: TextStyle(fontSize: 18)),
+                        const SizedBox(width: 8),
+                        const Text('City:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                        const SizedBox(width: 8),
+                        Expanded(child: DropdownButtonHideUnderline(child: DropdownButton<String>(
+                          value: _selectedCity,
+                          items: ['Bardhaman','Kolkata','Medinipur'].map((city) => DropdownMenuItem(value: city, child: Text(city, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)))).toList(),
+                          onChanged: (val) => setState(() => _selectedCity = val!),
+                        ))),
+                      ]),
+                    ),
+                    const SizedBox(height: 10),
+                    // K Coin toggle
+                    GestureDetector(
+                      onTap: () => setState(() => _useKCoins = !_useKCoins),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _useKCoins ? const Color(0xFFFFF3E0) : const Color(0xFFF5F5F5),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: _useKCoins ? const Color(0xFFFF6B35) : const Color(0xFFEEEEEE), width: 1.5),
+                        ),
+                        child: Row(children: [
+                          const Text('🪙', style: TextStyle(fontSize: 22)),
+                          const SizedBox(width: 10),
+                          const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text('Use K Coins', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                            Text('100 coins = ₹10 discount', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                          ])),
+                          Container(
+                            width: 44, height: 24,
+                            decoration: BoxDecoration(color: _useKCoins ? const Color(0xFFFF6B35) : Colors.grey[300], borderRadius: BorderRadius.circular(12)),
+                            child: AnimatedAlign(
+                              duration: const Duration(milliseconds: 200),
+                              alignment: _useKCoins ? Alignment.centerRight : Alignment.centerLeft,
+                              child: Container(margin: const EdgeInsets.all(3), width: 18, height: 18, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+                            ),
+                          ),
+                        ]),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
                     // Payment selector
                     GestureDetector(
                       onTap: () => setState(() => _showPaymentModal = true),
@@ -1216,7 +1350,8 @@ class _WhereToScreenState extends State<WhereToScreen> {
     "vehicle_type"  : widget.service.vehicleType,
     "service_type"  : widget.service.category == 'delivery' ? widget.service.name.toLowerCase() : 'ride',
     "payment_method": _paymentMethod.id,
-    "city"          : "Bardhaman",
+    "city"          : _selectedCity,
+    "use_kcoins"    : _useKCoins,
   };
 
   try {
@@ -1227,9 +1362,80 @@ class _WhereToScreenState extends State<WhereToScreen> {
     print(result);
 
     if (result["success"] == true) {
-
-      setState(() => _booked = true);
-
+      setState(() {
+        _booked    = true;
+        _searching = true;
+        _tripId    = result["trip_id"];
+      });
+      final riderId = AuthService.riderId;
+      final token   = AuthService.token;
+      if (riderId != null && token != null) {
+        await RiderSocketService.connect(riderId, token);
+        RiderSocketService.onMessage = (data) {
+          if (data["type"] == "driver_assigned") {
+            setState(() {
+              _searching = false;
+            });
+            // Show driver details
+            showModalBottomSheet(
+              context: context,
+              backgroundColor: Colors.white,
+              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+              builder: (_) => Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  const Text('Driver Assigned! 🎉', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
+                  const SizedBox(height: 16),
+                  Row(children: [
+                    CircleAvatar(radius: 30, backgroundColor: const Color(0xFFFFF3E0),
+                      child: Text(data["driver"]?["name"]?.toString().substring(0,1) ?? 'D', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xFFFF6B35)))),
+                    const SizedBox(width: 16),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(data["driver"]?["name"] ?? 'Driver', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                      Text(data["driver"]?["phone"] ?? '', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                    ])),
+                    // Call button
+                    GestureDetector(
+                      onTap: () {},
+                      child: Container(
+                        width: 44, height: 44,
+                        decoration: BoxDecoration(color: const Color(0xFFFFF3E0), borderRadius: BorderRadius.circular(12)),
+                        child: const Center(child: Text('📞', style: TextStyle(fontSize: 22))),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // SOS button
+                    GestureDetector(
+                      onTap: () async {
+                        if (_tripId != null) {
+                          await ApiService.raiseSOS(_tripId!);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('🚨 SOS Alert raised! Help is on the way.'), backgroundColor: Colors.red));
+                        }
+                      },
+                      child: Container(
+                        width: 44, height: 44,
+                        decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.red.shade300)),
+                        child: const Center(child: Text('🆘', style: TextStyle(fontSize: 22))),
+                      ),
+                    ),
+                  ]),
+                  const SizedBox(height: 16),
+                  SizedBox(width: double.infinity, child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6B35), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 14)),
+                    child: const Text('OK', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+                  )),
+                ]),
+              ),
+            );
+          } else if (data["type"] == "no_driver_found") {
+            setState(() { _booked = false; _searching = false; });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("No driver found nearby. Try again.")));
+          }
+        };
+      }
     } else {
 
       ScaffoldMessenger.of(context).showSnackBar(

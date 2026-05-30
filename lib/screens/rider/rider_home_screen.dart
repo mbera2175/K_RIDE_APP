@@ -18,8 +18,9 @@ const kMuted = Color(0xFF9E9E9E);
 class ServiceItem {
   final int id;
   final String name;
-  final String icon; // emoji or "toto"
+  final String icon;
   final String category;
+  final String vehicleType;
   final String? tag;
   final Color color;
   final Color accent;
@@ -30,6 +31,7 @@ class ServiceItem {
     required this.name,
     required this.icon,
     required this.category,
+    required this.vehicleType,
     this.tag,
     required this.color,
     required this.accent,
@@ -77,21 +79,21 @@ class PlaceItem {
 
 // ── Static data ──
 const services = [
-  ServiceItem(id: 1, name: 'Cab AC',     icon: '🚖', category: 'ride',     tag: null,        color: kOrangeLight, accent: kOrange,           bikeOnly: false),
-  ServiceItem(id: 2, name: 'Cab Non-AC', icon: '🚕', category: 'ride',     tag: 'Budget',    color: kOrangeLight, accent: kOrange,           bikeOnly: false),
-  ServiceItem(id: 3, name: 'Bike',       icon: '🏍️', category: 'ride',     tag: 'Fastest',   color: kOrangeLight, accent: kOrange,           bikeOnly: false),
-  ServiceItem(id: 4, name: 'Three Wheeler', icon: '🛺', category: 'ride',   tag: 'Auto/Toto', color: kOrangeLight, accent: kOrange,           bikeOnly: false),
-  ServiceItem(id: 6, name: 'Ambulance',  icon: '🚑', category: 'ride',     tag: 'Emergency', color: Color(0xFFFFF0F0), accent: Color(0xFFE53935), bikeOnly: false),
-  ServiceItem(id: 7, name: 'Food',       icon: '🍱', category: 'delivery', tag: 'Bike only', color: kOrangeLight, accent: kOrange,           bikeOnly: true),
-  ServiceItem(id: 8, name: 'Parcel',     icon: '📦', category: 'delivery', tag: 'Bike only', color: Color(0xFFF3F0FF), accent: Color(0xFF5E35B1), bikeOnly: true),
-  ServiceItem(id: 9, name: 'Medicine',   icon: '💊', category: 'delivery', tag: 'Bike only', color: Color(0xFFF0F8FF), accent: Color(0xFF0277BD), bikeOnly: true),
+  ServiceItem(id: 1, name: 'AC Cab',     icon: '🚖', category: 'ride',     vehicleType: 'ac_cab',     tag: null,        color: kOrangeLight, accent: kOrange,           bikeOnly: false),
+  ServiceItem(id: 2, name: 'Non-AC Cab', icon: '🚕', category: 'ride',     vehicleType: 'non_ac_cab', tag: 'Budget',    color: kOrangeLight, accent: kOrange,           bikeOnly: false),
+  ServiceItem(id: 3, name: 'Bike',       icon: '🏍️', category: 'ride',     vehicleType: 'bike',       tag: 'Fastest',   color: kOrangeLight, accent: kOrange,           bikeOnly: false),
+  ServiceItem(id: 4, name: 'Auto',       icon: '🛺', category: 'ride',     vehicleType: 'auto',       tag: null,        color: kOrangeLight, accent: kOrange,           bikeOnly: false),
+  ServiceItem(id: 5, name: 'Toto',       icon: '🛵', category: 'ride',     vehicleType: 'toto',       tag: 'EV',        color: Color(0xFFF0FFF4), accent: Color(0xFF2E7D32), bikeOnly: false),
+  ServiceItem(id: 6, name: 'Ambulance',  icon: '🚑', category: 'ride',     vehicleType: 'ambulance',  tag: 'Emergency', color: Color(0xFFFFF0F0), accent: Color(0xFFE53935), bikeOnly: false),
+  ServiceItem(id: 7, name: 'Food',       icon: '🍱', category: 'delivery', vehicleType: 'bike',       tag: 'Bike only', color: kOrangeLight, accent: kOrange,           bikeOnly: true),
+  ServiceItem(id: 8, name: 'Parcel',     icon: '📦', category: 'delivery', vehicleType: 'bike',       tag: 'Bike only', color: Color(0xFFF3F0FF), accent: Color(0xFF5E35B1), bikeOnly: true),
+  ServiceItem(id: 9, name: 'Medicine',   icon: '💊', category: 'delivery', vehicleType: 'bike',       tag: 'Bike only', color: Color(0xFFF0F8FF), accent: Color(0xFF0277BD), bikeOnly: true),
 ];
 
 const paymentMethods = [
   PaymentMethod(id: 'cash',   icon: '💵', label: 'Cash',     sub: 'Pay driver directly'),
   PaymentMethod(id: 'upi',    icon: '📱', label: 'UPI',      sub: 'GPay, PhonePe, Paytm'),
-  PaymentMethod(id: 'card',   icon: '💳', label: 'Card',     sub: 'Credit / Debit card'),
-  PaymentMethod(id: 'wallet', icon: '👛', label: 'K Wallet', sub: 'Balance: ₹240'),
+  PaymentMethod(id: 'wallet', icon: '👛', label: 'K Wallet', sub: 'Use wallet balance'),
 ];
 
 const promos = [
@@ -362,7 +364,7 @@ class ServiceIconWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (icon == 'three_wheeler') return AutoIcon(size: size);
+    if (icon == 'auto') return AutoIcon(size: size);
     if (icon == 'toto') return TotoIcon(size: size);
     return Text(icon, style: TextStyle(fontSize: size, fontFamily: 'Roboto', fontFamilyFallback: const ['Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']));
   }
@@ -1206,16 +1208,15 @@ class _WhereToScreenState extends State<WhereToScreen> {
 
   final body = {
     "pickup_address": _pickupCtrl.text,
-    "drop_address": _destCtrl.text,
-
-    "pickup_lat": 22.5726,
-    "pickup_lng": 88.3639,
-
-    "drop_lat": 22.5850,
-    "drop_lng": 88.3950,
-
-    "vehicle_type": widget.service.name.toLowerCase(),
+    "drop_address"  : _destCtrl.text,
+    "pickup_lat"    : 22.5726,
+    "pickup_lng"    : 88.3639,
+    "drop_lat"      : 22.5850,
+    "drop_lng"      : 88.3950,
+    "vehicle_type"  : widget.service.vehicleType,
+    "service_type"  : widget.service.category == 'delivery' ? widget.service.name.toLowerCase() : 'ride',
     "payment_method": _paymentMethod.id,
+    "city"          : "Bardhaman",
   };
 
   try {

@@ -1189,6 +1189,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
 
         await DriverSocketService.connect(
           AuthService.driverId,
+          AuthService.token,
         );
 
         DriverSocketService.onMessage = (data) {

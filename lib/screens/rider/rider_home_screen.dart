@@ -1564,7 +1564,95 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     setState(() => _activeScreen = (service: service, prefilledDest: prefilledDest));
   }
 
-  Widget _buildProfileTab() {
+  
+  Widget _buildWalletTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('My Wallet', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
+          const SizedBox(height: 20),
+
+          // Wallet Balance Card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Color(0xFFFF6B35), Color(0xFFFF8C42)]),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Wallet Balance', style: TextStyle(fontSize: 13, color: Colors.white70)),
+              const SizedBox(height: 8),
+              FutureBuilder<Map<String,dynamic>>(
+                future: ApiService.getWalletBalance(),
+                builder: (ctx, snap) {
+                  final bal = snap.data?['wallet_balance'] ?? 0.0;
+                  return Text('₹${bal.toStringAsFixed(2)}',
+                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white));
+                },
+              ),
+            ]),
+          ),
+          const SizedBox(height: 16),
+
+          // K Coin Card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF3E0),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFFF6B35).withOpacity(0.3)),
+            ),
+            child: Row(children: [
+              const Text('🪙', style: TextStyle(fontSize: 36)),
+              const SizedBox(width: 16),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('K Coins', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
+                const SizedBox(height: 4),
+                FutureBuilder<Map<String,dynamic>>(
+                  future: ApiService.getMe(),
+                  builder: (ctx, snap) {
+                    final coins = snap.data?['kcoin_balance'] ?? 0;
+                    return Text('$coins coins', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xFFFF6B35)));
+                  },
+                ),
+                const SizedBox(height: 4),
+                const Text('100 coins = ₹10 discount on next ride', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              ])),
+            ]),
+          ),
+          const SizedBox(height: 24),
+
+          const Text('How to earn K Coins?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
+          const SizedBox(height: 12),
+          _coinTip('🚗', 'Complete a ride', 'Every ₹10 = 1 K Coin'),
+          _coinTip('👥', 'Refer a friend', 'Bonus coins on referral'),
+          _coinTip('🎁', 'Special offers', 'Watch for bonus events'),
+        ],
+      ),
+    );
+  }
+
+  Widget _coinTip(String icon, String title, String sub) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(14)),
+      child: Row(children: [
+        Text(icon, style: const TextStyle(fontSize: 24)),
+        const SizedBox(width: 12),
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
+          Text(sub, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        ]),
+      ]),
+    );
+  }
+
+Widget _buildProfileTab() {
     return Column(
       children: [
         Container(
@@ -1804,6 +1892,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               SafeArea(
                 child: _buildProfileTab(),
               )
+            else if (_activeTab == 'wallet')
+              SafeArea(child: _buildWalletTab())
             else
               const SafeArea(
                 child: Center(child: Text('Coming Soon! 🚀', style: TextStyle(fontSize: 18, color: kMuted))),

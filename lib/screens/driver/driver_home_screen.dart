@@ -567,9 +567,10 @@ class ActiveTripPanel extends StatelessWidget {
   const ActiveTripPanel({super.key, required this.trip, required this.onAction});
 
   static const _steps = [
-    ('accepted', 'Head to Pickup',    'arrived',  "I've Arrived",  kInfo,    '🚗'),
-    ('arrived',  'Waiting for Rider', 'start',    'Start Trip',    kOrange,  '⏳'),
-    ('started',  'Trip in Progress',  'complete', 'Complete Trip', kSuccess, '🛣️'),
+    ('accepted',    'Head to Pickup',    'arrived',  "I've Arrived",  kInfo,    '🚗'),
+    ('arrived',     'Waiting for Rider', 'start',    'Start Trip',    kOrange,  '⏳'),
+    ('started',     'Trip in Progress',  'complete', 'Complete Trip', kSuccess, '🛣️'),
+    ('driver_assigned', 'Head to Pickup','arrived',  "I've Arrived",  kInfo,    '🚗'),
   ];
 
   @override
@@ -718,6 +719,37 @@ class ActiveTripPanel extends StatelessWidget {
                 child: Text('$btn →', style: GoogleFonts.sora(fontSize: 16, fontWeight: FontWeight.w700)),
               ),
             ),
+            const SizedBox(height: 10),
+            // Cash + SOS buttons
+            Row(children: [
+              if (trip.status == 'completed') Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => onAction('cash'),
+                  icon: const Text('💵', style: TextStyle(fontSize: 18)),
+                  label: const Text('Cash Collected'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2E7D32),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              if (trip.status == 'completed') const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => onAction('sos'),
+                  icon: const Text('🆘', style: TextStyle(fontSize: 18)),
+                  label: const Text('SOS'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red[700],
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ]),
           ],
         ),
       ),
@@ -1324,7 +1356,15 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
     }
   }
 
-  void _handleDecline() {
+  Future<void> _handleDecline() async {
+    if (_incomingTrip != null) {
+      try {
+        await ApiService.rejectTrip(_incomingTrip!.id);
+      } catch (e) {
+        debugPrint('Reject trip error: $e');
+      }
+    }
+    await RideAlertService.stopAlert();
     setState(() => _incomingTrip = null);
   }
 
@@ -1333,9 +1373,14 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
     final tripId = _activeTrip!.id;
     Map<String, dynamic> res;
     switch (action) {
-      case 'arrived':  res = await ApiService.markArrived(tripId);  break;
-      case 'start':    res = await ApiService.startTrip(tripId);    break;
-      case 'complete': res = await ApiService.completeTrip(tripId); break;
+      case 'arrived':  res = await ApiService.markArrived(tripId);       break;
+      case 'start':    res = await ApiService.startTrip(tripId);         break;
+      case 'complete': res = await ApiService.completeTrip(tripId);      break;
+      case 'cash':     res = await ApiService.markCashCollected(tripId); break;
+      case 'sos':
+        await ApiService.raiseSOS(tripId);
+        _showSnack('🚨 SOS Alert raised! Help is on the way.', isError: false);
+        return;
       default: return;
     }
     if (res['success']) {

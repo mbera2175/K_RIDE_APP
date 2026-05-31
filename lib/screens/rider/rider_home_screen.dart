@@ -1425,11 +1425,24 @@ Widget _buildInputStep() {
                     ),
                   ]),
                   const SizedBox(height: 16),
-                  SizedBox(width: double.infinity, child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6B35), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 14)),
-                    child: const Text('OK', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
-                  )),
+                  Row(children: [
+                    Expanded(child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => TripChatScreen(tripId: _tripId!, onClose: () => Navigator.pop(context)),
+                        ));
+                      },
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFF3E0), foregroundColor: const Color(0xFFFF6B35), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 14)),
+                      child: const Text('💬 Chat'),
+                    )),
+                    const SizedBox(width: 8),
+                    Expanded(child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6B35), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 14)),
+                      child: const Text('OK', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+                    )),
+                  ]),
                 ]),
               ),
             );
@@ -1570,6 +1583,172 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
 
   
   
+// ════════════════════════════════════════════════════════
+//  IN-APP CHAT SCREEN
+// ════════════════════════════════════════════════════════
+
+class TripChatScreen extends StatefulWidget {
+  final int tripId;
+  final VoidCallback onClose;
+  const TripChatScreen({super.key, required this.tripId, required this.onClose});
+
+  @override
+  State<TripChatScreen> createState() => _TripChatScreenState();
+}
+
+class _TripChatScreenState extends State<TripChatScreen> {
+  final _msgCtrl = TextEditingController();
+  List<Map<String,dynamic>> _messages = [];
+  List<Map<String,dynamic>> _quickMsgs = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+    // Listen for new messages via WebSocket
+    RiderSocketService.onMessage = (data) {
+      if (data['type'] == 'chat_message') {
+        setState(() => _messages.add(data));
+      }
+    };
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final msgs  = await ApiService.getChatMessages(widget.tripId);
+      final quick = await ApiService.getQuickMessages();
+      setState(() {
+        _messages  = List<Map<String,dynamic>>.from(msgs['messages'] ?? []);
+        _quickMsgs = List<Map<String,dynamic>>.from(quick['quick_messages'] ?? []);
+        _loading   = false;
+      });
+    } catch (e) {
+      setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _sendMessage(String text, {String type = 'text', String? quickKey}) async {
+    try {
+      await ApiService.sendChatMessage(widget.tripId, type, text, quickKey);
+      setState(() => _messages.add({
+        'sender_id'   : -1, // current user
+        'message_text': text,
+        'created_at'  : DateTime.now().toIso8601String(),
+        'isMe'        : true,
+      }));
+      _msgCtrl.clear();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to send message')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text('Chat with Driver', style: TextStyle(color: Color(0xFF1A1A2E), fontWeight: FontWeight.w800)),
+        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A2E)), onPressed: widget.onClose),
+      ),
+      body: Column(children: [
+        // Quick messages
+        if (_quickMsgs.isNotEmpty)
+          Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _quickMsgs.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (ctx, i) {
+                final q = _quickMsgs[i];
+                return GestureDetector(
+                  onTap: () => _sendMessage(q['text_bn'] ?? q['text_en'], type: 'quick', quickKey: q['key']),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF3E0),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFFF6B35).withOpacity(0.5)),
+                    ),
+                    child: Text(q['text_bn'] ?? q['text_en'] ?? '', style: const TextStyle(fontSize: 13, color: Color(0xFFFF6B35))),
+                  ),
+                );
+              },
+            ),
+          ),
+
+        // Messages
+        Expanded(
+          child: _loading
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF6B35)))
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _messages.length,
+                  itemBuilder: (ctx, i) {
+                    final m   = _messages[i];
+                    final isMe = m['isMe'] == true;
+                    return Align(
+                      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+                        decoration: BoxDecoration(
+                          color: isMe ? const Color(0xFFFF6B35) : const Color(0xFFF5F5F5),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(m['message_text'] ?? '',
+                          style: TextStyle(fontSize: 14, color: isMe ? Colors.white : const Color(0xFF1A1A2E))),
+                      ),
+                    );
+                  },
+                ),
+        ),
+
+        // Input
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]),
+          child: Row(children: [
+            Expanded(
+              child: TextField(
+                controller: _msgCtrl,
+                decoration: InputDecoration(
+                  hintText: 'Type a message...',
+                  filled: true,
+                  fillColor: const Color(0xFFF5F5F5),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () { if (_msgCtrl.text.trim().isNotEmpty) _sendMessage(_msgCtrl.text.trim()); },
+              child: Container(
+                width: 48, height: 48,
+                decoration: const BoxDecoration(color: Color(0xFFFF6B35), shape: BoxShape.circle),
+                child: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
+              ),
+            ),
+          ]),
+        ),
+      ]),
+    );
+  }
+
+  @override
+  void dispose() {
+    _msgCtrl.dispose();
+    super.dispose();
+  }
+}
+
 // ════════════════════════════════════════════════════════
 //  TRIP RECEIPT SCREEN
 // ════════════════════════════════════════════════════════

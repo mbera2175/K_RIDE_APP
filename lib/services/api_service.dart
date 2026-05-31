@@ -459,6 +459,19 @@ class ApiService {
   }
 
   // ═══════════════════════════════════════════════════════
+  //  CANCEL TRIP (RIDER)
+  // ═══════════════════════════════════════════════════════
+
+  static Future<Map<String, dynamic>> cancelTrip(int tripId, String reason) async {
+    final res = await http.patch(
+      Uri.parse('$_base/trips/$tripId/cancel'),
+      headers: _authHeaders,
+      body: jsonEncode({'reason': reason}),
+    ).timeout(_timeout);
+    return _handle(res);
+  }
+
+  // ═══════════════════════════════════════════════════════
   //  PRICING
   // ═══════════════════════════════════════════════════════
 

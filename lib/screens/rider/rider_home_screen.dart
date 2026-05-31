@@ -25,6 +25,7 @@ class ServiceItem {
   final Color color;
   final Color accent;
   final bool bikeOnly;
+  final bool isEV;
 
   const ServiceItem({
     required this.id,
@@ -36,6 +37,7 @@ class ServiceItem {
     required this.color,
     required this.accent,
     required this.bikeOnly,
+    this.isEV = false,
   });
 }
 
@@ -85,6 +87,7 @@ const services = [
   ServiceItem(id: 4, name: 'Auto',       icon: '🛺', category: 'ride',     vehicleType: 'auto',       tag: null,        color: kOrangeLight, accent: kOrange,           bikeOnly: false),
   ServiceItem(id: 5, name: 'Toto',       icon: '🛵', category: 'ride',     vehicleType: 'toto',       tag: 'EV',        color: Color(0xFFF0FFF4), accent: Color(0xFF2E7D32), bikeOnly: false),
   ServiceItem(id: 6, name: 'Ambulance',  icon: '🚑', category: 'ride',     vehicleType: 'ambulance',  tag: 'Emergency', color: Color(0xFFFFF0F0), accent: Color(0xFFE53935), bikeOnly: false),
+  ServiceItem(id: 10, name: 'EV Ride',   icon: '⚡', category: 'ride',     vehicleType: 'ac_cab',     tag: 'Eco', color: Color(0xFFF0FFF4), accent: Color(0xFF2E7D32), bikeOnly: false, isEV: true),
   ServiceItem(id: 7, name: 'Food',       icon: '🍱', category: 'delivery', vehicleType: 'bike',       tag: 'Bike only', color: kOrangeLight, accent: kOrange,           bikeOnly: true),
   ServiceItem(id: 8, name: 'Parcel',     icon: '📦', category: 'delivery', vehicleType: 'bike',       tag: 'Bike only', color: Color(0xFFF3F0FF), accent: Color(0xFF5E35B1), bikeOnly: true),
   ServiceItem(id: 9, name: 'Medicine',   icon: '💊', category: 'delivery', vehicleType: 'bike',       tag: 'Bike only', color: Color(0xFFF0F8FF), accent: Color(0xFF0277BD), bikeOnly: true),
@@ -1352,6 +1355,7 @@ Widget _buildInputStep() {
     "payment_method": _paymentMethod.id,
     "city"          : _selectedCity,
     "use_kcoins"    : _useKCoins,
+    "is_ev_request" : widget.service.isEV,
   };
 
   try {
@@ -1565,7 +1569,145 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
   }
 
   
-  Widget _buildWalletTab() {
+  
+// ════════════════════════════════════════════════════════
+//  TRIP RECEIPT SCREEN
+// ════════════════════════════════════════════════════════
+
+class TripReceiptScreen extends StatefulWidget {
+  final int tripId;
+  final VoidCallback onClose;
+  const TripReceiptScreen({super.key, required this.tripId, required this.onClose});
+
+  @override
+  State<TripReceiptScreen> createState() => _TripReceiptScreenState();
+}
+
+class _TripReceiptScreenState extends State<TripReceiptScreen> {
+  Map<String, dynamic>? _receipt;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReceipt();
+  }
+
+  Future<void> _loadReceipt() async {
+    try {
+      final res = await ApiService.getTripReceipt(widget.tripId);
+      if (res['success'] == true) {
+        setState(() { _receipt = res; _loading = false; });
+      }
+    } catch (e) {
+      setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text('Trip Receipt', style: TextStyle(color: Color(0xFF1A1A2E), fontWeight: FontWeight.w800)),
+        leading: IconButton(icon: const Icon(Icons.close, color: Color(0xFF1A1A2E)), onPressed: widget.onClose),
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF6B35)))
+          : _receipt == null
+              ? const Center(child: Text('Receipt not available'))
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(children: [
+                    // Success icon
+                    Container(
+                      width: 70, height: 70,
+                      decoration: const BoxDecoration(color: Color(0xFFF0FFF4), shape: BoxShape.circle),
+                      child: const Center(child: Text('✅', style: TextStyle(fontSize: 36))),
+                    ),
+                    const SizedBox(height: 12),
+                    Text('Trip Completed!', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
+                    Text(_receipt!['trip_code'] ?? '', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                    const SizedBox(height: 24),
+
+                    // Route
+                    _receiptRow('📍 Pickup', _receipt!['pickup_address'] ?? ''),
+                    _receiptRow('🏁 Drop', _receipt!['drop_address'] ?? ''),
+                    const Divider(height: 24),
+
+                    // Trip details
+                    _receiptRow('Distance', '${_receipt!['distance_km'] ?? 0} km'),
+                    _receiptRow('Duration', '${_receipt!['duration_min'] ?? 0} min'),
+                    _receiptRow('Vehicle', _receipt!['vehicle_type']?.toString().replaceAll('_', ' ').toUpperCase() ?? ''),
+                    const Divider(height: 24),
+
+                    // Fare breakdown
+                    _receiptRow('Base Fare', '₹${_receipt!['base_fare'] ?? 0}'),
+                    if ((_receipt!['surge_multiplier'] ?? 1.0) > 1.0)
+                      _receiptRow('Surge (${_receipt!['surge_multiplier']}x)', ''),
+                    if ((_receipt!['bonus_amount'] ?? 0) > 0)
+                      _receiptRow('Bonus Added', '+₹${_receipt!['bonus_amount']}'),
+                    if ((_receipt!['promo_discount'] ?? 0) > 0)
+                      _receiptRow('Promo (${_receipt!['promo_code']})', '-₹${_receipt!['promo_discount']}', color: Colors.green),
+                    if ((_receipt!['kcoin_discount'] ?? 0) > 0)
+                      _receiptRow('K Coins Used (${_receipt!['kcoin_used']})', '-₹${_receipt!['kcoin_discount']}', color: Colors.green),
+                    const Divider(height: 24),
+
+                    // Total
+                    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                      const Text('Total Paid', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
+                      Text('₹${_receipt!['actual_fare'] ?? 0}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFFFF6B35))),
+                    ]),
+                    const SizedBox(height: 8),
+                    _receiptRow('Payment Method', _receipt!['payment_method']?.toString().toUpperCase() ?? ''),
+                    const SizedBox(height: 24),
+
+                    // Driver info
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(14)),
+                      child: Row(children: [
+                        CircleAvatar(radius: 24, backgroundColor: const Color(0xFFFFF3E0),
+                          child: Text(_receipt!['driver']?['name']?.toString().substring(0,1) ?? 'D',
+                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFFFF6B35)))),
+                        const SizedBox(width: 12),
+                        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(_receipt!['driver']?['name'] ?? 'Driver', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                          Text(_receipt!['driver']?['vehicle_type']?.toString().replaceAll('_',' ') ?? '', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                        ]),
+                      ]),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Close button
+                    SizedBox(width: double.infinity, child: ElevatedButton(
+                      onPressed: widget.onClose,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFF6B35),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: const Text('Done', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+                    )),
+                  ]),
+                ),
+    );
+  }
+
+  Widget _receiptRow(String label, String value, {Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+        Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color ?? const Color(0xFF1A1A2E))),
+      ]),
+    );
+  }
+}
+
+Widget _buildWalletTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(

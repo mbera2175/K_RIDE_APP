@@ -26,10 +26,10 @@ dependencies:
   cached_network_image: ^3.3.1
   cupertino_icons: ^1.0.6
 
-  # Location & Maps (MapMyIndia - add when API key ready)
-  # mappls_gl: ^1.0.0        # Uncomment when MapMyIndia key ready
-  geolocator: ^11.0.0        # For GPS location
-  geocoding: ^3.0.0          # Keep as fallback
+  # Location & Maps ✅
+  mappls_gl: ^2.0.3
+  geolocator: ^11.0.0
+  geocoding: ^3.0.0
 
   # Auth & Phone
   intl_phone_field: ^3.2.0

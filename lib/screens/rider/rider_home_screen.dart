@@ -2081,7 +2081,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
 
   Widget _buildWalletTab() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2138,7 +2138,6 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           const Text('How to earn K Coins?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
           const SizedBox(height: 12),
           _coinTip('🚗', 'Complete a ride', 'Every ₹10 = 1 K Coin'),
-          _coinTip('👥', 'Refer a friend', 'Bonus coins on referral'),
           _coinTip('🎁', 'Special offers', 'Watch for bonus events'),
         ],
       ),
@@ -2161,77 +2160,181 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     );
   }
 
-  Widget _buildProfileTab() {
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-          child: Column(
-            children: [
-              GestureDetector(
-                onTap: _pickProfileImage,
-                child: Stack(
-                  alignment: Alignment.bottomRight,
-                  children: [
-                    Container(
-                      width: 100, height: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: const LinearGradient(colors: [kOrange, kOrangeDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                        boxShadow: [BoxShadow(color: kOrange.withOpacity(0.3), blurRadius: 16, offset: const Offset(0, 4))],
-                      ),
-                      child: ClipOval(
-                        child: AuthService.profilePic.isNotEmpty
-                            ? (AuthService.profilePic.startsWith('http')
-                                ? Image.network(
-                                    AuthService.profilePic,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: kWhite))),
-                                  )
-                                : Image.file(
-                                    File(AuthService.profilePic),
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: kWhite))),
-                                  ))
-                            : Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: kWhite))),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(color: kOrange, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))]),
-                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(AuthService.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: kDark)),
-              const SizedBox(height: 4),
-              Text('+91 ${AuthService.phone}', style: const TextStyle(fontSize: 14, color: kMuted)),
-              const SizedBox(height: 40),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    await AuthService.logout();
-                    if (!mounted) return;
-                    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const RoleSelectionScreen()), (r) => false);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFF0F0),
-                    foregroundColor: const Color(0xFFE53935),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    elevation: 0,
-                  ),
-                  child: const Text('Log Out', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                ),
-              ),
-            ],
-          ),
+  Widget _profileOptionTile({
+    required String icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: kGray,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFEEEEEE), width: 1),
         ),
-      ],
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: kWhite,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+              ),
+              child: Center(child: Text(icon, style: const TextStyle(fontSize: 20))),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kDark)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: const TextStyle(fontSize: 12, color: kMuted)),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded, color: kMuted, size: 14),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTap: _pickProfileImage,
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      Container(
+                        width: 100, height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(colors: [kOrange, kOrangeDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                          boxShadow: [BoxShadow(color: kOrange.withOpacity(0.3), blurRadius: 16, offset: const Offset(0, 4))],
+                        ),
+                        child: ClipOval(
+                          child: AuthService.profilePic.isNotEmpty
+                              ? (AuthService.profilePic.startsWith('http')
+                                  ? Image.network(
+                                      AuthService.profilePic,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: kWhite))),
+                                    )
+                                  : Image.file(
+                                      File(AuthService.profilePic),
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: kWhite))),
+                                    ))
+                              : Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: kWhite))),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(color: kOrange, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))]),
+                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(AuthService.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: kDark)),
+                const SizedBox(height: 4),
+                Text('+91 ${AuthService.phone}', style: const TextStyle(fontSize: 14, color: kMuted)),
+                const SizedBox(height: 32),
+                _profileOptionTile(
+                  icon: '👥',
+                  title: 'Refer a Friend',
+                  subtitle: 'Get bonus coins on every successful referral',
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Referral link copied to clipboard! 🎁')),
+                    );
+                  },
+                ),
+                _profileOptionTile(
+                  icon: '💬',
+                  title: 'Support & Help',
+                  subtitle: 'Connect with support or browse FAQs',
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.white,
+                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                      builder: (_) => Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFDDDDDD), borderRadius: BorderRadius.circular(99))),
+                            const SizedBox(height: 20),
+                            const Text('Contact Support 💬', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: kDark)),
+                            const SizedBox(height: 12),
+                            const Text('Need assistance with your ride or delivery?', style: TextStyle(fontSize: 14, color: kMuted), textAlign: TextAlign.center),
+                            const SizedBox(height: 24),
+                            _profileOptionTile(
+                              icon: '📞',
+                              title: 'Call Support Helpline',
+                              subtitle: 'Instant phone support (24/7)',
+                              onTap: () {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Calling Helpline: +91 1800-KRIDE 📞')));
+                              },
+                            ),
+                            _profileOptionTile(
+                              icon: '✉️',
+                              title: 'Email support',
+                              subtitle: 'support@kride.app',
+                              onTap: () {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening email compose ✉️')));
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      await AuthService.logout();
+                      if (!mounted) return;
+                      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const RoleSelectionScreen()), (r) => false);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFF0F0),
+                      foregroundColor: const Color(0xFFE53935),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
+                    ),
+                    child: const Text('Log Out', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

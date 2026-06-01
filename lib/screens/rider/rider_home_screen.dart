@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../services/auth_service.dart';
 import '../../services/api_service.dart';
 import '../../services/rider_socket_service.dart';
@@ -83,7 +85,7 @@ class PlaceItem {
 
 // ── Static data ──
 const services = [
-  ServiceItem(id: 1, name: 'AC Cab',     icon: '🚖', category: 'ride',     vehicleType: 'ac_cab',     tag: null,        color: kOrangeLight, accent: kOrange,           bikeOnly: false),
+  ServiceItem(id: 1, name: 'AC Cab',     icon: '🚖', category: 'ride',     vehicleType: 'ac_cab',     tag: 'Comfortable', color: kOrangeLight, accent: kOrange,           bikeOnly: false),
   ServiceItem(id: 2, name: 'Non-AC Cab', icon: '🚕', category: 'ride',     vehicleType: 'non_ac_cab', tag: 'Budget',    color: kOrangeLight, accent: kOrange,           bikeOnly: false),
   ServiceItem(id: 3, name: 'Bike',       icon: '🏍️', category: 'ride',     vehicleType: 'bike',       tag: 'Fastest',   color: kOrangeLight, accent: kOrange,           bikeOnly: false),
   ServiceItem(id: 4, name: 'Auto',       icon: '🛺', category: 'ride',     vehicleType: 'auto',       tag: null,        color: kOrangeLight, accent: kOrange,           bikeOnly: false),
@@ -697,6 +699,18 @@ class SeeAllModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isRide = title.toLowerCase() == 'ride';
+    ServiceItem? evRide;
+    try {
+      if (isRide) {
+        evRide = items.firstWhere((s) => s.id == 10);
+      }
+    } catch (_) {}
+
+    final gridItems = isRide && evRide != null
+        ? items.where((s) => s.id != 10).toList()
+        : items;
+
     return GestureDetector(
       onTap: onClose,
       child: Container(
@@ -721,13 +735,107 @@ class SeeAllModal extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
+                if (isRide && evRide != null) ...[
+                  GestureDetector(
+                    onTap: () { onSelect(evRide!); onClose(); },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFF81C784).withOpacity(0.5), width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF2E7D32).withOpacity(0.08),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF2E7D32).withOpacity(0.1),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                )
+                              ],
+                            ),
+                            child: const Center(
+                              child: Text('⚡', style: TextStyle(fontSize: 24)),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Text(
+                                      'EV Ride',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF1B5E20),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF2E7D32),
+                                        borderRadius: BorderRadius.circular(99),
+                                      ),
+                                      child: const Text(
+                                        'Eco',
+                                        style: TextStyle(
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  'one step closer to the better world',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF388E3C),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF2E7D32), size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
                 Flexible(
                   child: GridView.builder(
                     shrinkWrap: true,
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 20, mainAxisSpacing: 20, childAspectRatio: 0.9),
-                    itemCount: items.length,
+                    itemCount: gridItems.length,
                     itemBuilder: (_, i) {
-                      final s = items[i];
+                      final s = gridItems[i];
                       return GestureDetector(
                         onTap: () { onSelect(s); onClose(); },
                         child: Column(
@@ -1185,6 +1293,7 @@ class _WhereToScreenState extends State<WhereToScreen> {
   bool _booked = false;
   bool _showPaymentModal = false;
   String _selectedCity = 'Bardhaman';
+  late String _selectedVehicleType;
   double _bonusAmount = 0.0;
   bool _useKCoins = false;
   int? _tripId;
@@ -1201,6 +1310,10 @@ class _WhereToScreenState extends State<WhereToScreen> {
   void initState() {
     super.initState();
     _destCtrl = TextEditingController(text: widget.prefilledDest);
+    final initialVehicle = widget.service.vehicleType;
+    _selectedVehicleType = ['ac_cab', 'non_ac_cab', 'bike', 'auto', 'toto'].contains(initialVehicle)
+        ? initialVehicle
+        : 'ac_cab';
   }
 
   @override
@@ -1506,14 +1619,20 @@ class _WhereToScreenState extends State<WhereToScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                       decoration: BoxDecoration(color: const Color(0xFFFFF3E0), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFFF6B35).withOpacity(0.3))),
                       child: Row(children: [
-                        const Text('📍', style: TextStyle(fontSize: 18)),
+                        const Text('🚗', style: TextStyle(fontSize: 18)),
                         const SizedBox(width: 8),
-                        const Text('City:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                        const Text('Vehicle:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                         const SizedBox(width: 8),
                         Expanded(child: DropdownButtonHideUnderline(child: DropdownButton<String>(
-                          value: _selectedCity,
-                          items: ['Bardhaman', 'Kolkata', 'Medinipur'].map((city) => DropdownMenuItem(value: city, child: Text(city, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)))).toList(),
-                          onChanged: (val) => setState(() => _selectedCity = val!),
+                          value: _selectedVehicleType,
+                          items: const [
+                            DropdownMenuItem(value: 'ac_cab', child: Text('AC Cab')),
+                            DropdownMenuItem(value: 'non_ac_cab', child: Text('Non-AC Cab')),
+                            DropdownMenuItem(value: 'bike', child: Text('Bike')),
+                            DropdownMenuItem(value: 'auto', child: Text('Auto')),
+                            DropdownMenuItem(value: 'toto', child: Text('Toto')),
+                          ],
+                          onChanged: (val) => setState(() => _selectedVehicleType = val!),
                         ))),
                       ]),
                     ),
@@ -1589,7 +1708,7 @@ class _WhereToScreenState extends State<WhereToScreen> {
                             "pickup_lng": 88.3639,
                             "drop_lat": 22.5850,
                             "drop_lng": 88.3950,
-                            "vehicle_type": widget.service.vehicleType,
+                            "vehicle_type": _selectedVehicleType,
                             "service_type": widget.service.category == 'delivery' ? widget.service.name.toLowerCase() : 'ride',
                             "payment_method": _paymentMethod.id,
                             "city": _selectedCity,
@@ -1681,7 +1800,7 @@ class _WhereToScreenState extends State<WhereToScreen> {
                           }
                         },
                         style: ElevatedButton.styleFrom(backgroundColor: widget.service.accent, foregroundColor: kWhite, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 8, shadowColor: widget.service.accent.withOpacity(0.27)),
-                        child: Text('Confirm ${widget.service.name} · ₹89', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                        child: Text('Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹89', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                       ),
                     ),
                   ],
@@ -1700,6 +1819,17 @@ class _WhereToScreenState extends State<WhereToScreen> {
           ),
       ],
     );
+  }
+
+  String _getVehicleLabel(String type) {
+    switch (type) {
+      case 'ac_cab': return 'AC Cab';
+      case 'non_ac_cab': return 'Non-AC Cab';
+      case 'bike': return 'Bike';
+      case 'auto': return 'Auto';
+      case 'toto': return 'Toto';
+      default: return 'Ride';
+    }
   }
 }
 
@@ -1776,9 +1906,177 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
 
   final _rideServices = services.where((s) => s.category == 'ride').toList();
   final _deliveryServices = services.where((s) => s.category == 'delivery').toList();
+  late final _gridRideServices = _rideServices.where((s) => s.id != 10).toList();
+  late final _evRide = services.firstWhere((s) => s.id == 10);
 
   void _openService(ServiceItem service, {String prefilledDest = ''}) {
     setState(() => _activeScreen = (service: service, prefilledDest: prefilledDest));
+  }
+
+  void _showNotificationsBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDDDDDD),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Notifications 🔔',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: kDark,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () async {
+                      try {
+                        await ApiService.markAllRead();
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('All marked as read!')),
+                        );
+                      } catch (_) {}
+                    },
+                    child: const Text(
+                      'Mark all as read',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: kOrange,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: FutureBuilder<Map<String, dynamic>>(
+                  future: ApiService.getNotifications(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(color: kOrange),
+                      );
+                    }
+                    final list = snapshot.data?['notifications'] as List?;
+                    if (snapshot.hasError || list == null || list.isEmpty) {
+                      return const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('📣', style: TextStyle(fontSize: 40)),
+                            SizedBox(height: 12),
+                            Text(
+                              'No new notifications',
+                              style: TextStyle(fontSize: 14, color: kMuted, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: list.length,
+                      itemBuilder: (context, index) {
+                        final notif = list[index];
+                        final isUnread = notif['is_read'] != true;
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: isUnread ? kOrangeLight : kGray,
+                            borderRadius: BorderRadius.circular(14),
+                            border: isUnread
+                                ? Border.all(color: kOrange.withOpacity(0.2), width: 1.5)
+                                : null,
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isUnread ? '🔵' : '⚪',
+                                style: const TextStyle(fontSize: 10),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      notif['title'] ?? 'Notification',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: isUnread ? FontWeight.w800 : FontWeight.w600,
+                                        color: kDark,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      notif['message'] ?? '',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickProfileImage() async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+      if (pickedFile != null) {
+        await AuthService.updateProfilePic(pickedFile.path);
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile picture updated locally!')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to pick image: $e')),
+      );
+    }
   }
 
   Widget _buildWalletTab() {
@@ -1871,14 +2169,41 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
           child: Column(
             children: [
-              Container(
-                width: 100, height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(colors: [kOrange, kOrangeDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                  boxShadow: [BoxShadow(color: kOrange.withOpacity(0.3), blurRadius: 16, offset: const Offset(0, 4))],
+              GestureDetector(
+                onTap: _pickProfileImage,
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    Container(
+                      width: 100, height: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(colors: [kOrange, kOrangeDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                        boxShadow: [BoxShadow(color: kOrange.withOpacity(0.3), blurRadius: 16, offset: const Offset(0, 4))],
+                      ),
+                      child: ClipOval(
+                        child: AuthService.profilePic.isNotEmpty
+                            ? (AuthService.profilePic.startsWith('http')
+                                ? Image.network(
+                                    AuthService.profilePic,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: kWhite))),
+                                  )
+                                : Image.file(
+                                    File(AuthService.profilePic),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: kWhite))),
+                                  ))
+                            : Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: kWhite))),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(color: kOrange, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))]),
+                      child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                    ),
+                  ],
                 ),
-                child: Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: kWhite))),
               ),
               const SizedBox(height: 16),
               Text(AuthService.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: kDark)),
@@ -1939,43 +2264,39 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                                 )),
                               ]),
                               Row(children: [
-                                Stack(children: [
-                                  Container(width: 42, height: 42, decoration: BoxDecoration(color: kGray, borderRadius: BorderRadius.circular(14)), child: const Center(child: Text('🔔', style: TextStyle(fontSize: 18)))),
-                                  Positioned(top: 8, right: 9, child: Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: kOrange, border: Border.all(color: kWhite, width: 2)))),
-                                ]),
+                                GestureDetector(
+                                  onTap: _showNotificationsBottomSheet,
+                                  child: Stack(children: [
+                                    Container(width: 42, height: 42, decoration: BoxDecoration(color: kGray, borderRadius: BorderRadius.circular(14)), child: const Center(child: Text('🔔', style: TextStyle(fontSize: 18)))),
+                                    Positioned(top: 8, right: 9, child: Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: kOrange, border: Border.all(color: kWhite, width: 2)))),
+                                  ]),
+                                ),
                                 const SizedBox(width: 10),
-                                Container(
-                                  width: 42, height: 42,
-                                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [kOrange, kOrangeDark], begin: Alignment.topLeft, end: Alignment.bottomRight)),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(14),
-                                    child: AuthService.profilePic.isNotEmpty
-                                        ? Image.network(AuthService.profilePic, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'U', style: const TextStyle(color: kWhite, fontWeight: FontWeight.w800, fontSize: 16))))
-                                        : Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'U', style: const TextStyle(color: kWhite, fontWeight: FontWeight.w800, fontSize: 16))),
+                                GestureDetector(
+                                  onTap: () => setState(() => _activeTab = 'profile'),
+                                  child: Container(
+                                    width: 42, height: 42,
+                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [kOrange, kOrangeDark], begin: Alignment.topLeft, end: Alignment.bottomRight)),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: AuthService.profilePic.isNotEmpty
+                                          ? (AuthService.profilePic.startsWith('http')
+                                              ? Image.network(
+                                                  AuthService.profilePic,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (_, __, ___) => Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'U', style: const TextStyle(color: kWhite, fontWeight: FontWeight.w800, fontSize: 16))),
+                                                )
+                                              : Image.file(
+                                                  File(AuthService.profilePic),
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (_, __, ___) => Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'U', style: const TextStyle(color: kWhite, fontWeight: FontWeight.w800, fontSize: 16))),
+                                                ))
+                                          : Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'U', style: const TextStyle(color: kWhite, fontWeight: FontWeight.w800, fontSize: 16))),
+                                    ),
                                   ),
                                 ),
                               ]),
                             ],
-                          ),
-                          const SizedBox(height: 16),
-                          GestureDetector(
-                            onTap: () => setState(() => _showLocationModal = true),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                              decoration: BoxDecoration(color: kOrangeLight, borderRadius: BorderRadius.circular(14), border: Border.all(color: kOrange.withOpacity(0.2), width: 1.5)),
-                              child: Row(
-                                children: [
-                                  Container(width: 32, height: 32, decoration: BoxDecoration(color: kOrange, borderRadius: BorderRadius.circular(10)), child: const Center(child: Text('📍', style: TextStyle(fontSize: 16)))),
-                                  const SizedBox(width: 10),
-                                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                    const Text('YOUR PICKUP LOCATION', style: TextStyle(fontSize: 10, color: kMuted, fontWeight: FontWeight.w600)),
-                                    const SizedBox(height: 1),
-                                    Text(_currentLocation, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: kDark)),
-                                  ])),
-                                  Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: kOrange, borderRadius: BorderRadius.circular(10)), child: const Text('Change', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: kWhite))),
-                                ],
-                              ),
-                            ),
                           ),
                         ],
                       ),
@@ -2007,10 +2328,103 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                                 GestureDetector(onTap: () => setState(() => _seeAll = (title: 'Ride', items: _rideServices)), child: const Text('See all →', style: TextStyle(fontSize: 12, color: kOrange, fontWeight: FontWeight.w600))),
                               ]),
                               const SizedBox(height: 16),
+                              // ── EV Ride Banner Block ──
+                              GestureDetector(
+                                onTap: () => _openService(_evRide),
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                  margin: const EdgeInsets.only(bottom: 16),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: const Color(0xFF81C784).withOpacity(0.5), width: 1.5),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF2E7D32).withOpacity(0.08),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      )
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 48,
+                                        height: 48,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(12),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF2E7D32).withOpacity(0.1),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 2),
+                                            )
+                                          ],
+                                        ),
+                                        child: const Center(
+                                          child: Text('⚡', style: TextStyle(fontSize: 24)),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                const Text(
+                                                  'EV Ride',
+                                                  style: TextStyle(
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: Color(0xFF1B5E20),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                  decoration: BoxDecoration(
+                                                    color: const Color(0xFF2E7D32),
+                                                    borderRadius: BorderRadius.circular(99),
+                                                  ),
+                                                  child: const Text(
+                                                    'Eco',
+                                                    style: TextStyle(
+                                                      fontSize: 8,
+                                                      fontWeight: FontWeight.w700,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 4),
+                                            const Text(
+                                              'one step closer to the better world',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                                color: Color(0xFF388E3C),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF2E7D32), size: 16),
+                                    ],
+                                  ),
+                                ),
+                              ),
                               GridView.count(
                                 shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
                                 crossAxisCount: 3, crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 0.9,
-                                children: _rideServices.map((s) => ServiceCard(service: s, onTap: () => _openService(s))).toList(),
+                                children: _gridRideServices.map((s) => ServiceCard(service: s, onTap: () => _openService(s))).toList(),
                               ),
                             ]),
                           ),

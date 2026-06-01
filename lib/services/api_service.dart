@@ -18,7 +18,17 @@ class ApiService {
   };
 
   static Future<Map<String, dynamic>> _handle(http.Response res) async {
-    final data = jsonDecode(utf8.decode(res.bodyBytes));
+    dynamic data;
+    try {
+      data = jsonDecode(utf8.decode(res.bodyBytes));
+    } catch (_) {
+      return {
+        'success': false,
+        'error': 'Server error (${res.statusCode}): ${res.body.isNotEmpty ? res.body : "No response body"}',
+        'status': res.statusCode,
+      };
+    }
+
     if (res.statusCode >= 200 && res.statusCode < 300) {
       return {'success': true, 'data': data, 'status': res.statusCode};
     }

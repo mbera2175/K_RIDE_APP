@@ -2297,6 +2297,15 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                               },
                             ),
                             _profileOptionTile(
+                              icon: '🟢',
+                              title: 'Chat on WhatsApp',
+                              subtitle: 'Get support via WhatsApp chat',
+                              onTap: () {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening WhatsApp Support Chat 🟢')));
+                              },
+                            ),
+                            _profileOptionTile(
                               icon: '✉️',
                               title: 'Email support',
                               subtitle: 'support@kride.app',

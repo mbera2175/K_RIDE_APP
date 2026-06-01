@@ -1637,7 +1637,7 @@ class _WhereToScreenState extends State<WhereToScreen> {
                             Text(widget.service.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: kDark)),
                             Text('${widget.service.bikeOnly ? '🏍️ Bike rider · ' : ''}~12 min · 3.2 km', style: const TextStyle(fontSize: 12, color: kMuted)),
                           ])),
-                          Text('₹89', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: widget.service.accent)),
+                          Text('₹${_estimatedFare.toStringAsFixed(0)}', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: widget.service.accent))
                         ],
                       ),
                     ),

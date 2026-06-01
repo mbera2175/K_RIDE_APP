@@ -198,6 +198,36 @@ class _DriverStep2VehicleState extends State<DriverStep2Vehicle> {
 
                 const SizedBox(height: 16),
 
+                // ── Fuel Type ─────────────────────────
+                _label('Fuel Type *'),
+                DropdownButtonFormField<String>(
+                  value: _fuelType,
+                  items: _fuelTypes.map((fuel) => DropdownMenuItem<String>(
+                    value: fuel['type'],
+                    child: Text(fuel['label'] ?? '', style: GoogleFonts.sora(fontSize: 14)),
+                  )).toList(),
+                  onChanged: _loading ? null : (val) {
+                    if (val != null) {
+                      setState(() => _fuelType = val);
+                    }
+                  },
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.local_gas_station_outlined, color: AppColors.textSecondary, size: 20),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.divider, width: 1.5)),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.divider, width: 1.5)),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.driverColor, width: 2)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
                 // ── Color ─────────────────────────────
                 _label('Vehicle Color *'),
                 _textField(_colorCtrl, 'e.g. White, Black, Silver',

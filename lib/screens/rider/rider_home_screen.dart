@@ -1297,6 +1297,8 @@ class _WhereToScreenState extends State<WhereToScreen> {
   String _selectedCity = 'Bardhaman';
   late String _selectedVehicleType;
   double _bonusAmount = 0.0;
+  double _pickupLat = 22.5726;
+  double _pickupLng = 88.3639;
   bool _useKCoins = false;
   int? _tripId;
   bool _searching = false;

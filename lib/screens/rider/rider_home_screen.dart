@@ -1318,7 +1318,22 @@ class _WhereToScreenState extends State<WhereToScreen> {
     _selectedVehicleType = ['ac_cab', 'non_ac_cab', 'bike', 'auto', 'toto'].contains(initialVehicle)
         ? initialVehicle
         : 'ac_cab';
+      _getLocation();
   }
+  Future<void> _getLocation() async {
+  try {
+    final permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) return;
+    final pos = await Geolocator.getCurrentPosition();
+    setState(() {
+      _pickupLat = pos.latitude;
+      _pickupLng = pos.longitude;
+      _pickupCtrl.text = 'Current Location';
+    });
+  } catch (e) {
+    // Keep default if GPS fails
+  }
+}
 
   @override
   void dispose() {
@@ -1728,8 +1743,8 @@ class _WhereToScreenState extends State<WhereToScreen> {
                           final body = {
                             "pickup_address": _pickupCtrl.text,
                             "drop_address": _destCtrl.text,
-                            "pickup_lat": 22.5726,
-                            "pickup_lng": 88.3639,
+                            "pickup_lat": _pickupLat,
+                            "pickup_lng": _pickupLng,
                             "drop_lat": 22.5850,
                             "drop_lng": 88.3950,
                             "vehicle_type": _selectedVehicleType,

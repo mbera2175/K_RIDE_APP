@@ -1983,7 +1983,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                         child: CircularProgressIndicator(color: kOrange),
                       );
                     }
-                    final list = snapshot.data?['notifications'] as List?;
+                    final list = snapshot.data?['data']?['notifications'] as List?;
                     if (snapshot.hasError || list == null || list.isEmpty) {
                       return const Center(
                         child: Column(
@@ -2100,7 +2100,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               FutureBuilder<Map<String, dynamic>>(
                 future: ApiService.getWalletBalance(),
                 builder: (ctx, snap) {
-                  final bal = snap.data?['wallet_balance'] ?? 0.0;
+                  final bal = snap.data?['data']?['balance'] ?? 0.0;
                   return Text('₹${bal.toStringAsFixed(2)}',
                       style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white));
                 },
@@ -2125,7 +2125,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 FutureBuilder<Map<String, dynamic>>(
                   future: ApiService.getMe(),
                   builder: (ctx, snap) {
-                    final coins = snap.data?['kcoin_balance'] ?? 0;
+                    final coins = snap.data?['data']?['kcoin_balance'] ?? snap.data?['data']?['rider']?['kcoin_balance'] ?? AuthService.kcoinBalance;
                     return Text('$coins coins', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xFFFF6B35)));
                   },
                 ),
@@ -2206,6 +2206,183 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     );
   }
 
+  void _showReferralBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.75,
+          ),
+          child: FutureBuilder<Map<String, dynamic>>(
+            future: ApiService.getMe(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox(
+                  height: 250,
+                  child: Center(
+                    child: CircularProgressIndicator(color: kOrange),
+                  ),
+                );
+              }
+
+              // Extract the referral code safely
+              final data = snapshot.data?['data'];
+              final referralCode = data?['referral_code']?.toString() ?? 'KRIDE50'; // standard fallback
+
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Handle bar
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDDDDDD),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Gift Icon/Emoji with pulsing border effect or stylish box
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: kOrangeLight,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: kOrange.withOpacity(0.2), width: 2),
+                      ),
+                      child: const Center(
+                        child: Text('🎁', style: TextStyle(fontSize: 40)),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    const Text(
+                      'Refer a Friend & Earn! 👥',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: kDark,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+                    
+                    const Text(
+                      'Share your unique referral code with friends. When they register and take their first ride, both of you will receive bonus coins! 🪙',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        color: kMuted,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 28),
+
+                    // Referral Code Box
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFBFBFB),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFEEEEEE)),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'YOUR REFERRAL CODE',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: kMuted,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Dashed-style look with rounded orange text
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: kOrangeLight,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: kOrange.withOpacity(0.3),
+                                style: BorderStyle.solid,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Text(
+                              referralCode,
+                              style: const TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w900,
+                                color: kOrange,
+                                letterSpacing: 3,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Copy Code Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: referralCode));
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Referral code "$referralCode" copied to clipboard! 🎁', 
+                                style: const TextStyle(fontFamily: 'Sora', fontSize: 13, fontWeight: FontWeight.w600)),
+                              backgroundColor: kOrange,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.copy_rounded, color: Colors.white, size: 18),
+                        label: const Text(
+                          'Copy Referral Code',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kOrange,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildProfileTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
@@ -2261,11 +2438,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                   icon: '👥',
                   title: 'Refer a Friend',
                   subtitle: 'Get bonus coins on every successful referral',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Referral link copied to clipboard! 🎁')),
-                    );
-                  },
+                  onTap: _showReferralBottomSheet,
                 ),
                 _profileOptionTile(
                   icon: '💬',

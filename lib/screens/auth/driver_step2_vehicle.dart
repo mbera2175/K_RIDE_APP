@@ -175,8 +175,9 @@ class _DriverStep2VehicleState extends State<DriverStep2Vehicle> {
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
                   childAspectRatio: 1.0,
+                  // FIX: use ?? '' to safely convert String? → String
                   children: _vehicles.map((v) =>
-                    _vehicleCard(v['type'] ?? ", v['emoji'] ?? ", v['label'] ?? ")).toList(),
+                    _vehicleCard(v['type'] ?? '', v['emoji'] ?? '', v['label'] ?? '')).toList(),
                 ),
 
                 const SizedBox(height: 16),
@@ -324,8 +325,6 @@ class _DriverStep2VehicleState extends State<DriverStep2Vehicle> {
       ),
     );
   }
-
-
 
   Widget _stepBar(int current) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

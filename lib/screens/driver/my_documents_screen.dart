@@ -214,6 +214,10 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
   // ── BUILD ──────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final isRcReadOnly = _uploadedUrls['rc_front']?.isNotEmpty == true || _uploadedUrls['rc_back']?.isNotEmpty == true;
+    final isDlReadOnly = _uploadedUrls['dl_front']?.isNotEmpty == true || _uploadedUrls['dl_back']?.isNotEmpty == true;
+    final isAadhaarReadOnly = _uploadedUrls['aadhaar_front']?.isNotEmpty == true || _uploadedUrls['aadhaar_back']?.isNotEmpty == true;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -322,7 +326,8 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                     _lbl('RC Number'),
                     _tf(_rcNumberCtrl, 'e.g. WB01AB1234',
                       Icons.pin_outlined,
-                      caps: TextCapitalization.characters),
+                      caps: TextCapitalization.characters,
+                      readOnly: isRcReadOnly),
                     const SizedBox(height: 10),
                     Row(children: [
                       Expanded(child: Column(
@@ -333,7 +338,8 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                           from: DateTime.now().year - 20,
                           to: DateTime.now().year,
                           onChanged: (v) => setState(() => _rcRegYear = v!),
-                          color: AppColors.primary),
+                          color: AppColors.primary,
+                          readOnly: isRcReadOnly),
                       ])),
                       const SizedBox(width: 10),
                       Expanded(child: Column(
@@ -344,7 +350,8 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                           from: DateTime.now().year,
                           to: DateTime.now().year + 15,
                           onChanged: (v) => setState(() => _rcExpireYear = v!),
-                          color: AppColors.primary),
+                          color: AppColors.primary,
+                          readOnly: isRcReadOnly),
                       ])),
                     ]),
                     const SizedBox(height: 10),
@@ -374,14 +381,16 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                     _lbl('DL Number'),
                     _tf(_dlNumberCtrl, 'e.g. WB0120110012345',
                       Icons.credit_card_rounded,
-                      caps: TextCapitalization.characters),
+                      caps: TextCapitalization.characters,
+                      readOnly: isDlReadOnly),
                     const SizedBox(height: 10),
                     _lbl('Expire Year'),
                     _yearDrop(_dlExpireYear,
                       from: DateTime.now().year,
                       to: DateTime.now().year + 20,
                       onChanged: (v) => setState(() => _dlExpireYear = v!),
-                      color: AppColors.driverColor),
+                      color: AppColors.driverColor,
+                      readOnly: isDlReadOnly),
                     const SizedBox(height: 10),
                     _lbl('Front & Back Photos'),
                     Row(children: [
@@ -412,7 +421,8 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                       type: TextInputType.number,
                       formatters: [
                         FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(12)]),
+                        LengthLimitingTextInputFormatter(12)],
+                      readOnly: isAadhaarReadOnly),
                     const SizedBox(height: 10),
                     _lbl('Front & Back Photos'),
                     Row(children: [
@@ -494,9 +504,10 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
     final newFile  = _newFiles[key];
     final existUrl = _uploadedUrls[key] ?? '';
     final hasImage = newFile != null || existUrl.isNotEmpty;
+    final isReadOnly = existUrl.isNotEmpty;
 
     return GestureDetector(
-      onTap: _saving ? null : () async {
+      onTap: _saving || isReadOnly ? null : () async {
         final f = await _pickImage();
         if (f != null) setState(() => _newFiles[key] = f);
       },
@@ -527,20 +538,21 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                         color: color.withOpacity(0.1),
                         child: Icon(Icons.broken_image_rounded,
                           color: color, size: 30)))),
-              // Re-upload button
-              Positioned(top: 4, right: 4,
-                child: GestureDetector(
-                  onTap: _saving ? null : () async {
-                    final f = await _pickImage();
-                    if (f != null) setState(() => _newFiles[key] = f);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(6)),
-                    child: const Icon(Icons.camera_alt_rounded,
-                      color: Colors.white, size: 13)))),
+              // Re-upload button (ONLY show if NOT read-only)
+              if (!isReadOnly)
+                Positioned(top: 4, right: 4,
+                  child: GestureDetector(
+                    onTap: _saving ? null : () async {
+                      final f = await _pickImage();
+                      if (f != null) setState(() => _newFiles[key] = f);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(6)),
+                      child: const Icon(Icons.camera_alt_rounded,
+                        color: Colors.white, size: 13)))),
               // Uploaded indicator
               if (existUrl.isNotEmpty && newFile == null)
                 Positioned(bottom: 4, right: 4,
@@ -592,9 +604,10 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
     final newFile  = _newFiles[key];
     final existUrl = _uploadedUrls[key] ?? '';
     final hasImage = newFile != null || existUrl.isNotEmpty;
+    final isReadOnly = existUrl.isNotEmpty;
 
     return GestureDetector(
-      onTap: _saving ? null : () async {
+      onTap: _saving || isReadOnly ? null : () async {
         final f = await _pickImage();
         if (f != null) setState(() => _newFiles[key] = f);
       },
@@ -626,19 +639,20 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
                         color: color.withOpacity(0.1),
                         child: Icon(Icons.broken_image_rounded,
                           color: color, size: 36)))),
-              Positioned(top: 6, right: 6,
-                child: GestureDetector(
-                  onTap: _saving ? null : () async {
-                    final f = await _pickImage();
-                    if (f != null) setState(() => _newFiles[key] = f);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(8)),
-                    child: const Icon(Icons.camera_alt_rounded,
-                      color: Colors.white, size: 16)))),
+              if (!isReadOnly)
+                Positioned(top: 6, right: 6,
+                  child: GestureDetector(
+                    onTap: _saving ? null : () async {
+                      final f = await _pickImage();
+                      if (f != null) setState(() => _newFiles[key] = f);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(8)),
+                      child: const Icon(Icons.camera_alt_rounded,
+                        color: Colors.white, size: 16)))),
               if (existUrl.isNotEmpty && newFile == null)
                 Positioned(bottom: 6, right: 6,
                   child: Container(
@@ -728,12 +742,13 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
     TextCapitalization caps       = TextCapitalization.none,
     TextInputType type            = TextInputType.text,
     List<TextInputFormatter>? formatters,
+    bool readOnly                 = false,
   }) => TextField(
     controller: ctrl,
     keyboardType: type,
     textCapitalization: caps,
     inputFormatters: formatters,
-    enabled: !_saving,
+    enabled: !_saving && !readOnly,
     style: GoogleFonts.sora(fontSize: 13),
     decoration: InputDecoration(
       hintText: hint,
@@ -760,6 +775,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
     required int to,
     required void Function(int?) onChanged,
     required Color color,
+    bool readOnly = false,
   }) {
     final years = List.generate(
       to - from + 1, (i) => from + i).reversed.toList();
@@ -776,7 +792,7 @@ class _MyDocumentsScreenState extends State<MyDocumentsScreen> {
             fontSize: 13, color: AppColors.textPrimary),
           items: years.map((y) => DropdownMenuItem(
             value: y, child: Text('$y'))).toList(),
-          onChanged: _saving ? null : onChanged)));
+          onChanged: _saving || readOnly ? null : onChanged)));
   }
 
   Widget _msgBox(String msg, Color color, IconData icon) => Container(

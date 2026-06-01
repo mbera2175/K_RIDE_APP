@@ -2339,7 +2339,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               FutureBuilder<Map<String, dynamic>>(
                 future: ApiService.getWalletBalance(),
                 builder: (ctx, snap) {
-                  final bal = snap.data?['data']?['balance'] ?? 0.0;
+                  final bal = snap.data?['data']?['wallet_balance'] ?? 0.0;
                   return Text('₹${bal.toStringAsFixed(2)}',
                       style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white));
                 },

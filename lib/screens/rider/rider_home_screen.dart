@@ -1553,57 +1553,53 @@ class _WhereToScreenState extends State<WhereToScreen> {
           child: Column(
             children: [
               Expanded(
-  child: Stack(
-    children: [
-      // ✅ Real Mappls Map
-      MapplsMap(
-        initialCameraPosition: CameraPosition(
-          target: LatLng(22.5726, 88.3639),
-          zoom: 13,
-        ),
-        onMapCreated: (MapplsMapController controller) async {
-          // Pickup marker (orange)
-          await controller.addSymbol(SymbolOptions(
-            geometry: const LatLng(22.5726, 88.3639),
-            iconImage: 'marker-15',
-            iconSize: 2.0,
-            iconColor: '#FF6B00',
-            textField: 'Pickup',
-            textOffset: const Offset(0, 1.5),
-            textColor: '#FF6B00',
-          ));
-          // Drop marker (dark)
-          await controller.addSymbol(SymbolOptions(
-            geometry: const LatLng(22.5850, 88.3950),
-            iconImage: 'marker-15',
-            iconSize: 2.0,
-            iconColor: '#1A1A1A',
-            textField: 'Drop',
-            textOffset: const Offset(0, 1.5),
-            textColor: '#1A1A1A',
-          ));
-        },
-        myLocationEnabled: true,
-      ),
-      // ✅ Back button on top of map
-      Positioned(
-        top: 52, left: 16,
-        child: GestureDetector(
-          onTap: () => setState(() => _step = 'input'),
-          child: Container(
-            width: 40, height: 40,
-            decoration: BoxDecoration(
-              color: kWhite,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 2))],
-            ),
-            child: const Center(child: Text('←', style: TextStyle(fontSize: 18))),
-          ),
-        ),
-      ),
-    ],
-  ),
-),
+                child: Stack(
+                  children: [
+                    MapplsMap(
+                      initialCameraPosition: const CameraPosition(
+                        target: LatLng(22.5726, 88.3639),
+                        zoom: 13,
+                      ),
+                      onMapCreated: (MapplsMapController controller) async {
+                        await controller.addSymbol(SymbolOptions(
+                          geometry: const LatLng(22.5726, 88.3639),
+                          iconImage: 'marker-15',
+                          iconSize: 2.0,
+                          iconColor: '#FF6B00',
+                          textField: 'Pickup',
+                          textOffset: const Offset(0, 1.5),
+                          textColor: '#FF6B00',
+                        ));
+                        await controller.addSymbol(SymbolOptions(
+                          geometry: const LatLng(22.5850, 88.3950),
+                          iconImage: 'marker-15',
+                          iconSize: 2.0,
+                          iconColor: '#1A1A1A',
+                          textField: 'Drop',
+                          textOffset: const Offset(0, 1.5),
+                          textColor: '#1A1A1A',
+                        ));
+                      },
+                      myLocationEnabled: true,
+                    ),
+                    Positioned(
+                      top: 52, left: 16,
+                      child: GestureDetector(
+                        onTap: () => setState(() => _step = 'input'),
+                        child: Container(
+                          width: 40, height: 40,
+                          decoration: BoxDecoration(
+                            color: kWhite,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 2))],
+                          ),
+                          child: const Center(child: Text('←', style: TextStyle(fontSize: 18))),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               ),
               Container(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),

@@ -1,3 +1,4 @@
+import 'package:mappls_gl/mappls_gl.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -1552,33 +1553,57 @@ class _WhereToScreenState extends State<WhereToScreen> {
           child: Column(
             children: [
               Expanded(
-                child: Container(
-                  color: const Color(0xFFF8F4EF),
-                  child: Stack(
-                    children: [
-                      CustomPaint(size: Size.infinite, painter: _MapGridPainter(accentColor: widget.service.accent)),
-                      Positioned(
-                        left: MediaQuery.of(context).size.width * 0.33 - 14,
-                        top: MediaQuery.of(context).size.height * 0.28 - 28,
-                        child: Transform.rotate(angle: -0.785, child: Container(width: 28, height: 28, decoration: BoxDecoration(color: kOrange, borderRadius: const BorderRadius.only(topLeft: Radius.circular(14), topRight: Radius.circular(14), bottomLeft: Radius.circular(14)), border: Border.all(color: kWhite, width: 3), boxShadow: [BoxShadow(color: kOrange.withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 3))]))),
-                      ),
-                      Positioned(
-                        left: MediaQuery.of(context).size.width * 0.64 - 13,
-                        top: MediaQuery.of(context).size.height * 0.28 - 26,
-                        child: Transform.rotate(angle: -0.785, child: Container(width: 26, height: 26, decoration: BoxDecoration(color: kDark, borderRadius: const BorderRadius.only(topLeft: Radius.circular(13), topRight: Radius.circular(13), bottomLeft: Radius.circular(13)), border: Border.all(color: kWhite, width: 3)))),
-                      ),
-                      Positioned(
-                        left: MediaQuery.of(context).size.width * 0.22 - 18,
-                        top: MediaQuery.of(context).size.height * 0.21,
-                        child: Container(width: 36, height: 36, decoration: BoxDecoration(shape: BoxShape.circle, color: kWhite, border: Border.all(color: kOrange, width: 2), boxShadow: [const BoxShadow(color: Colors.black12, blurRadius: 12, offset: Offset(0, 3))]), child: Center(child: ServiceIconWidget(icon: widget.service.icon, size: 18))),
-                      ),
-                      Positioned(
-                        top: 52, left: 16,
-                        child: GestureDetector(onTap: () => setState(() => _step = 'input'), child: Container(width: 40, height: 40, decoration: BoxDecoration(color: kWhite, borderRadius: BorderRadius.circular(12), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 2))]), child: const Center(child: Text('←', style: TextStyle(fontSize: 18))))),
-                      ),
-                    ],
-                  ),
-                ),
+  child: Stack(
+    children: [
+      // ✅ Real Mappls Map
+      MapplsMap(
+        initialCameraPosition: CameraPosition(
+          target: LatLng(22.5726, 88.3639),
+          zoom: 13,
+        ),
+        onMapCreated: (MapplsMapController controller) async {
+          // Pickup marker (orange)
+          await controller.addSymbol(SymbolOptions(
+            geometry: const LatLng(22.5726, 88.3639),
+            iconImage: 'marker-15',
+            iconSize: 2.0,
+            iconColor: '#FF6B00',
+            textField: 'Pickup',
+            textOffset: const Offset(0, 1.5),
+            textColor: '#FF6B00',
+          ));
+          // Drop marker (dark)
+          await controller.addSymbol(SymbolOptions(
+            geometry: const LatLng(22.5850, 88.3950),
+            iconImage: 'marker-15',
+            iconSize: 2.0,
+            iconColor: '#1A1A1A',
+            textField: 'Drop',
+            textOffset: const Offset(0, 1.5),
+            textColor: '#1A1A1A',
+          ));
+        },
+        myLocationEnabled: true,
+      ),
+      // ✅ Back button on top of map
+      Positioned(
+        top: 52, left: 16,
+        child: GestureDetector(
+          onTap: () => setState(() => _step = 'input'),
+          child: Container(
+            width: 40, height: 40,
+            decoration: BoxDecoration(
+              color: kWhite,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 2))],
+            ),
+            child: const Center(child: Text('←', style: TextStyle(fontSize: 18))),
+          ),
+        ),
+      ),
+    ],
+  ),
+),
               ),
               Container(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),

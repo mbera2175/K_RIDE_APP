@@ -2276,45 +2276,48 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                       context: context,
                       backgroundColor: Colors.white,
                       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-                      builder: (_) => Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFDDDDDD), borderRadius: BorderRadius.circular(99))),
-                            const SizedBox(height: 20),
-                            const Text('Contact Support 💬', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: kDark)),
-                            const SizedBox(height: 12),
-                            const Text('Need assistance with your ride or delivery?', style: TextStyle(fontSize: 14, color: kMuted), textAlign: TextAlign.center),
-                            const SizedBox(height: 24),
-                            _profileOptionTile(
-                              icon: '📞',
-                              title: 'Call Support Helpline',
-                              subtitle: 'Instant phone support (24/7)',
-                              onTap: () {
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Calling Helpline: +91 1800-KRIDE 📞')));
-                              },
-                            ),
-                            _profileOptionTile(
-                              icon: '🟢',
-                              title: 'Chat on WhatsApp',
-                              subtitle: 'Get support via WhatsApp chat',
-                              onTap: () {
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening WhatsApp Support Chat 🟢')));
-                              },
-                            ),
-                            _profileOptionTile(
-                              icon: '✉️',
-                              title: 'Email support',
-                              subtitle: 'support@kride.app',
-                              onTap: () {
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening email compose ✉️')));
-                              },
-                            ),
-                          ],
+                      builder: (_) => Container(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFDDDDDD), borderRadius: BorderRadius.circular(99))),
+                              const SizedBox(height: 20),
+                              const Text('Contact Support 💬', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: kDark)),
+                              const SizedBox(height: 12),
+                              const Text('Need assistance with your ride or delivery?', style: TextStyle(fontSize: 14, color: kMuted), textAlign: TextAlign.center),
+                              const SizedBox(height: 24),
+                              _profileOptionTile(
+                                icon: '📞',
+                                title: 'Call Support Helpline',
+                                subtitle: 'Instant phone support (24/7)',
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Calling Helpline: +91 1800-KRIDE 📞')));
+                                },
+                              ),
+                              _profileOptionTile(
+                                icon: '🟢',
+                                title: 'Chat on WhatsApp',
+                                subtitle: 'Get support via WhatsApp chat',
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening WhatsApp Support Chat 🟢')));
+                                },
+                              ),
+                              _profileOptionTile(
+                                icon: '✉️',
+                                title: 'Email support',
+                                subtitle: 'support@kride.app',
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening email compose ✉️')));
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );

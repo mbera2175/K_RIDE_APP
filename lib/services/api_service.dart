@@ -95,6 +95,21 @@ class ApiService {
     return _handle(res);
   }
 
+  static Future<Map<String, dynamic>> uploadProfilePicture(File file) async {
+    try {
+      final uri     = Uri.parse('$_base/auth/profile-picture');
+      final request = http.MultipartRequest('POST', uri);
+      request.headers['Authorization'] = 'Bearer ${AuthService.token}';
+      request.files.add(await http.MultipartFile.fromPath(
+        'file', file.path, filename: 'profile_pic.jpg'));
+      final streamed = await request.send().timeout(_timeout);
+      final res      = await http.Response.fromStream(streamed);
+      return _handle(res);
+    } catch (e) {
+      return {'success': false, 'error': 'Profile picture upload failed: $e'};
+    }
+  }
+
   // ═══════════════════════════════════════════════════════
   //  DOCUMENTS — unchanged
   // ═══════════════════════════════════════════════════════

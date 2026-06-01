@@ -2066,15 +2066,70 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
       if (pickedFile != null) {
-        await AuthService.updateProfilePic(pickedFile.path);
-        setState(() {});
+        // Show high-end loading snackbar
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile picture updated locally!')),
+          SnackBar(
+            content: Row(
+              children: [
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                ),
+                const SizedBox(width: 16),
+                Text('Uploading profile picture... 📸', 
+                  style: const TextStyle(fontFamily: 'Sora', fontSize: 13, fontWeight: FontWeight.w600)),
+              ],
+            ),
+            duration: const Duration(seconds: 4),
+            backgroundColor: kDark.withOpacity(0.9),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
         );
+
+        final res = await ApiService.uploadProfilePicture(File(pickedFile.path));
+        
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        if (res['success']) {
+          // Extract the permanent S3 URL (or Base64 fallback) returned by the backend
+          final url = res['data']?['profile_picture_url'] ?? pickedFile.path;
+          await AuthService.updateProfilePic(url);
+          setState(() {});
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Profile picture uploaded successfully! 🎉', 
+                style: TextStyle(fontFamily: 'Sora', fontSize: 13, fontWeight: FontWeight.w600)),
+              backgroundColor: kOrange,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Upload failed: ${res['error']}', 
+                style: const TextStyle(fontFamily: 'Sora', fontSize: 13, fontWeight: FontWeight.w600)),
+              backgroundColor: const Color(0xFFE53935),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        }
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick image: $e')),
+        SnackBar(
+          content: Text('Failed to pick image: $e', 
+            style: const TextStyle(fontFamily: 'Sora', fontSize: 13, fontWeight: FontWeight.w600)),
+          backgroundColor: const Color(0xFFE53935),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       );
     }
   }

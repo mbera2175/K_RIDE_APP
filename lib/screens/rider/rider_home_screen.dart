@@ -2364,7 +2364,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 FutureBuilder<Map<String, dynamic>>(
                   future: ApiService.getMe(),
                   builder: (ctx, snap) {
-                    final coins = snap.data?['data']?['kcoin_balance'] ?? snap.data?['data']?['rider']?['kcoin_balance'] ?? AuthService.kcoinBalance;
+                    final coins = snap.data?['kcoin_balance'] ?? AuthService.kcoinBalance;
                     return Text('$coins coins', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xFFFF6B35)));
                   },
                 ),

@@ -1302,6 +1302,8 @@ class _WhereToScreenState extends State<WhereToScreen> {
   bool _useKCoins = false;
   int? _tripId;
   bool _searching = false;
+  double _estimatedFare = 0.0;
+  bool _fareLoading = false;
 
   final _quickDests = const [
     PlaceItem(icon: '🏠', label: 'Home',        sub: 'Sector 15, Noida'),
@@ -1334,7 +1336,25 @@ class _WhereToScreenState extends State<WhereToScreen> {
     // Keep default if GPS fails
   }
 }
-
+Future<void> _loadFare() async {
+    setState(() => _fareLoading = true);
+    try {
+      final res = await ApiService.estimateFare(
+        pickupLat: _pickupLat,
+        pickupLng: _pickupLng,
+        dropLat: 22.5850,
+        dropLng: 88.3950,
+        vehicleType: _selectedVehicleType,
+      );
+      if (res['success'] == true) {
+        setState(() => _estimatedFare =
+          (res['data']?['estimated_fare'] ?? 0.0).toDouble());
+      }
+    } catch (e) {
+      setState(() => _estimatedFare = 0.0);
+    }
+    setState(() => _fareLoading = false);
+  }
   @override
   void dispose() {
     _pickupCtrl.dispose();
@@ -1543,7 +1563,10 @@ class _WhereToScreenState extends State<WhereToScreen> {
               builder: (_, ss) {
                 final hasText = _destCtrl.text.isNotEmpty;
                 return ElevatedButton(
-                  onPressed: hasText ? () => setState(() => _step = 'confirm') : null,
+                  onPressed: hasText ? () async {
+                                  await _loadFare();
+                                  setState(() => _step = 'confirm');
+                                } : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: hasText ? widget.service.accent : const Color(0xFFEEEEEE),
                     foregroundColor: hasText ? kWhite : kMuted,
@@ -1839,7 +1862,7 @@ class _WhereToScreenState extends State<WhereToScreen> {
                           }
                         },
                         style: ElevatedButton.styleFrom(backgroundColor: widget.service.accent, foregroundColor: kWhite, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 8, shadowColor: widget.service.accent.withOpacity(0.27)),
-                        child: Text('Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹89', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                        child: Text(_fareLoading ? 'Getting fare...' : 'Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹${_estimatedFare.toStringAsFixed(0)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                       ),
                     ),
                   ],

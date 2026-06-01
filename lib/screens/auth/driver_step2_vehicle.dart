@@ -176,7 +176,7 @@ class _DriverStep2VehicleState extends State<DriverStep2Vehicle> {
                   mainAxisSpacing: 10,
                   childAspectRatio: 1.0,
                   children: _vehicles.map((v) =>
-                    _vehicleCard(v['type'], v['emoji'], v['label'])).toList(),
+                    _vehicleCard(v['type'] ?? ", v['emoji'] ?? ", v['label'] ?? ")).toList(),
                 ),
 
                 const SizedBox(height: 16),

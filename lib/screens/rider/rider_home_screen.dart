@@ -2062,9 +2062,172 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
   }
 
   Future<void> _pickProfileImage() async {
+    // Show a premium bottom sheet to choose Camera or Gallery
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF1A1A2E),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Update Profile Photo',
+              style: TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Choose how you want to upload your photo',
+              style: TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 13,
+                color: Colors.white.withOpacity(0.55),
+              ),
+            ),
+            const SizedBox(height: 28),
+            Row(
+              children: [
+                // Camera option
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context, ImageSource.camera),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 22),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFF6B35), Color(0xFFFF8C42)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFF6B35).withOpacity(0.35),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: const [
+                          Icon(Icons.camera_alt_rounded, color: Colors.white, size: 32),
+                          SizedBox(height: 10),
+                          Text(
+                            'Camera',
+                            style: TextStyle(
+                              fontFamily: 'Sora',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Take a new photo',
+                            style: TextStyle(
+                              fontFamily: 'Sora',
+                              fontSize: 11,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Gallery option
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context, ImageSource.gallery),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 22),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withOpacity(0.15)),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.photo_library_rounded, color: Colors.white.withOpacity(0.9), size: 32),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Gallery',
+                            style: TextStyle(
+                              fontFamily: 'Sora',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Choose from gallery',
+                            style: TextStyle(
+                              fontFamily: 'Sora',
+                              fontSize: 11,
+                              color: Colors.white.withOpacity(0.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Cancel button
+            GestureDetector(
+              onTap: () => Navigator.pop(context, null),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white54,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return; // User cancelled
+
     try {
       final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+      final pickedFile = await picker.pickImage(source: source, imageQuality: 80);
       if (pickedFile != null) {
         // Show high-end loading snackbar
         if (!mounted) return;

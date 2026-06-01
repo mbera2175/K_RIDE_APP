@@ -1,3 +1,4 @@
+import 'package:geolocator/geolocator.dart';
 import 'package:mappls_gl/mappls_gl.dart';
 import 'dart:async';
 import 'dart:io';

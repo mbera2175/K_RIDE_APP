@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mappls_gl/mappls_gl.dart';
 import 'utils/app_colors.dart';
 import 'services/auth_service.dart';
 import 'screens/rider/rider_home_screen.dart';
@@ -12,12 +13,21 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ✅ Mappls (MapMyIndia) Initialization
+  MapplsAccountManager.setMapSDKKey("c59951af1ef53a9e6cc8fb8a7080d5d8");
+  MapplsAccountManager.setRestAPIKey("c59951af1ef53a9e6cc8fb8a7080d5d8");
+  MapplsAccountManager.setAtlasClientId("96dHZVzsAutf7JmkOzGCFwHsVMopiBc3omOm6Nz9I61Oj27HCVNsH44gi4vQBl9ZxAk3l9rrauxdqOYwUmUkOlCz7RrIFlKN");
+  MapplsAccountManager.setAtlasClientSecret("lrFxI-iSEg8FAEuoX9z0UYKFbEDDr2gtxSFnMaxGyAmNBp8A__5GQ8yGbmpIL3g5qYPFCzw-0wb_u9xpbjl1i8lZ49AasxwH3PCiRF2PpuY=");
+
   await AuthService.init(); // ← load saved session
+
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.dark,
   ));
+
   runApp(const KRideApp());
 }
 
@@ -42,7 +52,6 @@ class KRideApp extends StatelessWidget {
           centerTitle: true,
         ),
       ),
-      // Auto-login: if token exists go to home, else show role selection
       home: AuthService.isLoggedIn
           ? const _AutoLoginRedirect()
           : const RoleSelectionScreen(),
@@ -56,7 +65,7 @@ class _AutoLoginRedirect extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (AuthService.isRider)  return const RiderHomeScreen();
+    if (AuthService.isRider) return const RiderHomeScreen();
     if (AuthService.isDriver) return const DriverHomeScreen();
     return const RoleSelectionScreen();
   }

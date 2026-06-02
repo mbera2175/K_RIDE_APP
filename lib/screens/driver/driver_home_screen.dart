@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:async';
 import 'dart:math';
 import 'dart:io';
@@ -9,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../utils/app_colors.dart';
 import '../../services/auth_service.dart';
@@ -34,6 +36,7 @@ const kInfo = Color(0xFF3B82F6);
 // ── Data models ──────────────────────────────────────────────
 class TripData {
   final int id;
+  final String tripCode;
   final int fare;
   final int driverEarnings;
   final String pickup;
@@ -47,11 +50,17 @@ class TripData {
   final String payment;
   final String riderRating;
   final String riderName;
+  final String riderPhone;
   final String vehicle;
+  final double bonusAmount;
+  final double totalFare;
+  final bool isNonAcRequest;
+  final String message;
   String status; // requested | accepted | arrived | started
 
   TripData({
     required this.id,
+    required this.tripCode,
     required this.fare,
     required this.driverEarnings,
     required this.pickup,
@@ -63,7 +72,12 @@ class TripData {
     required this.payment,
     required this.riderRating,
     required this.riderName,
+    required this.riderPhone,
     required this.vehicle,
+    required this.bonusAmount,
+    required this.totalFare,
+    required this.isNonAcRequest,
+    required this.message,
     required this.status,
   });
 
@@ -74,6 +88,7 @@ class TripData {
   }) =>
       TripData(
         id: id,
+        tripCode: tripCode,
         fare: fare,
         driverEarnings: driverEarnings,
         pickup: pickup,
@@ -85,7 +100,12 @@ class TripData {
         payment: payment,
         riderRating: riderRating,
         riderName: riderName,
+        riderPhone: riderPhone,
         vehicle: vehicle,
+        bonusAmount: bonusAmount,
+        totalFare: totalFare,
+        isNonAcRequest: isNonAcRequest,
+        message: message,
         status: status ?? this.status,
       );
 }
@@ -108,14 +128,15 @@ class EarningsData {
 }
 
 Map<String, dynamic> _unwrapTripPayload(dynamic raw) {
-  if (raw is! Map<String, dynamic>) {
+  final normalized = _maybeDecodeJson(raw);
+  if (normalized is! Map<String, dynamic>) {
     return <String, dynamic>{};
   }
 
-  var current = Map<String, dynamic>.from(raw);
+  var current = Map<String, dynamic>.from(normalized);
 
   while (true) {
-    final nested = _firstValue(current, const [
+    final nested = _maybeDecodeJson(_firstValue(current, const [
       'trip',
       'booking',
       'ride',
@@ -123,7 +144,7 @@ Map<String, dynamic> _unwrapTripPayload(dynamic raw) {
       'request',
       'payload',
       'data',
-    ]);
+    ]));
 
     if (nested is! Map<String, dynamic>) {
       break;
@@ -162,6 +183,22 @@ dynamic _firstValue(Map<String, dynamic> data, List<String> keys) {
   return null;
 }
 
+dynamic _maybeDecodeJson(dynamic raw) {
+  if (raw is String) {
+    final text = raw.trim();
+    if (text.isEmpty) return raw;
+    if ((text.startsWith('{') && text.endsWith('}')) ||
+        (text.startsWith('[') && text.endsWith(']'))) {
+      try {
+        return jsonDecode(text);
+      } catch (_) {
+        return raw;
+      }
+    }
+  }
+  return raw;
+}
+
 int _asInt(dynamic value, {int fallback = 0}) {
   if (value == null) return fallback;
   if (value is int) return value;
@@ -186,7 +223,10 @@ TripData _mapToTripData(dynamic raw) {
   final data = _unwrapTripPayload(raw);
 
   final fare = _asInt(
-    _firstValue(data, const ['estimated_fare', 'fare', 'amount', 'trip_fare']),
+    _firstValue(
+      data,
+      const ['total_fare', 'estimated_fare', 'fare', 'amount', 'trip_fare'],
+    ),
   );
   final driverEarnings = _asInt(
     _firstValue(data, const ['driver_earnings', 'driver_earning', 'earnings']),
@@ -209,6 +249,14 @@ TripData _mapToTripData(dynamic raw) {
 
   return TripData(
     id: _asInt(_firstValue(data, const ['id', 'trip_id', 'booking_id'])),
+    tripCode: _asText(
+      _firstValue(data, const ['trip_code', 'code', 'booking_code']),
+      fallback: '#${_asInt(_firstValue(data, const [
+            'id',
+            'trip_id',
+            'booking_id'
+          ]))}',
+    ),
     fare: fare,
     driverEarnings: driverEarnings,
     pickup: _asText(
@@ -246,11 +294,25 @@ TripData _mapToTripData(dynamic raw) {
             fallback: 'Rider')
         : _asText(_firstValue(data, const ['rider_name', 'rider']),
             fallback: 'Rider'),
+    riderPhone: data['rider'] is Map<String, dynamic>
+        ? _asText((data['rider'] as Map<String, dynamic>)['phone'])
+        : _asText(_firstValue(data, const ['rider_phone', 'phone'])),
     vehicle: _asText(
             _firstValue(
                 data, const ['vehicle_type', 'vehicle', 'service_type']),
             fallback: 'cab')
         .toUpperCase(),
+    bonusAmount: _asDouble(
+      _firstValue(data, const ['bonus_amount', 'bonus', 'bonus_fare']),
+    ),
+    totalFare: _asDouble(
+      _firstValue(data, const ['total_fare', 'estimated_fare', 'fare']),
+      fallback: fare.toDouble(),
+    ),
+    isNonAcRequest:
+        _firstValue(data, const ['is_non_ac_request', 'non_ac_request']) ==
+            true,
+    message: _asText(_firstValue(data, const ['message', 'note', 'remarks'])),
     status: _asText(
         _firstValue(data, const ['status', 'trip_status', 'booking_status']),
         fallback: 'requested'),
@@ -526,6 +588,12 @@ class _IncomingTripModalState extends State<IncomingTripModal>
   @override
   Widget build(BuildContext context) {
     final maxHeight = MediaQuery.of(context).size.height * 0.90;
+    final displayFare = widget.trip.totalFare > 0
+        ? widget.trip.totalFare
+        : widget.trip.fare.toDouble();
+    final fareLabel = displayFare % 1 == 0
+        ? displayFare.toStringAsFixed(0)
+        : displayFare.toStringAsFixed(2);
     return GestureDetector(
       onTap: () {},
       child: Container(
@@ -596,7 +664,7 @@ class _IncomingTripModalState extends State<IncomingTripModal>
                                       letterSpacing: 1.5)),
                               const SizedBox(height: 4),
                               Text.rich(TextSpan(
-                                text: '₹${widget.trip.fare} ',
+                                text: '₹$fareLabel ',
                                 style: GoogleFonts.sora(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w800,
@@ -610,6 +678,36 @@ class _IncomingTripModalState extends State<IncomingTripModal>
                                           fontWeight: FontWeight.w500))
                                 ],
                               )),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Trip ${widget.trip.tripCode} • ${widget.trip.riderName}',
+                                style: GoogleFonts.sora(
+                                  fontSize: 12,
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              if (widget.trip.isNonAcRequest) ...[
+                                const SizedBox(height: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: kOrangeLight,
+                                    borderRadius: BorderRadius.circular(99),
+                                    border: Border.all(
+                                        color: kOrange.withOpacity(0.15)),
+                                  ),
+                                  child: Text(
+                                    'Non-AC request',
+                                    style: GoogleFonts.sora(
+                                      fontSize: 10,
+                                      color: kOrange,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -686,7 +784,9 @@ class _IncomingTripModalState extends State<IncomingTripModal>
                                             fontWeight: FontWeight.w600)),
                                     const SizedBox(height: 4),
                                     Text(
-                                      '${widget.trip.pickupDistanceKm.toStringAsFixed(1)} km away',
+                                      widget.trip.pickupDistanceKm > 0
+                                          ? '${widget.trip.pickupDistanceKm.toStringAsFixed(1)} km to pickup'
+                                          : 'Driver distance not available',
                                       style: GoogleFonts.sora(
                                         fontSize: 11,
                                         color: kOrange,
@@ -737,6 +837,44 @@ class _IncomingTripModalState extends State<IncomingTripModal>
                         ],
                       ),
                     ),
+                    if (widget.trip.message.isNotEmpty ||
+                        widget.trip.bonusAmount > 0) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: kWhite,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: kGray2),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (widget.trip.message.isNotEmpty) ...[
+                              Text(
+                                widget.trip.message,
+                                style: GoogleFonts.sora(
+                                  fontSize: 12,
+                                  color: kDark,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                            ],
+                            if (widget.trip.bonusAmount > 0)
+                              Text(
+                                'Bonus included: +₹${widget.trip.bonusAmount.toStringAsFixed(0)}',
+                                style: GoogleFonts.sora(
+                                  fontSize: 12,
+                                  color: kSuccess,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 14),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -831,8 +969,14 @@ class _CountdownPainter extends CustomPainter {
 class ActiveTripPanel extends StatelessWidget {
   final TripData trip;
   final Function(String) onAction;
+  final VoidCallback onCall;
+  final VoidCallback onChat;
   const ActiveTripPanel(
-      {super.key, required this.trip, required this.onAction});
+      {super.key,
+      required this.trip,
+      required this.onAction,
+      required this.onCall,
+      required this.onChat});
 
   static const _steps = [
     ('accepted', 'Head to Pickup', 'arrived', "I've Arrived", kInfo, '🚗'),
@@ -983,9 +1127,14 @@ class ActiveTripPanel extends StatelessWidget {
                       _CircleBtn(
                           icon: '📞',
                           bg: kSuccess.withOpacity(0.15),
-                          border: kSuccess.withOpacity(0.27)),
+                          border: kSuccess.withOpacity(0.27),
+                          onTap: onCall),
                       const SizedBox(width: 8),
-                      _CircleBtn(icon: '💬', bg: kGray2, border: kGray2),
+                      _CircleBtn(
+                          icon: '💬',
+                          bg: kGray2,
+                          border: kGray2,
+                          onTap: onChat),
                     ],
                   ),
                 ],
@@ -1112,6 +1261,267 @@ class ActiveTripPanel extends StatelessWidget {
             ]),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class DriverTripChatScreen extends StatefulWidget {
+  final int tripId;
+  final String riderName;
+  final VoidCallback onClose;
+
+  const DriverTripChatScreen({
+    super.key,
+    required this.tripId,
+    required this.riderName,
+    required this.onClose,
+  });
+
+  @override
+  State<DriverTripChatScreen> createState() => _DriverTripChatScreenState();
+}
+
+class _DriverTripChatScreenState extends State<DriverTripChatScreen> {
+  final _msgCtrl = TextEditingController();
+  final _scrollCtrl = ScrollController();
+  List<Map<String, dynamic>> _messages = [];
+  List<Map<String, dynamic>> _quickMsgs = [];
+  bool _loading = true;
+  bool _sending = false;
+  Timer? _pollTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (mounted) {
+        _loadData(silent: true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    _msgCtrl.dispose();
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadData({bool silent = false}) async {
+    try {
+      final msgs = await ApiService.getChatMessages(widget.tripId);
+      final quick = await ApiService.getQuickMessages();
+      if (!mounted) return;
+      setState(() {
+        _messages = List<Map<String, dynamic>>.from(
+            msgs['data']?['messages'] ?? msgs['messages'] ?? const []);
+        _quickMsgs = List<Map<String, dynamic>>.from(quick['data']
+                ?['quick_messages'] ??
+            quick['quick_messages'] ??
+            const []);
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      if (!silent) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  Future<void> _sendMessage(String text,
+      {String type = 'text', String? quickKey}) async {
+    if (_sending) return;
+    setState(() => _sending = true);
+    try {
+      final res = await ApiService.sendChatMessage(
+        widget.tripId,
+        type,
+        text,
+        quickKey,
+      );
+      if (res['success'] == true) {
+        _msgCtrl.clear();
+        await _loadData(silent: true);
+        if (_scrollCtrl.hasClients) {
+          await Future.delayed(const Duration(milliseconds: 150));
+          _scrollCtrl.animateTo(
+            _scrollCtrl.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+          );
+        }
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(res['error'] ?? 'Failed to send message')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to send message')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _sending = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final myId = AuthService.userId;
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          'Chat with ${widget.riderName.isNotEmpty ? widget.riderName : "Rider"}',
+          style: GoogleFonts.sora(
+            color: kDark,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: kDark),
+          onPressed: widget.onClose,
+        ),
+      ),
+      body: Column(
+        children: [
+          if (_quickMsgs.isNotEmpty)
+            Container(
+              height: 44,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _quickMsgs.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (ctx, i) {
+                  final q = _quickMsgs[i];
+                  final label = q['text_en'] ?? q['text_bn'] ?? '';
+                  return GestureDetector(
+                    onTap: () => _sendMessage(
+                      label,
+                      type: 'quick',
+                      quickKey: q['key'],
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: kOrangeLight,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: kOrange.withOpacity(0.15),
+                        ),
+                      ),
+                      child: Text(
+                        label,
+                        style: GoogleFonts.sora(
+                          fontSize: 12,
+                          color: kOrange,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          Expanded(
+            child: _loading
+                ? const Center(
+                    child: CircularProgressIndicator(color: kOrange),
+                  )
+                : ListView.builder(
+                    controller: _scrollCtrl,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _messages.length,
+                    itemBuilder: (ctx, i) {
+                      final m = _messages[i];
+                      final isMe = (m['sender_id'] as num?)?.toInt() == myId;
+                      final text = m['message_text']?.toString() ?? '';
+                      return Align(
+                        alignment:
+                            isMe ? Alignment.centerRight : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 10),
+                          constraints: BoxConstraints(
+                              maxWidth:
+                                  MediaQuery.of(context).size.width * 0.72),
+                          decoration: BoxDecoration(
+                            color: isMe ? kOrange : kGray,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text(
+                            text,
+                            style: GoogleFonts.sora(
+                              fontSize: 14,
+                              color: isMe ? Colors.white : kDark,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            decoration: BoxDecoration(color: Colors.white, boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+            ]),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _msgCtrl,
+                    decoration: InputDecoration(
+                      hintText: 'Type a message...',
+                      filled: true,
+                      fillColor: kGray,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: _sending
+                      ? null
+                      : () {
+                          final text = _msgCtrl.text.trim();
+                          if (text.isNotEmpty) {
+                            _sendMessage(text);
+                          }
+                        },
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: _sending ? kMuted : kOrange,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.send_rounded,
+                        color: Colors.white, size: 22),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1342,18 +1752,23 @@ class _MetaChip extends StatelessWidget {
 class _CircleBtn extends StatelessWidget {
   final String icon;
   final Color bg, border;
+  final VoidCallback? onTap;
   const _CircleBtn(
-      {required this.icon, required this.bg, required this.border});
+      {required this.icon, required this.bg, required this.border, this.onTap});
 
   @override
-  Widget build(BuildContext context) => Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: bg,
-            border: Border.all(color: border, width: 1.5)),
-        child: Center(child: Text(icon, style: const TextStyle(fontSize: 18))),
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: bg,
+              border: Border.all(color: border, width: 1.5)),
+          child:
+              Center(child: Text(icon, style: const TextStyle(fontSize: 18))),
+        ),
       );
 }
 
@@ -1912,6 +2327,39 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     setState(() => _incomingTrip = null);
   }
 
+  Future<void> _callRider() async {
+    final trip = _activeTrip;
+    if (trip == null) return;
+
+    final phone = trip.riderPhone.trim();
+    if (phone.isEmpty) {
+      _showSnack('Rider phone number is not available.', isError: true);
+      return;
+    }
+
+    final uri = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      _showSnack('Could not open phone dialer', isError: true);
+    }
+  }
+
+  void _openRiderChat() {
+    final trip = _activeTrip;
+    if (trip == null) return;
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DriverTripChatScreen(
+          tripId: trip.id,
+          riderName: trip.riderName,
+          onClose: () => Navigator.pop(context),
+        ),
+      ),
+    );
+  }
+
   Future<void> _handleTripAction(String action) async {
     if (_activeTrip == null) return;
     final tripId = _activeTrip!.id;
@@ -2428,7 +2876,12 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
           ],
         ),
         if (_activeTrip != null)
-          ActiveTripPanel(trip: _activeTrip!, onAction: _handleTripAction),
+          ActiveTripPanel(
+            trip: _activeTrip!,
+            onAction: _handleTripAction,
+            onCall: _callRider,
+            onChat: _openRiderChat,
+          ),
         if (_incomingTrip != null && _activeTrip == null)
           Positioned.fill(
             child: IncomingTripModal(

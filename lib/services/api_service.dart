@@ -35,7 +35,7 @@ class ApiService {
     if (res.statusCode == 403) {
       final detail = data is Map ? data['detail'] : '';
       if (detail != null && detail.toString().contains('another device')) {
-        await AuthService.logout();
+        await AuthService.logout(forced: true);
         return {
           'success': false,
           'error': 'You have been logged out because your account was accessed from another device.',

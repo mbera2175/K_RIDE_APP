@@ -17,6 +17,7 @@ Future<void> initializeBackgroundService() async {
       initialNotificationTitle: 'KRide Driver',
       initialNotificationContent: 'You are online and ready to receive rides.',
       foregroundServiceNotificationId: 888,
+      foregroundServiceTypes: [AndroidForegroundType.location],
     ),
     iosConfiguration: IosConfiguration(
       autoStart: false,

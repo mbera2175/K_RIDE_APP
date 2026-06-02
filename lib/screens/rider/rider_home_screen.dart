@@ -1309,6 +1309,8 @@ class _WhereToScreenState extends State<WhereToScreen> {
    bool _searching = false;
   bool _socketDisconnected = false;
   double _estimatedFare = 0.0;
+  double _estimatedDistance = 0.0;
+  int _estimatedDuration = 0;
   bool _fareLoading = false;
 
   // Active Tracking state
@@ -1396,11 +1398,18 @@ class _WhereToScreenState extends State<WhereToScreen> {
         vehicleType: _selectedVehicleType,
       );
       if (res['success'] == true) {
-        setState(() => _estimatedFare =
-          (res['data']?['estimated_fare'] ?? 0.0).toDouble());
+        setState(() {
+          _estimatedFare = (res['data']?['estimated_fare'] ?? 0.0).toDouble();
+          _estimatedDistance = (res['data']?['distance_km'] ?? 0.0).toDouble();
+          _estimatedDuration = (res['data']?['duration_min'] ?? 0).toInt();
+        });
       }
     } catch (e) {
-      setState(() => _estimatedFare = 0.0);
+      setState(() {
+        _estimatedFare = 0.0;
+        _estimatedDistance = 0.0;
+        _estimatedDuration = 0;
+      });
     }
     setState(() => _fareLoading = false);
   }
@@ -1538,6 +1547,17 @@ class _WhereToScreenState extends State<WhereToScreen> {
     RiderSocketService.onMessage = (data) {
       debugPrint('Rider socket message: $data');
       final type = data["type"];
+      if (type == "kicked") {
+        RiderSocketService.disconnect();
+        AuthService.logout(forced: true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(data["message"] ?? "Logged in on another device"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
       if (type == "driver_assigned") {
         setState(() {
           _searching = false;
@@ -1976,7 +1996,7 @@ class _WhereToScreenState extends State<WhereToScreen> {
                           const SizedBox(width: 12),
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             Text(widget.service.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: kDark)),
-                            Text('${widget.service.bikeOnly ? '🏍️ Bike rider · ' : ''}~12 min · 3.2 km', style: const TextStyle(fontSize: 12, color: kMuted)),
+                            Text('${widget.service.bikeOnly ? '🏍️ Bike rider · ' : ''}~${_estimatedDuration > 0 ? _estimatedDuration : 12} min · ${_estimatedDistance > 0 ? _estimatedDistance.toStringAsFixed(1) : '3.2'} km', style: const TextStyle(fontSize: 12, color: kMuted)),
                           ])),
                           Text('₹${_estimatedFare.toStringAsFixed(0)}', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: widget.service.accent))
                         ],

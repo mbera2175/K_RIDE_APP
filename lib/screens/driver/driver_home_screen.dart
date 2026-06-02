@@ -1235,6 +1235,16 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
 
           debugPrint('Socket message: $data');
 
+          if (data['type'] == 'kicked') {
+            DriverSocketService.disconnect();
+            AuthService.logout(forced: true);
+            _showSnack(
+              data['message'] ?? 'Logged in on another device',
+              isError: true,
+            );
+            return;
+          }
+
           if (data['type'] == 'new_trip') {
 
             final tripData = data['data'];

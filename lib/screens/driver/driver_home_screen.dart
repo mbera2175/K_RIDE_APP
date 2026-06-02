@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 
 import '../../utils/app_colors.dart';
 import '../../services/auth_service.dart';
@@ -1213,6 +1216,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
       );
 
       if (online) {
+        if (Platform.isAndroid) {
+          await Permission.notification.request();
+        }
+        await FlutterBackgroundService().startService();
 
         await ApiService.updateLocation(
           _currentLat,
@@ -1269,10 +1276,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> with SingleTickerPr
         };
 
       } else {
-
         await RideAlertService.stopAlert();
-
         DriverSocketService.disconnect();
+        FlutterBackgroundService().invoke("stopService");
 
         if (mounted) {
 

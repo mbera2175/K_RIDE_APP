@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mappls_gl/mappls_gl.dart';
 import 'utils/app_colors.dart';
 import 'services/auth_service.dart';
+import 'services/driver_background_service.dart';
 import 'screens/rider/rider_home_screen.dart';
 import 'screens/driver/driver_home_screen.dart';
 import 'screens/auth/role_selection_screen.dart';
@@ -21,6 +22,7 @@ void main() async {
   // MapplsAccountManager.setAtlasClientSecret("lrFxI-iSEg8FAEuoX9z0UYKFbEDDr2gtxSFnMaxGyAmNBp8A__5GQ8yGbmpIL3g5qYPFCzw-0wb_u9xpbjl1i8lZ49AasxwH3PCiRF2PpuY=");
 
   await AuthService.init(); // ← load saved session
+  await initializeBackgroundService();
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(

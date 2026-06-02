@@ -515,4 +515,24 @@ class ApiService {
       headers: _headers).timeout(_timeout);
     return _handle(res);
   }
+
+  // ═══════════════════════════════════════════════════════
+  //  HEARTBEAT & RECONNECT
+  // ═══════════════════════════════════════════════════════
+
+  static Future<Map<String, dynamic>> sendHeartbeat() async {
+    final res = await http.post(
+      Uri.parse('$_base/driver/heartbeat'),
+      headers: _authHeaders,
+    ).timeout(_timeout);
+    return _handle(res);
+  }
+
+  static Future<Map<String, dynamic>> reconnectTrip() async {
+    final res = await http.get(
+      Uri.parse('$_base/trips/reconnect'),
+      headers: _authHeaders,
+    ).timeout(_timeout);
+    return _handle(res);
+  }
 }

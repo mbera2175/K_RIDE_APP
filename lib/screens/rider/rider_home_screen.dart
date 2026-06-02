@@ -1306,7 +1306,8 @@ class _WhereToScreenState extends State<WhereToScreen> {
   double _dropLng = 88.3950;
   bool _useKCoins = false;
   int? _tripId;
-  bool _searching = false;
+   bool _searching = false;
+  bool _socketDisconnected = false;
   double _estimatedFare = 0.0;
   bool _fareLoading = false;
 
@@ -1462,6 +1463,77 @@ class _WhereToScreenState extends State<WhereToScreen> {
   }
 
   void _connectSocket(int riderId, String token) {
+    setState(() => _socketDisconnected = false);
+
+    RiderSocketService.onDisconnect = () {
+      if (mounted) {
+        setState(() {
+          _socketDisconnected = true;
+        });
+      }
+    };
+
+    RiderSocketService.onReconnect = () async {
+      if (mounted) {
+        setState(() {
+          _socketDisconnected = false;
+        });
+      }
+      try {
+        final res = await ApiService.reconnectTrip();
+        if (res['success'] == true && res['data'] != null) {
+          final data = res['data'];
+          final isSearching = data['searching'] == true;
+          final activeTrip = data['active_trip'];
+
+          if (isSearching) {
+            setState(() {
+              _searching = true;
+              _booked = true;
+            });
+          } else if (activeTrip != null) {
+            final tripId = activeTrip['id'];
+            final status = activeTrip['status'] ?? 'requested';
+            final otpCode = activeTrip['otp_code']?.toString();
+            
+            Map<String, dynamic>? driver;
+            double? dLat;
+            double? dLng;
+            if (activeTrip['driver'] != null) {
+              driver = activeTrip['driver'];
+              dLat = (activeTrip['driver']['current_lat'] as num?)?.toDouble();
+              dLng = (activeTrip['driver']['current_lng'] as num?)?.toDouble();
+            }
+
+            setState(() {
+              _tripId = tripId;
+              _booked = true;
+              _searching = false;
+              _step = 'tracking';
+              _tripStatus = status;
+              _otpCode = otpCode;
+              _assignedDriver = driver;
+              _driverLat = dLat;
+              _driverLng = dLng;
+            });
+
+            if (dLat != null && dLng != null) {
+              _updateDriverMarker(dLat, dLng);
+            }
+          } else {
+            setState(() {
+              _booked = false;
+              _searching = false;
+              _step = 'input';
+              _tripId = null;
+            });
+          }
+        }
+      } catch (e) {
+        debugPrint('Error during trip reconnect restoration: $e');
+      }
+    };
+
     RiderSocketService.connect(riderId, token);
     RiderSocketService.onMessage = (data) {
       debugPrint('Rider socket message: $data');
@@ -1561,72 +1633,140 @@ class _WhereToScreenState extends State<WhereToScreen> {
     final isAmbulance = widget.service.vehicleType == 'ambulance';
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const SizedBox(height: 40),
-              Container(
-                width: 80, height: 80,
-                decoration: const BoxDecoration(color: Color(0xFFFFF3E0), shape: BoxShape.circle),
-                child: Center(child: Text(widget.service.icon, style: const TextStyle(fontSize: 40))),
-              ),
-              const SizedBox(height: 20),
-              const Text('Finding your driver...', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
-              const SizedBox(height: 8),
-              Text('Looking for drivers near you', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-              const SizedBox(height: 32),
-              if (!isAmbulance) ...[
-                const Text('No one accepting? Add a bonus!', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8, runSpacing: 8,
-                  alignment: WrapAlignment.center,
-                  children: [10, 20, 30, 40, 50, 100].map((amount) => GestureDetector(
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 40),
+                  Container(
+                    width: 80, height: 80,
+                    decoration: const BoxDecoration(color: Color(0xFFFFF3E0), shape: BoxShape.circle),
+                    child: Center(child: Text(widget.service.icon, style: const TextStyle(fontSize: 40))),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text('Finding your driver...', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
+                  const SizedBox(height: 8),
+                  Text('Looking for drivers near you', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                  const SizedBox(height: 32),
+                  if (!isAmbulance) ...[
+                    const Text('No one accepting? Add a bonus!', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8, runSpacing: 8,
+                      alignment: WrapAlignment.center,
+                      children: [10, 20, 30, 40, 50, 100].map((amount) => GestureDetector(
+                        onTap: () async {
+                          if (_tripId == null) return;
+                          try {
+                            await ApiService.addBonus(_tripId!, amount.toDouble());
+                            setState(() => _bonusAmount += amount);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('+₹$amount bonus added!')));
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Failed to add bonus')));
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF3E0),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: const Color(0xFFFF6B35), width: 1.5),
+                          ),
+                          child: Text('+₹$amount', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFFFF6B35))),
+                        ),
+                      )).toList(),
+                    ),
+                    if (_bonusAmount > 0) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(color: const Color(0xFFFFF3E0), borderRadius: BorderRadius.circular(12)),
+                        child: Text('Total Bonus: ₹$_bonusAmount', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFFFF6B35))),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                  ],
+                  GestureDetector(
                     onTap: () async {
-                      if (_tripId == null) return;
-                      try {
-                        await ApiService.addBonus(_tripId!, amount.toDouble());
-                        setState(() => _bonusAmount += amount);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('+₹$amount bonus added!')));
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Failed to add bonus')));
-                      }
+                      if (_tripId != null) await ApiService.cancelTrip(_tripId!, 'Cancelled by rider');
+                      RiderSocketService.disconnect();
+                      setState(() { _booked = false; _searching = false; _tripId = null; _bonusAmount = 0; });
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF3E0),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: const Color(0xFFFF6B35), width: 1.5),
-                      ),
-                      child: Text('+₹$amount', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFFFF6B35))),
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                      decoration: BoxDecoration(color: const Color(0xFFFFF3F3), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.red.shade300)),
+                      child: const Text('Cancel Search', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.red)),
                     ),
-                  )).toList(),
-                ),
-                if (_bonusAmount > 0) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(color: const Color(0xFFFFF3E0), borderRadius: BorderRadius.circular(12)),
-                    child: Text('Total Bonus: ₹$_bonusAmount', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFFFF6B35))),
                   ),
                 ],
-                const SizedBox(height: 24),
-              ],
-              GestureDetector(
-                onTap: () async {
-                  if (_tripId != null) await ApiService.cancelTrip(_tripId!, 'Cancelled by rider');
-                  RiderSocketService.disconnect();
-                  setState(() { _booked = false; _searching = false; _tripId = null; _bonusAmount = 0; });
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                  decoration: BoxDecoration(color: const Color(0xFFFFF3F3), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.red.shade300)),
-                  child: const Text('Cancel Search', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.red)),
+              ),
+            ),
+          ),
+          if (_socketDisconnected)
+            _buildReconnectionOverlay(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReconnectionOverlay() {
+    return Positioned(
+      top: 50,
+      left: 16,
+      right: 16,
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(color: Colors.orange.shade100, width: 1.5),
+          ),
+          child: Row(
+            children: [
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(kOrange),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Connection Lost',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    Text(
+                      'Attempting to reconnect every 5s...',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -2429,6 +2569,8 @@ class _WhereToScreenState extends State<WhereToScreen> {
               ),
             ),
           ),
+          if (_socketDisconnected)
+            _buildReconnectionOverlay(),
         ],
       ),
     );

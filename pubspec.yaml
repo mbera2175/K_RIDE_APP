@@ -30,6 +30,7 @@ dependencies:
   mappls_gl: ^2.0.3
   geolocator: ^11.0.0
   geocoding: ^3.0.0
+  flutter_background_service: ^5.0.7
 
   # Auth & Phone
   intl_phone_field: ^3.2.0

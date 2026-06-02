@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
+import '../utils/constants.dart';
 
 class DriverSocketService {
   static WebSocketChannel? _channel;
@@ -17,7 +18,7 @@ class DriverSocketService {
       disconnect();
 
       final wsUrl =
-    'ws://13.232.171.208:8000/ws/driver/$driverId?token=$token';
+    '${AppConstants.wsBaseUrl}/ws/driver/$driverId?token=$token';
 
       _channel = WebSocketChannel.connect(
         Uri.parse(wsUrl),

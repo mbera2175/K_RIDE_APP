@@ -10,6 +10,8 @@ import '../../services/auth_service.dart';
 import '../../services/api_service.dart';
 import '../../services/rider_socket_service.dart';
 import '../auth/role_selection_screen.dart';
+import 'package:geocoding/geocoding.dart' as geo;
+import 'package:url_launcher/url_launcher.dart';
 
 // ── Constants ──
 const kOrange = Color(0xFFFF6B00);
@@ -1281,7 +1283,8 @@ class WhereToScreen extends StatefulWidget {
   final ServiceItem service;
   final String prefilledDest;
   final VoidCallback onBack;
-  const WhereToScreen({super.key, required this.service, required this.prefilledDest, required this.onBack});
+  final int? activeTripId;
+  const WhereToScreen({super.key, required this.service, required this.prefilledDest, required this.onBack, this.activeTripId});
 
   @override
   State<WhereToScreen> createState() => _WhereToScreenState();
@@ -1299,11 +1302,22 @@ class _WhereToScreenState extends State<WhereToScreen> {
   double _bonusAmount = 0.0;
   double _pickupLat = 22.5726;
   double _pickupLng = 88.3639;
+  double _dropLat = 22.5850;
+  double _dropLng = 88.3950;
   bool _useKCoins = false;
   int? _tripId;
   bool _searching = false;
   double _estimatedFare = 0.0;
   bool _fareLoading = false;
+
+  // Active Tracking state
+  String _tripStatus = 'requested';
+  Map<String, dynamic>? _assignedDriver;
+  String? _otpCode;
+  double? _driverLat;
+  double? _driverLng;
+  MapplsMapController? _mapController;
+  Symbol? _driverSymbol;
 
   final _quickDests = const [
     PlaceItem(icon: '🏠', label: 'Home',        sub: 'Sector 15, Noida'),
@@ -1320,30 +1334,64 @@ class _WhereToScreenState extends State<WhereToScreen> {
     _selectedVehicleType = ['ac_cab', 'non_ac_cab', 'bike', 'auto', 'toto'].contains(initialVehicle)
         ? initialVehicle
         : 'ac_cab';
+    
+    if (widget.activeTripId != null) {
+      _tripId = widget.activeTripId;
+      _booked = true;
+      _searching = false;
+      _step = 'tracking';
+      _loadActiveTripDetails();
+    } else {
       _getLocation();
+    }
   }
+
   Future<void> _getLocation() async {
-  try {
-    final permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied) return;
-    final pos = await Geolocator.getCurrentPosition();
-    setState(() {
-      _pickupLat = pos.latitude;
-      _pickupLng = pos.longitude;
-      _pickupCtrl.text = 'Current Location';
-    });
-  } catch (e) {
-    // Keep default if GPS fails
+    try {
+      final permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+      final pos = await Geolocator.getCurrentPosition();
+      setState(() {
+        _pickupLat = pos.latitude;
+        _pickupLng = pos.longitude;
+        _pickupCtrl.text = 'Current Location';
+      });
+    } catch (e) {
+      // Keep default if GPS fails
+    }
   }
-}
-Future<void> _loadFare() async {
+
+  Future<void> _loadFare() async {
     setState(() => _fareLoading = true);
     try {
+      if (_destCtrl.text.isNotEmpty) {
+        try {
+          List<geo.Location> locations = await geo.locationFromAddress(_destCtrl.text);
+          if (locations.isNotEmpty) {
+            _dropLat = locations.first.latitude;
+            _dropLng = locations.first.longitude;
+          }
+        } catch (e) {
+          debugPrint('Geocoding drop error: $e');
+        }
+      }
+      if (_pickupCtrl.text.isNotEmpty && _pickupCtrl.text != 'Current Location') {
+        try {
+          List<geo.Location> locations = await geo.locationFromAddress(_pickupCtrl.text);
+          if (locations.isNotEmpty) {
+            _pickupLat = locations.first.latitude;
+            _pickupLng = locations.first.longitude;
+          }
+        } catch (e) {
+          debugPrint('Geocoding pickup error: $e');
+        }
+      }
+
       final res = await ApiService.estimateFare(
         pickupLat: _pickupLat,
         pickupLng: _pickupLng,
-        dropLat: 22.5850,
-        dropLng: 88.3950,
+        dropLat: _dropLat,
+        dropLng: _dropLng,
         vehicleType: _selectedVehicleType,
       );
       if (res['success'] == true) {
@@ -1355,6 +1403,127 @@ Future<void> _loadFare() async {
     }
     setState(() => _fareLoading = false);
   }
+
+  Future<void> _updateDriverMarker(double lat, double lng) async {
+    if (_mapController == null) return;
+    try {
+      if (_driverSymbol != null) {
+        await _mapController!.removeSymbol(_driverSymbol!);
+      }
+      _driverSymbol = await _mapController!.addSymbol(SymbolOptions(
+        geometry: LatLng(lat, lng),
+        iconImage: 'car-15',
+        iconSize: 2.0,
+        iconColor: '#FF6B00',
+        textField: 'Driver',
+        textOffset: const Offset(0, -1.5),
+        textColor: '#FF6B00',
+        textSize: 12.0,
+      ));
+    } catch (e) {
+      debugPrint('Driver marker update error: $e');
+    }
+  }
+
+  Future<void> _loadActiveTripDetails() async {
+    setState(() => _fareLoading = true);
+    try {
+      final res = await ApiService.getActiveTrip();
+      if (res['success'] == true && res['data']?['active_trip'] != null) {
+        final trip = res['data']['active_trip'];
+        setState(() {
+          _tripStatus = trip['status'] ?? 'requested';
+          _pickupCtrl.text = trip['pickup_address'] ?? '';
+          _pickupLat = (trip['pickup_lat'] as num?)?.toDouble() ?? 22.5726;
+          _pickupLng = (trip['pickup_lng'] as num?)?.toDouble() ?? 88.3639;
+          _dropLat = (trip['drop_lat'] as num?)?.toDouble() ?? 22.5850;
+          _dropLng = (trip['drop_lng'] as num?)?.toDouble() ?? 88.3950;
+          _estimatedFare = (trip['estimated_fare'] as num?)?.toDouble() ?? 0.0;
+          _selectedVehicleType = trip['vehicle_type'] ?? _selectedVehicleType;
+          _otpCode = trip['otp_code']?.toString();
+          
+          if (trip['driver'] != null) {
+            _assignedDriver = trip['driver'];
+            _driverLat = (trip['driver']['current_lat'] as num?)?.toDouble();
+            _driverLng = (trip['driver']['current_lng'] as num?)?.toDouble();
+          }
+          
+          final riderId = AuthService.riderId;
+          final token = AuthService.token;
+          if (riderId != null && token != null) {
+            _connectSocket(riderId, token);
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Load active trip details error: $e');
+    }
+    setState(() => _fareLoading = false);
+  }
+
+  void _connectSocket(int riderId, String token) {
+    RiderSocketService.connect(riderId, token);
+    RiderSocketService.onMessage = (data) {
+      debugPrint('Rider socket message: $data');
+      final type = data["type"];
+      if (type == "driver_assigned") {
+        setState(() {
+          _searching = false;
+          _step = 'tracking';
+          _tripStatus = 'driver_assigned';
+          _assignedDriver = data["driver"];
+          _otpCode = data["otp"]?.toString();
+        });
+      } else if (type == "no_driver_found") {
+        setState(() {
+          _booked = false;
+          _searching = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("No driver found nearby. Try again.")));
+      } else if (type == "driver_location") {
+        final lat = (data["lat"] as num?)?.toDouble();
+        final lng = (data["lng"] as num?)?.toDouble();
+        if (lat != null && lng != null) {
+          setState(() {
+            _driverLat = lat;
+            _driverLng = lng;
+          });
+          _updateDriverMarker(lat, lng);
+        }
+      } else if (type == "driver_arrived") {
+        setState(() {
+          _tripStatus = 'arrived';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Driver has arrived at pickup location! 📍"), backgroundColor: kOrange));
+      } else if (type == "trip_started") {
+        setState(() {
+          _tripStatus = 'started';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Trip started! Have a safe journey. 🚗"), backgroundColor: Colors.green));
+      } else if (type == "trip_completed") {
+        setState(() {
+          _tripStatus = 'completed';
+        });
+        RiderSocketService.disconnect();
+        Navigator.pushReplacement(context, MaterialPageRoute(
+          builder: (_) => TripReceiptScreen(tripId: _tripId!, onClose: widget.onBack),
+        ));
+      } else if (type == "trip_cancelled") {
+        RiderSocketService.disconnect();
+        setState(() {
+          _booked = false;
+          _searching = false;
+          _step = 'input';
+          _tripId = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Trip cancelled by driver: ${data["reason"] ?? 'No reason given'}"), backgroundColor: Colors.red));
+      }
+    };
+  }
   @override
   void dispose() {
     _pickupCtrl.dispose();
@@ -1363,16 +1532,26 @@ Future<void> _loadFare() async {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
+    if (_step == 'tracking') {
+      return _buildTrackingStep();
+    }
     if (_booked) {
-      return _searching
-          ? _buildSearchingState()
-          : BookingSuccessScreen(
-              service: widget.service,
-              destination: _destCtrl.text,
-              payment: _paymentMethod,
-              onDone: widget.onBack,
-            );
+      if (_searching) {
+        return _buildSearchingState();
+      } else {
+        return BookingSuccessScreen(
+          service: widget.service,
+          destination: _destCtrl.text,
+          payment: _paymentMethod,
+          onDone: () {
+            setState(() {
+              _step = 'tracking';
+            });
+          },
+        );
+      }
     }
     if (_step == 'confirm') return _buildConfirmStep();
     return _buildInputStep();
@@ -1597,13 +1776,13 @@ Future<void> _loadFare() async {
                 child: Stack(
                   children: [
                     MapplsMap(
-                      initialCameraPosition: const CameraPosition(
-                        target: LatLng(22.5726, 88.3639),
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(_pickupLat, _pickupLng),
                         zoom: 13,
                       ),
                       onMapCreated: (MapplsMapController controller) async {
                         await controller.addSymbol(SymbolOptions(
-                          geometry: const LatLng(22.5726, 88.3639),
+                          geometry: LatLng(_pickupLat, _pickupLng),
                           iconImage: 'marker-15',
                           iconSize: 2.0,
                           iconColor: '#FF6B00',
@@ -1612,7 +1791,7 @@ Future<void> _loadFare() async {
                           textColor: '#FF6B00',
                         ));
                         await controller.addSymbol(SymbolOptions(
-                          geometry: const LatLng(22.5850, 88.3950),
+                          geometry: LatLng(_dropLat, _dropLng),
                           iconImage: 'marker-15',
                           iconSize: 2.0,
                           iconColor: '#1A1A1A',
@@ -1640,7 +1819,6 @@ Future<void> _loadFare() async {
                     ),
                   ],
                 ),
-              ),
               ),
               Container(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
@@ -1768,8 +1946,8 @@ Future<void> _loadFare() async {
                             "drop_address": _destCtrl.text,
                             "pickup_lat": _pickupLat,
                             "pickup_lng": _pickupLng,
-                            "drop_lat": 22.5850,
-                            "drop_lng": 88.3950,
+                            "drop_lat": _dropLat,
+                            "drop_lng": _dropLng,
                             "vehicle_type": _selectedVehicleType,
                             "service_type": widget.service.category == 'delivery' ? widget.service.name.toLowerCase() : 'ride',
                             "payment_method": _paymentMethod.id,
@@ -1788,71 +1966,7 @@ Future<void> _loadFare() async {
                               final riderId = AuthService.riderId;
                               final token = AuthService.token;
                               if (riderId != null && token != null) {
-                                await RiderSocketService.connect(riderId, token);
-                                RiderSocketService.onMessage = (data) {
-                                  if (data["type"] == "driver_assigned") {
-                                    setState(() { _searching = false; });
-                                    showModalBottomSheet(
-                                      context: context,
-                                      backgroundColor: Colors.white,
-                                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-                                      builder: (_) => Padding(
-                                        padding: const EdgeInsets.all(20),
-                                        child: Column(mainAxisSize: MainAxisSize.min, children: [
-                                          const Text('Driver Assigned! 🎉', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
-                                          const SizedBox(height: 16),
-                                          Row(children: [
-                                            CircleAvatar(radius: 30, backgroundColor: const Color(0xFFFFF3E0),
-                                                child: Text(data["driver"]?["name"]?.toString().substring(0, 1) ?? 'D', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xFFFF6B35)))),
-                                            const SizedBox(width: 16),
-                                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                              Text(data["driver"]?["name"] ?? 'Driver', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                                              Text(data["driver"]?["phone"] ?? '', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
-                                            ])),
-                                            GestureDetector(
-                                              onTap: () {},
-                                              child: Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFFFFF3E0), borderRadius: BorderRadius.circular(12)), child: const Center(child: Text('📞', style: TextStyle(fontSize: 22)))),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            GestureDetector(
-                                              onTap: () async {
-                                                if (_tripId != null) {
-                                                  await ApiService.raiseSOS(_tripId!);
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                      const SnackBar(content: Text('🚨 SOS Alert raised! Help is on the way.'), backgroundColor: Colors.red));
-                                                }
-                                              },
-                                              child: Container(width: 44, height: 44, decoration: BoxDecoration(color: Colors.red[50], borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.red.shade300)), child: const Center(child: Text('🆘', style: TextStyle(fontSize: 22)))),
-                                            ),
-                                          ]),
-                                          const SizedBox(height: 16),
-                                          Row(children: [
-                                            Expanded(child: ElevatedButton(
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                                Navigator.push(context, MaterialPageRoute(
-                                                  builder: (_) => TripChatScreen(tripId: _tripId!, onClose: () => Navigator.pop(context)),
-                                                ));
-                                              },
-                                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFF3E0), foregroundColor: const Color(0xFFFF6B35), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 14)),
-                                              child: const Text('💬 Chat'),
-                                            )),
-                                            const SizedBox(width: 8),
-                                            Expanded(child: ElevatedButton(
-                                              onPressed: () => Navigator.pop(context),
-                                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6B35), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 14)),
-                                              child: const Text('OK', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
-                                            )),
-                                          ]),
-                                        ]),
-                                      ),
-                                    );
-                                  } else if (data["type"] == "no_driver_found") {
-                                    setState(() { _booked = false; _searching = false; });
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text("No driver found nearby. Try again.")));
-                                  }
-                                };
+                                _connectSocket(riderId, token);
                               }
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result["error"] ?? "Booking failed")));
@@ -1880,6 +1994,443 @@ Future<void> _loadFare() async {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildTrackingStep() {
+    final driverName = _assignedDriver?['name'] ?? 'Driver';
+    final driverPhone = _assignedDriver?['phone'] ?? '';
+    final driverRating = _assignedDriver?['rating'] ?? '4.8';
+    final vehicleModel = _assignedDriver?['vehicle_model'] ?? 'Standard Vehicle';
+    final vehicleNo = _assignedDriver?['vehicle_no'] ?? 'T&C Applied';
+
+    Color statusColor = kOrange;
+    String statusTitle = 'Driver Assigned';
+    String statusSubtitle = 'Driver is on their way to pick you up';
+
+    if (_tripStatus == 'arrived') {
+      statusColor = Colors.green;
+      statusTitle = 'Driver Arrived';
+      statusSubtitle = 'Please meet the driver at your pickup point';
+    } else if (_tripStatus == 'started') {
+      statusColor = Colors.blue;
+      statusTitle = 'On Trip';
+      statusSubtitle = 'Heading to your destination';
+    } else if (_tripStatus == 'completed') {
+      statusColor = Colors.grey;
+      statusTitle = 'Trip Completed';
+      statusSubtitle = 'Thank you for riding with KRide';
+    }
+
+    return Scaffold(
+      backgroundColor: kWhite,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: MapplsMap(
+              initialCameraPosition: CameraPosition(
+                target: LatLng(_pickupLat, _pickupLng),
+                zoom: 14,
+              ),
+              onMapCreated: (MapplsMapController controller) async {
+                _mapController = controller;
+                try {
+                  await controller.addSymbol(SymbolOptions(
+                    geometry: LatLng(_pickupLat, _pickupLng),
+                    iconImage: 'marker-15',
+                    iconSize: 2.0,
+                    iconColor: '#FF6B00',
+                    textField: 'Pickup',
+                    textOffset: const Offset(0, 1.5),
+                    textColor: '#FF6B00',
+                  ));
+                  await controller.addSymbol(SymbolOptions(
+                    geometry: LatLng(_dropLat, _dropLng),
+                    iconImage: 'marker-15',
+                    iconSize: 2.0,
+                    iconColor: '#1A1A1A',
+                    textField: 'Drop',
+                    textOffset: const Offset(0, 1.5),
+                    textColor: '#1A1A1A',
+                  ));
+                  if (_driverLat != null && _driverLng != null) {
+                    await _updateDriverMarker(_driverLat!, _driverLng!);
+                  }
+                } catch (e) {
+                  debugPrint('Map symbols creation error: $e');
+                }
+              },
+              myLocationEnabled: true,
+            ),
+          ),
+          Positioned(
+            top: 52,
+            left: 16,
+            right: 16,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onTap: widget.onBack,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: kWhite,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 10,
+                          offset: Offset(0, 2),
+                        )
+                      ],
+                    ),
+                    child: const Center(child: Text('←', style: TextStyle(fontSize: 18))),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 10,
+                        offset: Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  child: Text(
+                    statusTitle,
+                    style: const TextStyle(
+                      color: kWhite,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+              decoration: const BoxDecoration(
+                color: kWhite,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 32,
+                    offset: Offset(0, -8),
+                  )
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDDDDDD),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: statusColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          statusSubtitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: kOrangeLight,
+                        child: Text(
+                          driverName.isNotEmpty ? driverName.substring(0, 1).toUpperCase() : 'D',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: kOrange,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  driverName,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: kDark,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFF8E1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.star, size: 12, color: Colors.amber),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        driverRating.toString(),
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.amber,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '$vehicleModel • $vehicleNo',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => TripChatScreen(
+                                tripId: _tripId!,
+                                onClose: () => Navigator.pop(context),
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: kOrangeLight,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(child: Text('💬', style: TextStyle(fontSize: 20))),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () async {
+                          if (driverPhone.isNotEmpty) {
+                            final uri = Uri.parse('tel:$driverPhone');
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Could not open phone dialer')),
+                              );
+                            }
+                          }
+                        },
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8F5E9),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(child: Text('📞', style: TextStyle(fontSize: 20))),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      if (_otpCode != null && (_tripStatus == 'requested' || _tripStatus == 'driver_assigned' || _tripStatus == 'arrived'))
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: kGray,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: const Color(0xFFEEEEEE), width: 1.5),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Share OTP to start:',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: kMuted,
+                                  ),
+                                ),
+                                Text(
+                                  _otpCode!,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: kOrange,
+                                    letterSpacing: 2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        const Spacer(),
+                      if (_otpCode != null && (_tripStatus == 'requested' || _tripStatus == 'driver_assigned' || _tripStatus == 'arrived'))
+                        const SizedBox(width: 12),
+                      GestureDetector(
+                        onTap: () async {
+                          if (_tripId != null) {
+                            try {
+                              await ApiService.raiseSOS(_tripId!);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('🚨 SOS Alert Raised! Support notified.'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Failed to raise SOS')),
+                              );
+                            }
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF0F0),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.red.shade300, width: 1.5),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('🆘', style: TextStyle(fontSize: 18)),
+                              SizedBox(width: 6),
+                              Text(
+                                'SOS',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (_tripStatus == 'requested' || _tripStatus == 'driver_assigned' || _tripStatus == 'arrived') ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Cancel Ride?'),
+                              content: const Text('Are you sure you want to cancel this ride request?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: const Text('No'),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    Navigator.pop(ctx);
+                                    if (_tripId != null) {
+                                      try {
+                                        await ApiService.cancelTrip(_tripId!, 'Cancelled by rider');
+                                        RiderSocketService.disconnect();
+                                        setState(() {
+                                          _booked = false;
+                                          _searching = false;
+                                          _step = 'input';
+                                          _tripId = null;
+                                        });
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Ride request cancelled')),
+                                        );
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Failed to cancel ride')),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  child: const Text(
+                                    'Yes, Cancel',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Text(
+                          'Cancel Ride',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1941,6 +2492,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
   bool _showLocationModal = false;
   Timer? _promoTimer;
   late PageController _promoPageCtrl;
+  int? _restoredTripId;
 
   @override
   void initState() {
@@ -1957,6 +2509,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
         _promoPageCtrl.animateToPage(_promoIdx, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
       }
     });
+
+    _checkActiveTrip();
   }
 
   @override
@@ -1964,6 +2518,28 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     _promoTimer?.cancel();
     _promoPageCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkActiveTrip() async {
+    try {
+      final res = await ApiService.getActiveTrip();
+      if (res['success'] == true && res['data']?['active_trip'] != null) {
+        final trip = res['data']['active_trip'];
+        final serviceItem = services.firstWhere(
+          (s) => s.vehicleType == trip['vehicle_type'] || s.tag == 'Standard',
+          orElse: () => services.first,
+        );
+        setState(() {
+          _restoredTripId = (trip['id'] as num?)?.toInt();
+          _activeScreen = (
+            service: serviceItem,
+            prefilledDest: trip['drop_address'] ?? ''
+          );
+        });
+      }
+    } catch (e) {
+      debugPrint('Check active trip error: $e');
+    }
   }
 
   final _rideServices = services.where((s) => s.category == 'ride').toList();
@@ -3100,7 +3676,15 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               Positioned.fill(child: SeeAllModal(title: _seeAll!.title, items: _seeAll!.items, onSelect: _openService, onClose: () => setState(() => _seeAll = null))),
 
             if (_activeScreen != null)
-              Positioned.fill(child: WhereToScreen(service: _activeScreen!.service, prefilledDest: _activeScreen!.prefilledDest, onBack: () => setState(() => _activeScreen = null))),
+              Positioned.fill(child: WhereToScreen(
+                service: _activeScreen!.service,
+                prefilledDest: _activeScreen!.prefilledDest,
+                activeTripId: _restoredTripId,
+                onBack: () => setState(() {
+                  _activeScreen = null;
+                  _restoredTripId = null;
+                }),
+              )),
           ],
         ),
       ),

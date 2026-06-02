@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
+import '../utils/constants.dart';
 
 class RiderSocketService {
   static WebSocketChannel? _channel;
@@ -14,7 +15,7 @@ class RiderSocketService {
       disconnect();
 
       final wsUrl =
-          'ws://13.232.171.208:8000/ws/rider/$riderId?token=$token';
+          '${AppConstants.wsBaseUrl}/ws/rider/$riderId?token=$token';
 
       _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
       _isConnected = true;

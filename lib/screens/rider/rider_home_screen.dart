@@ -89,41 +89,144 @@ class PlaceItem {
 
 // ── Static data ──
 const services = [
-  ServiceItem(id: 1, name: 'AC Cab',     icon: '🚖', category: 'ride',     vehicleType: 'ac_cab',     tag: 'Comfortable', color: kOrangeLight, accent: kOrange,           bikeOnly: false),
-  ServiceItem(id: 2, name: 'Non-AC Cab', icon: '🚕', category: 'ride',     vehicleType: 'non_ac_cab', tag: 'Budget',    color: kOrangeLight, accent: kOrange,           bikeOnly: false),
-  ServiceItem(id: 3, name: 'Bike',       icon: '🏍️', category: 'ride',     vehicleType: 'bike',       tag: 'Fastest',   color: kOrangeLight, accent: kOrange,           bikeOnly: false),
-  ServiceItem(id: 4, name: 'Auto',       icon: '🛺', category: 'ride',     vehicleType: 'auto',       tag: null,        color: kOrangeLight, accent: kOrange,           bikeOnly: false),
-  ServiceItem(id: 5, name: 'Toto',       icon: '🛵', category: 'ride',     vehicleType: 'toto',       tag: 'EV',        color: Color(0xFFF0FFF4), accent: Color(0xFF2E7D32), bikeOnly: false),
-  ServiceItem(id: 6, name: 'Ambulance',  icon: '🚑', category: 'ride',     vehicleType: 'ambulance',  tag: 'Emergency', color: Color(0xFFFFF0F0), accent: Color(0xFFE53935), bikeOnly: false),
-  ServiceItem(id: 10, name: 'EV Ride',   icon: '⚡', category: 'ride',     vehicleType: 'ac_cab',     tag: 'Eco', color: Color(0xFFF0FFF4), accent: Color(0xFF2E7D32), bikeOnly: false, isEV: true),
-  ServiceItem(id: 7, name: 'Food',       icon: '🍱', category: 'delivery', vehicleType: 'bike',       tag: 'Bike only', color: kOrangeLight, accent: kOrange,           bikeOnly: true),
-  ServiceItem(id: 8, name: 'Parcel',     icon: '📦', category: 'delivery', vehicleType: 'bike',       tag: 'Bike only', color: Color(0xFFF3F0FF), accent: Color(0xFF5E35B1), bikeOnly: true),
-  ServiceItem(id: 9, name: 'Medicine',   icon: '💊', category: 'delivery', vehicleType: 'bike',       tag: 'Bike only', color: Color(0xFFF0F8FF), accent: Color(0xFF0277BD), bikeOnly: true),
+  ServiceItem(
+      id: 1,
+      name: 'AC Cab',
+      icon: '🚖',
+      category: 'ride',
+      vehicleType: 'ac_cab',
+      tag: 'Comfortable',
+      color: kOrangeLight,
+      accent: kOrange,
+      bikeOnly: false),
+  ServiceItem(
+      id: 2,
+      name: 'Non-AC Cab',
+      icon: '🚕',
+      category: 'ride',
+      vehicleType: 'non_ac_cab',
+      tag: 'Budget',
+      color: kOrangeLight,
+      accent: kOrange,
+      bikeOnly: false),
+  ServiceItem(
+      id: 3,
+      name: 'Bike',
+      icon: '🏍️',
+      category: 'ride',
+      vehicleType: 'bike',
+      tag: 'Fastest',
+      color: kOrangeLight,
+      accent: kOrange,
+      bikeOnly: false),
+  ServiceItem(
+      id: 4,
+      name: 'Auto',
+      icon: '🛺',
+      category: 'ride',
+      vehicleType: 'auto',
+      tag: null,
+      color: kOrangeLight,
+      accent: kOrange,
+      bikeOnly: false),
+  ServiceItem(
+      id: 5,
+      name: 'Toto',
+      icon: '🛵',
+      category: 'ride',
+      vehicleType: 'toto',
+      tag: 'EV',
+      color: Color(0xFFF0FFF4),
+      accent: Color(0xFF2E7D32),
+      bikeOnly: false),
+  ServiceItem(
+      id: 6,
+      name: 'Ambulance',
+      icon: '🚑',
+      category: 'ride',
+      vehicleType: 'ambulance',
+      tag: 'Emergency',
+      color: Color(0xFFFFF0F0),
+      accent: Color(0xFFE53935),
+      bikeOnly: false),
+  ServiceItem(
+      id: 10,
+      name: 'EV Ride',
+      icon: '⚡',
+      category: 'ride',
+      vehicleType: 'ac_cab',
+      tag: 'Eco',
+      color: Color(0xFFF0FFF4),
+      accent: Color(0xFF2E7D32),
+      bikeOnly: false,
+      isEV: true),
+  ServiceItem(
+      id: 7,
+      name: 'Food',
+      icon: '🍱',
+      category: 'delivery',
+      vehicleType: 'bike',
+      tag: 'Bike only',
+      color: kOrangeLight,
+      accent: kOrange,
+      bikeOnly: true),
+  ServiceItem(
+      id: 8,
+      name: 'Parcel',
+      icon: '📦',
+      category: 'delivery',
+      vehicleType: 'bike',
+      tag: 'Bike only',
+      color: Color(0xFFF3F0FF),
+      accent: Color(0xFF5E35B1),
+      bikeOnly: true),
+  ServiceItem(
+      id: 9,
+      name: 'Medicine',
+      icon: '💊',
+      category: 'delivery',
+      vehicleType: 'bike',
+      tag: 'Bike only',
+      color: Color(0xFFF0F8FF),
+      accent: Color(0xFF0277BD),
+      bikeOnly: true),
 ];
 
 const paymentMethods = [
-  PaymentMethod(id: 'cash',   icon: '💵', label: 'Cash',     sub: 'Pay driver directly'),
-  PaymentMethod(id: 'upi',    icon: '📱', label: 'UPI',      sub: 'GPay, PhonePe, Paytm'),
-  PaymentMethod(id: 'wallet', icon: '👛', label: 'K Wallet', sub: 'Use wallet balance'),
+  PaymentMethod(
+      id: 'cash', icon: '💵', label: 'Cash', sub: 'Pay driver directly'),
+  PaymentMethod(
+      id: 'upi', icon: '📱', label: 'UPI', sub: 'GPay, PhonePe, Paytm'),
+  PaymentMethod(
+      id: 'wallet', icon: '👛', label: 'K Wallet', sub: 'Use wallet balance'),
 ];
 
 const promos = [
-  PromoItem(title: 'First ride free!',  sub: 'Use code KRIDE1',     gradientColors: [kOrange, kOrangeDark]),
-  PromoItem(title: 'Food delivery',     sub: 'Up to 40% off today', gradientColors: [Color(0xFF2E7D32), Color(0xFF43A047)]),
-  PromoItem(title: 'Refer & Earn',      sub: '₹50 per referral',    gradientColors: [Color(0xFF5E35B1), Color(0xFF7B1FA2)]),
+  PromoItem(
+      title: 'First ride free!',
+      sub: 'Use code KRIDE1',
+      gradientColors: [kOrange, kOrangeDark]),
+  PromoItem(
+      title: 'Food delivery',
+      sub: 'Up to 40% off today',
+      gradientColors: [Color(0xFF2E7D32), Color(0xFF43A047)]),
+  PromoItem(
+      title: 'Refer & Earn',
+      sub: '₹50 per referral',
+      gradientColors: [Color(0xFF5E35B1), Color(0xFF7B1FA2)]),
 ];
 
 const recentPlaces = [
-  PlaceItem(icon: '🏠', label: 'Home',        sub: 'Sector 15, Noida'),
-  PlaceItem(icon: '💼', label: 'Office',       sub: 'Cyber City, Gurugram'),
+  PlaceItem(icon: '🏠', label: 'Home', sub: 'Sector 15, Noida'),
+  PlaceItem(icon: '💼', label: 'Office', sub: 'Cyber City, Gurugram'),
   PlaceItem(icon: '🛍️', label: 'Select Mall', sub: 'Saket, Delhi'),
-  PlaceItem(icon: '✈️', label: 'Airport',      sub: 'IGI Terminal 3, Delhi'),
+  PlaceItem(icon: '✈️', label: 'Airport', sub: 'IGI Terminal 3, Delhi'),
 ];
 
 const savedLocations = [
-  PlaceItem(icon: '🏠', label: 'Home',        sub: 'Sector 15, Noida'),
-  PlaceItem(icon: '💼', label: 'Office',       sub: 'Cyber City, Gurugram'),
-  PlaceItem(icon: '✈️', label: 'Airport',      sub: 'IGI Terminal 3, Delhi'),
+  PlaceItem(icon: '🏠', label: 'Home', sub: 'Sector 15, Noida'),
+  PlaceItem(icon: '💼', label: 'Office', sub: 'Cyber City, Gurugram'),
+  PlaceItem(icon: '✈️', label: 'Airport', sub: 'IGI Terminal 3, Delhi'),
   PlaceItem(icon: '🛍️', label: 'Select Mall', sub: 'Saket, Delhi'),
 ];
 
@@ -151,13 +254,19 @@ class _TotoPainter extends CustomPainter {
     final p = Paint()..style = PaintingStyle.fill;
 
     p.color = const Color(0xFFFFF7F0);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.width, size.height), Radius.circular(28 * s)), p);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.width, size.height),
+            Radius.circular(28 * s)),
+        p);
 
     final border = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2 * s
       ..color = const Color(0xFFFFD7B8);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(6 * s, 6 * s, 116 * s, 116 * s), Radius.circular(24 * s)), border);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(6 * s, 6 * s, 116 * s, 116 * s),
+            Radius.circular(24 * s)),
+        border);
 
     final stroke2 = Paint()
       ..style = PaintingStyle.stroke
@@ -187,8 +296,14 @@ class _TotoPainter extends CustomPainter {
     canvas.drawPath(wsPath, stroke2);
 
     p.color = const Color(0xFF20C05C);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(35 * s, 52 * s, 60 * s, 36 * s), Radius.circular(8 * s)), p);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(35 * s, 52 * s, 60 * s, 36 * s), Radius.circular(8 * s)), stroke2);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(35 * s, 52 * s, 60 * s, 36 * s),
+            Radius.circular(8 * s)),
+        p);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(35 * s, 52 * s, 60 * s, 36 * s),
+            Radius.circular(8 * s)),
+        stroke2);
 
     p.color = const Color(0xFF19A84F);
     final frontPath = Path()
@@ -203,8 +318,14 @@ class _TotoPainter extends CustomPainter {
     canvas.drawPath(frontPath, stroke2);
 
     p.color = const Color(0xFF2A2A2A);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(48 * s, 57 * s, 18 * s, 12 * s), Radius.circular(3 * s)), p);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(70 * s, 57 * s, 18 * s, 12 * s), Radius.circular(3 * s)), p);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(48 * s, 57 * s, 18 * s, 12 * s),
+            Radius.circular(3 * s)),
+        p);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(70 * s, 57 * s, 18 * s, 12 * s),
+            Radius.circular(3 * s)),
+        p);
 
     final framePaint = Paint()
       ..style = PaintingStyle.stroke
@@ -224,12 +345,16 @@ class _TotoPainter extends CustomPainter {
       p.color = const Color(0xFFD9D9D9);
       canvas.drawCircle(Offset(cx * s, cy * s), 5 * s, p);
     }
+
     drawWheel(42, 95, 10);
     drawWheel(89, 95, 10);
     drawWheel(24, 92, 11);
 
     p.color = Colors.black.withOpacity(0.08);
-    canvas.drawOval(Rect.fromCenter(center: Offset(64 * s, 108 * s), width: 68 * s, height: 8 * s), p);
+    canvas.drawOval(
+        Rect.fromCenter(
+            center: Offset(64 * s, 108 * s), width: 68 * s, height: 8 * s),
+        p);
   }
 
   @override
@@ -257,13 +382,19 @@ class _AutoPainter extends CustomPainter {
     final p = Paint()..style = PaintingStyle.fill;
 
     p.color = const Color(0xFFFFF7F0);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.width, size.height), Radius.circular(28 * s)), p);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.width, size.height),
+            Radius.circular(28 * s)),
+        p);
 
     final border = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2 * s
       ..color = const Color(0xFFFFD7B8);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(6 * s, 6 * s, 116 * s, 116 * s), Radius.circular(24 * s)), border);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(6 * s, 6 * s, 116 * s, 116 * s),
+            Radius.circular(24 * s)),
+        border);
 
     final stroke2 = Paint()
       ..style = PaintingStyle.stroke
@@ -293,8 +424,14 @@ class _AutoPainter extends CustomPainter {
     canvas.drawPath(wsPath, stroke2);
 
     p.color = const Color(0xFFFFCC00);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(35 * s, 52 * s, 60 * s, 36 * s), Radius.circular(8 * s)), p);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(35 * s, 52 * s, 60 * s, 36 * s), Radius.circular(8 * s)), stroke2);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(35 * s, 52 * s, 60 * s, 36 * s),
+            Radius.circular(8 * s)),
+        p);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(35 * s, 52 * s, 60 * s, 36 * s),
+            Radius.circular(8 * s)),
+        stroke2);
 
     p.color = const Color(0xFFFFD600);
     final frontPath = Path()
@@ -309,8 +446,14 @@ class _AutoPainter extends CustomPainter {
     canvas.drawPath(frontPath, stroke2);
 
     p.color = const Color(0xFF2A2A2A);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(48 * s, 57 * s, 18 * s, 12 * s), Radius.circular(3 * s)), p);
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(70 * s, 57 * s, 18 * s, 12 * s), Radius.circular(3 * s)), p);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(48 * s, 57 * s, 18 * s, 12 * s),
+            Radius.circular(3 * s)),
+        p);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(70 * s, 57 * s, 18 * s, 12 * s),
+            Radius.circular(3 * s)),
+        p);
 
     final framePaint = Paint()
       ..style = PaintingStyle.stroke
@@ -330,12 +473,16 @@ class _AutoPainter extends CustomPainter {
       p.color = const Color(0xFFD9D9D9);
       canvas.drawCircle(Offset(cx * s, cy * s), 5 * s, p);
     }
+
     drawWheel(42, 95, 10);
     drawWheel(89, 95, 10);
     drawWheel(24, 92, 11);
 
     p.color = Colors.black.withOpacity(0.08);
-    canvas.drawOval(Rect.fromCenter(center: Offset(64 * s, 108 * s), width: 68 * s, height: 8 * s), p);
+    canvas.drawOval(
+        Rect.fromCenter(
+            center: Offset(64 * s, 108 * s), width: 68 * s, height: 8 * s),
+        p);
   }
 
   @override
@@ -354,7 +501,15 @@ class ServiceIconWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     if (icon == 'auto') return AutoIcon(size: size);
     if (icon == 'toto') return TotoIcon(size: size);
-    return Text(icon, style: TextStyle(fontSize: size, fontFamily: 'Roboto', fontFamilyFallback: const ['Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']));
+    return Text(icon,
+        style: TextStyle(
+            fontSize: size,
+            fontFamily: 'Roboto',
+            fontFamilyFallback: const [
+              'Noto Color Emoji',
+              'Apple Color Emoji',
+              'Segoe UI Emoji'
+            ]));
   }
 }
 
@@ -390,26 +545,47 @@ class _ServiceCardState extends State<ServiceCard> {
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  width: 64, height: 64,
+                  width: 64,
+                  height: 64,
                   decoration: BoxDecoration(
                     color: widget.service.color,
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: [BoxShadow(color: widget.service.accent.withOpacity(0.13), blurRadius: 14, offset: const Offset(0, 4))],
-                    border: Border.all(color: widget.service.accent.withOpacity(0.13), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                          color: widget.service.accent.withOpacity(0.13),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4))
+                    ],
+                    border: Border.all(
+                        color: widget.service.accent.withOpacity(0.13),
+                        width: 1.5),
                   ),
-                  child: Center(child: ServiceIconWidget(icon: widget.service.icon, size: 30)),
+                  child: Center(
+                      child: ServiceIconWidget(
+                          icon: widget.service.icon, size: 30)),
                 ),
                 if (widget.service.tag != null)
                   Positioned(
-                    top: -6, right: -6,
+                    top: -6,
+                    right: -6,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: widget.service.accent,
                         borderRadius: BorderRadius.circular(99),
-                        boxShadow: [BoxShadow(color: widget.service.accent.withOpacity(0.33), blurRadius: 6, offset: const Offset(0, 2))],
+                        boxShadow: [
+                          BoxShadow(
+                              color: widget.service.accent.withOpacity(0.33),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2))
+                        ],
                       ),
-                      child: Text(widget.service.tag!, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w700, color: kWhite)),
+                      child: Text(widget.service.tag!,
+                          style: const TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                              color: kWhite)),
                     ),
                   ),
               ],
@@ -417,7 +593,8 @@ class _ServiceCardState extends State<ServiceCard> {
             const SizedBox(height: 8),
             Text(
               widget.service.name,
-              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: kDark),
+              style: const TextStyle(
+                  fontSize: 11.5, fontWeight: FontWeight.w600, color: kDark),
               textAlign: TextAlign.center,
               maxLines: 2,
             ),
@@ -438,11 +615,15 @@ class PromoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 220, height: 100,
+      width: 220,
+      height: 100,
       clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        gradient: LinearGradient(colors: promo.gradientColors, begin: Alignment.topLeft, end: Alignment.bottomRight),
+        gradient: LinearGradient(
+            colors: promo.gradientColors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight),
       ),
       child: Stack(
         children: [
@@ -454,9 +635,15 @@ class PromoCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(promo.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: kWhite)),
+                Text(promo.title,
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: kWhite)),
                 const SizedBox(height: 4),
-                Text(promo.sub, style: TextStyle(fontSize: 12, color: kWhite.withOpacity(0.8))),
+                Text(promo.sub,
+                    style: TextStyle(
+                        fontSize: 12, color: kWhite.withOpacity(0.8))),
               ],
             ),
           ),
@@ -466,9 +653,11 @@ class PromoCard extends StatelessWidget {
   }
 
   Widget _circle(double size, double opacity) => Container(
-    width: size, height: size,
-    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(opacity)),
-  );
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+            shape: BoxShape.circle, color: Colors.white.withOpacity(opacity)),
+      );
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -478,7 +667,11 @@ class LocationModal extends StatefulWidget {
   final String current;
   final ValueChanged<String> onSelect;
   final VoidCallback onClose;
-  const LocationModal({super.key, required this.current, required this.onSelect, required this.onClose});
+  const LocationModal(
+      {super.key,
+      required this.current,
+      required this.onSelect,
+      required this.onClose});
 
   @override
   State<LocationModal> createState() => _LocationModalState();
@@ -510,7 +703,8 @@ class _LocationModalState extends State<LocationModal> {
         child: GestureDetector(
           onTap: () {},
           child: Container(
-            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.85),
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
             decoration: const BoxDecoration(
               color: kWhite,
@@ -520,22 +714,44 @@ class _LocationModalState extends State<LocationModal> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFDDDDDD), borderRadius: BorderRadius.circular(99)))),
+                  Center(
+                      child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFDDDDDD),
+                              borderRadius: BorderRadius.circular(99)))),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Set pickup location', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: kDark)),
+                      const Text('Set pickup location',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: kDark)),
                       GestureDetector(
                         onTap: widget.onClose,
-                        child: Container(width: 32, height: 32, decoration: BoxDecoration(color: kGray, borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.close, size: 14, color: kDark)),
+                        child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                                color: kGray,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: const Icon(Icons.close,
+                                size: 14, color: kDark)),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    decoration: BoxDecoration(color: kGray, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFEEEEEE), width: 1.5)),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    decoration: BoxDecoration(
+                        color: kGray,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                            color: const Color(0xFFEEEEEE), width: 1.5)),
                     child: Row(
                       children: [
                         const Text('🔍', style: TextStyle(fontSize: 16)),
@@ -544,7 +760,11 @@ class _LocationModalState extends State<LocationModal> {
                           child: TextField(
                             controller: _controller,
                             onChanged: (_) => setState(() {}),
-                            decoration: const InputDecoration(border: InputBorder.none, hintText: 'Type your location...', hintStyle: TextStyle(color: Color(0xFFBDBDBD), fontSize: 14)),
+                            decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                hintText: 'Type your location...',
+                                hintStyle: TextStyle(
+                                    color: Color(0xFFBDBDBD), fontSize: 14)),
                             style: const TextStyle(fontSize: 14, color: kDark),
                           ),
                         ),
@@ -552,9 +772,16 @@ class _LocationModalState extends State<LocationModal> {
                           GestureDetector(
                             onTap: () => widget.onSelect(_controller.text),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(color: kOrange, borderRadius: BorderRadius.circular(8)),
-                              child: const Text('Set', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: kWhite)),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                  color: kOrange,
+                                  borderRadius: BorderRadius.circular(8)),
+                              child: const Text('Set',
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: kWhite)),
                             ),
                           ),
                       ],
@@ -565,16 +792,37 @@ class _LocationModalState extends State<LocationModal> {
                     onTap: _useCurrentLocation,
                     child: Container(
                       padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(color: kOrangeLight, borderRadius: BorderRadius.circular(14), border: Border.all(color: kOrange.withOpacity(0.2), width: 1.5)),
+                      decoration: BoxDecoration(
+                          color: kOrangeLight,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                              color: kOrange.withOpacity(0.2), width: 1.5)),
                       child: Row(
                         children: [
-                          Container(width: 40, height: 40, decoration: BoxDecoration(color: kOrange, borderRadius: BorderRadius.circular(12)), child: Center(child: Text(_locating ? '⏳' : '🎯', style: const TextStyle(fontSize: 18)))),
+                          Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                  color: kOrange,
+                                  borderRadius: BorderRadius.circular(12)),
+                              child: Center(
+                                  child: Text(_locating ? '⏳' : '🎯',
+                                      style: const TextStyle(fontSize: 18)))),
                           const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(_locating ? 'Detecting location...' : 'Use current location', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kOrange)),
-                              const Text('Uses GPS to find you', style: TextStyle(fontSize: 12, color: kMuted)),
+                              Text(
+                                  _locating
+                                      ? 'Detecting location...'
+                                      : 'Use current location',
+                                  style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: kOrange)),
+                              const Text('Uses GPS to find you',
+                                  style:
+                                      TextStyle(fontSize: 12, color: kMuted)),
                             ],
                           ),
                         ],
@@ -582,7 +830,12 @@ class _LocationModalState extends State<LocationModal> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text('SAVED PLACES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kMuted, letterSpacing: 0.5)),
+                  const Text('SAVED PLACES',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: kMuted,
+                          letterSpacing: 0.5)),
                   const SizedBox(height: 10),
                   ...savedLocations.map((loc) {
                     final full = '${loc.label}, ${loc.sub}';
@@ -591,22 +844,48 @@ class _LocationModalState extends State<LocationModal> {
                       onTap: () => widget.onSelect(full),
                       child: Container(
                         margin: const EdgeInsets.only(bottom: 6),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        decoration: BoxDecoration(color: selected ? kOrangeLight : kGray, borderRadius: BorderRadius.circular(14)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                            color: selected ? kOrangeLight : kGray,
+                            borderRadius: BorderRadius.circular(14)),
                         child: Row(
                           children: [
-                            Container(width: 40, height: 40, decoration: BoxDecoration(color: kWhite, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 8, offset: const Offset(0, 2))]), child: Center(child: Text(loc.icon, style: const TextStyle(fontSize: 18)))),
+                            Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                    color: kWhite,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                          color: Colors.black.withOpacity(0.07),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2))
+                                    ]),
+                                child: Center(
+                                    child: Text(loc.icon,
+                                        style: const TextStyle(fontSize: 18)))),
                             const SizedBox(width: 14),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(loc.label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kDark)),
-                                  Text(loc.sub, style: const TextStyle(fontSize: 12, color: kMuted)),
+                                  Text(loc.label,
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: kDark)),
+                                  Text(loc.sub,
+                                      style: const TextStyle(
+                                          fontSize: 12, color: kMuted)),
                                 ],
                               ),
                             ),
-                            if (selected) const Text('✓', style: TextStyle(color: kOrange, fontSize: 16)),
+                            if (selected)
+                              const Text('✓',
+                                  style:
+                                      TextStyle(color: kOrange, fontSize: 16)),
                           ],
                         ),
                       ),
@@ -629,7 +908,11 @@ class PaymentModal extends StatelessWidget {
   final PaymentMethod selected;
   final ValueChanged<PaymentMethod> onSelect;
   final VoidCallback onClose;
-  const PaymentModal({super.key, required this.selected, required this.onSelect, required this.onClose});
+  const PaymentModal(
+      {super.key,
+      required this.selected,
+      required this.onSelect,
+      required this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -642,41 +925,92 @@ class PaymentModal extends StatelessWidget {
           onTap: () {},
           child: Container(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
-            decoration: const BoxDecoration(color: kWhite, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+            decoration: const BoxDecoration(
+                color: kWhite,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFDDDDDD), borderRadius: BorderRadius.circular(99)))),
+                Center(
+                    child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                            color: const Color(0xFFDDDDDD),
+                            borderRadius: BorderRadius.circular(99)))),
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Payment method', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: kDark)),
-                    GestureDetector(onTap: onClose, child: Container(width: 32, height: 32, decoration: BoxDecoration(color: kGray, borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.close, size: 14))),
+                    const Text('Payment method',
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: kDark)),
+                    GestureDetector(
+                        onTap: onClose,
+                        child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                                color: kGray,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: const Icon(Icons.close, size: 14))),
                   ],
                 ),
                 const SizedBox(height: 20),
                 ...paymentMethods.map((pm) {
                   final sel = selected.id == pm.id;
                   return GestureDetector(
-                    onTap: () { onSelect(pm); onClose(); },
+                    onTap: () {
+                      onSelect(pm);
+                      onClose();
+                    },
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
                       decoration: BoxDecoration(
                         color: sel ? kOrangeLight : kGray,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: sel ? kOrange : Colors.transparent, width: 2),
+                        border: Border.all(
+                            color: sel ? kOrange : Colors.transparent,
+                            width: 2),
                       ),
                       child: Row(
                         children: [
-                          Container(width: 44, height: 44, decoration: BoxDecoration(color: kWhite, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 8, offset: const Offset(0, 2))]), child: Center(child: Text(pm.icon, style: const TextStyle(fontSize: 22)))),
+                          Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                  color: kWhite,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: Colors.black.withOpacity(0.07),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2))
+                                  ]),
+                              child: Center(
+                                  child: Text(pm.icon,
+                                      style: const TextStyle(fontSize: 22)))),
                           const SizedBox(width: 14),
-                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(pm.label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: kDark)),
-                            Text(pm.sub, style: const TextStyle(fontSize: 12, color: kMuted)),
-                          ])),
-                          if (sel) const Text('✓', style: TextStyle(color: kOrange, fontSize: 20)),
+                          Expanded(
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                Text(pm.label,
+                                    style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        color: kDark)),
+                                Text(pm.sub,
+                                    style: const TextStyle(
+                                        fontSize: 12, color: kMuted)),
+                              ])),
+                          if (sel)
+                            const Text('✓',
+                                style: TextStyle(color: kOrange, fontSize: 20)),
                         ],
                       ),
                     ),
@@ -699,7 +1033,12 @@ class SeeAllModal extends StatelessWidget {
   final List<ServiceItem> items;
   final ValueChanged<ServiceItem> onSelect;
   final VoidCallback onClose;
-  const SeeAllModal({super.key, required this.title, required this.items, required this.onSelect, required this.onClose});
+  const SeeAllModal(
+      {super.key,
+      required this.title,
+      required this.items,
+      required this.onSelect,
+      required this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -723,28 +1062,52 @@ class SeeAllModal extends StatelessWidget {
         child: GestureDetector(
           onTap: () {},
           child: Container(
-            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.8),
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
-            decoration: const BoxDecoration(color: kWhite, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+            decoration: const BoxDecoration(
+                color: kWhite,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFDDDDDD), borderRadius: BorderRadius.circular(99))),
+                Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                        color: const Color(0xFFDDDDDD),
+                        borderRadius: BorderRadius.circular(99))),
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('All $title services', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: kDark)),
-                    GestureDetector(onTap: onClose, child: Container(width: 32, height: 32, decoration: BoxDecoration(color: kGray, borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.close, size: 14))),
+                    Text('All $title services',
+                        style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: kDark)),
+                    GestureDetector(
+                        onTap: onClose,
+                        child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                                color: kGray,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: const Icon(Icons.close, size: 14))),
                   ],
                 ),
                 const SizedBox(height: 20),
                 if (isRide && evRide != null) ...[
                   GestureDetector(
-                    onTap: () { onSelect(evRide!); onClose(); },
+                    onTap: () {
+                      onSelect(evRide!);
+                      onClose();
+                    },
                     child: Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 16),
                       margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
@@ -753,7 +1116,9 @@ class SeeAllModal extends StatelessWidget {
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFF81C784).withOpacity(0.5), width: 1.5),
+                        border: Border.all(
+                            color: const Color(0xFF81C784).withOpacity(0.5),
+                            width: 1.5),
                         boxShadow: [
                           BoxShadow(
                             color: const Color(0xFF2E7D32).withOpacity(0.08),
@@ -772,7 +1137,8 @@ class SeeAllModal extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF2E7D32).withOpacity(0.1),
+                                  color:
+                                      const Color(0xFF2E7D32).withOpacity(0.1),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
                                 )
@@ -799,7 +1165,8 @@ class SeeAllModal extends StatelessWidget {
                                     ),
                                     const SizedBox(width: 8),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFF2E7D32),
                                         borderRadius: BorderRadius.circular(99),
@@ -827,7 +1194,8 @@ class SeeAllModal extends StatelessWidget {
                               ],
                             ),
                           ),
-                          const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF2E7D32), size: 16),
+                          const Icon(Icons.arrow_forward_ios_rounded,
+                              color: Color(0xFF2E7D32), size: 16),
                         ],
                       ),
                     ),
@@ -836,22 +1204,66 @@ class SeeAllModal extends StatelessWidget {
                 Flexible(
                   child: GridView.builder(
                     shrinkWrap: true,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 20, mainAxisSpacing: 20, childAspectRatio: 0.9),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 20,
+                            mainAxisSpacing: 20,
+                            childAspectRatio: 0.9),
                     itemCount: gridItems.length,
                     itemBuilder: (_, i) {
                       final s = gridItems[i];
                       return GestureDetector(
-                        onTap: () { onSelect(s); onClose(); },
+                        onTap: () {
+                          onSelect(s);
+                          onClose();
+                        },
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Stack(clipBehavior: Clip.none, children: [
-                              Container(width: 64, height: 64, decoration: BoxDecoration(color: s.color, borderRadius: BorderRadius.circular(20), border: Border.all(color: s.accent.withOpacity(0.13), width: 1.5), boxShadow: [BoxShadow(color: s.accent.withOpacity(0.13), blurRadius: 14, offset: const Offset(0, 4))]), child: Center(child: ServiceIconWidget(icon: s.icon, size: 30))),
+                              Container(
+                                  width: 64,
+                                  height: 64,
+                                  decoration: BoxDecoration(
+                                      color: s.color,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                          color: s.accent.withOpacity(0.13),
+                                          width: 1.5),
+                                      boxShadow: [
+                                        BoxShadow(
+                                            color: s.accent.withOpacity(0.13),
+                                            blurRadius: 14,
+                                            offset: const Offset(0, 4))
+                                      ]),
+                                  child: Center(
+                                      child: ServiceIconWidget(
+                                          icon: s.icon, size: 30))),
                               if (s.tag != null)
-                                Positioned(top: -6, right: -6, child: Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: s.accent, borderRadius: BorderRadius.circular(99)), child: Text(s.tag!, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w700, color: kWhite)))),
+                                Positioned(
+                                    top: -6,
+                                    right: -6,
+                                    child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                            color: s.accent,
+                                            borderRadius:
+                                                BorderRadius.circular(99)),
+                                        child: Text(s.tag!,
+                                            style: const TextStyle(
+                                                fontSize: 8,
+                                                fontWeight: FontWeight.w700,
+                                                color: kWhite)))),
                             ]),
                             const SizedBox(height: 8),
-                            Text(s.name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kDark), textAlign: TextAlign.center),
+                            Text(s.name,
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: kDark),
+                                textAlign: TextAlign.center),
                           ],
                         ),
                       );
@@ -875,13 +1287,19 @@ class BookingSuccessScreen extends StatefulWidget {
   final String destination;
   final PaymentMethod payment;
   final VoidCallback onDone;
-  const BookingSuccessScreen({super.key, required this.service, required this.destination, required this.payment, required this.onDone});
+  const BookingSuccessScreen(
+      {super.key,
+      required this.service,
+      required this.destination,
+      required this.payment,
+      required this.onDone});
 
   @override
   State<BookingSuccessScreen> createState() => _BookingSuccessScreenState();
 }
 
-class _BookingSuccessScreenState extends State<BookingSuccessScreen> with SingleTickerProviderStateMixin {
+class _BookingSuccessScreenState extends State<BookingSuccessScreen>
+    with SingleTickerProviderStateMixin {
   int _countdown = 3;
   Timer? _timer;
   late AnimationController _pingController;
@@ -890,11 +1308,16 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> with Single
   @override
   void initState() {
     super.initState();
-    _pingController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500))..repeat();
+    _pingController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1500))
+      ..repeat();
     _pingAnim = Tween(begin: 1.0, end: 2.0).animate(_pingController);
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
       setState(() => _countdown--);
-      if (_countdown <= 0) { t.cancel(); widget.onDone(); }
+      if (_countdown <= 0) {
+        t.cancel();
+        widget.onDone();
+      }
     });
   }
 
@@ -920,72 +1343,139 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> with Single
                 animation: _pingAnim,
                 builder: (_, __) => Transform.scale(
                   scale: _pingAnim.value,
-                  child: Container(width: 120, height: 120, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: kOrange.withOpacity(0.3), width: 3))),
+                  child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: kOrange.withOpacity(0.3), width: 3))),
                 ),
               ),
               Container(
-                width: 120, height: 120,
-                decoration: const BoxDecoration(shape: BoxShape.circle, color: kOrangeLight),
+                width: 120,
+                height: 120,
+                decoration: const BoxDecoration(
+                    shape: BoxShape.circle, color: kOrangeLight),
                 child: Center(
                   child: Container(
-                    width: 90, height: 90,
-                    decoration: const BoxDecoration(shape: BoxShape.circle, color: kOrange),
-                    child: const Center(child: Text('✓', style: TextStyle(fontSize: 40, color: kWhite))),
+                    width: 90,
+                    height: 90,
+                    decoration: const BoxDecoration(
+                        shape: BoxShape.circle, color: kOrange),
+                    child: const Center(
+                        child: Text('✓',
+                            style: TextStyle(fontSize: 40, color: kWhite))),
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 24),
-          const Text('Booking Confirmed!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: kDark), textAlign: TextAlign.center),
+          const Text('Booking Confirmed!',
+              style: TextStyle(
+                  fontSize: 24, fontWeight: FontWeight.w800, color: kDark),
+              textAlign: TextAlign.center),
           const SizedBox(height: 8),
-          Text('Your ${widget.service.name} is being assigned', style: const TextStyle(fontSize: 14, color: kMuted), textAlign: TextAlign.center),
+          Text('Your ${widget.service.name} is being assigned',
+              style: const TextStyle(fontSize: 14, color: kMuted),
+              textAlign: TextAlign.center),
           const SizedBox(height: 32),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(color: kGray, borderRadius: BorderRadius.circular(20)),
+            decoration: BoxDecoration(
+                color: kGray, borderRadius: BorderRadius.circular(20)),
             child: Column(
               children: [
                 Row(
                   children: [
-                    Container(width: 48, height: 48, decoration: BoxDecoration(color: widget.service.color, borderRadius: BorderRadius.circular(14)), child: Center(child: ServiceIconWidget(icon: widget.service.icon, size: 26))),
+                    Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                            color: widget.service.color,
+                            borderRadius: BorderRadius.circular(14)),
+                        child: Center(
+                            child: ServiceIconWidget(
+                                icon: widget.service.icon, size: 26))),
                     const SizedBox(width: 12),
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(widget.service.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: kDark)),
-                      const Text('Driver being assigned...', style: TextStyle(fontSize: 12, color: kMuted)),
-                    ])),
-                    Text('₹89', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: widget.service.accent)),
+                    Expanded(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                          Text(widget.service.name,
+                              style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: kDark)),
+                          const Text('Driver being assigned...',
+                              style: TextStyle(fontSize: 12, color: kMuted)),
+                        ])),
+                    Text('₹89',
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: widget.service.accent)),
                   ],
                 ),
                 Divider(height: 32, color: Colors.grey.shade200),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Text('DESTINATION', style: TextStyle(fontSize: 11, color: kMuted, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 4),
-                      Text(widget.destination, style: const TextStyle(fontSize: 13, color: kDark, fontWeight: FontWeight.w600)),
-                    ]),
-                    Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                      const Text('PAYMENT', style: TextStyle(fontSize: 11, color: kMuted, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 4),
-                      Text('${widget.payment.icon} ${widget.payment.label}', style: const TextStyle(fontSize: 13, color: kDark, fontWeight: FontWeight.w600)),
-                    ]),
+                    Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('DESTINATION',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 4),
+                          Text(widget.destination,
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  color: kDark,
+                                  fontWeight: FontWeight.w600)),
+                        ]),
+                    Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text('PAYMENT',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 4),
+                          Text('${widget.payment.icon} ${widget.payment.label}',
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  color: kDark,
+                                  fontWeight: FontWeight.w600)),
+                        ]),
                   ],
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
-          Text('Going to tracking in ${_countdown}s...', style: const TextStyle(fontSize: 13, color: kMuted)),
+          Text('Going to tracking in ${_countdown}s...',
+              style: const TextStyle(fontSize: 13, color: kMuted)),
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: widget.onDone,
-              style: ElevatedButton.styleFrom(backgroundColor: kOrange, foregroundColor: kWhite, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 8, shadowColor: kOrange.withOpacity(0.27)),
-              child: const Text('Track my ride →', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: kOrange,
+                  foregroundColor: kWhite,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  elevation: 8,
+                  shadowColor: kOrange.withOpacity(0.27)),
+              child: const Text('Track my ride →',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
             ),
           ),
         ],
@@ -1000,7 +1490,8 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> with Single
 class TripChatScreen extends StatefulWidget {
   final int tripId;
   final VoidCallback onClose;
-  const TripChatScreen({super.key, required this.tripId, required this.onClose});
+  const TripChatScreen(
+      {super.key, required this.tripId, required this.onClose});
 
   @override
   State<TripChatScreen> createState() => _TripChatScreenState();
@@ -1035,7 +1526,8 @@ class _TripChatScreenState extends State<TripChatScreen> {
       final quick = await ApiService.getQuickMessages();
       setState(() {
         _messages = List<Map<String, dynamic>>.from(msgs['messages'] ?? []);
-        _quickMsgs = List<Map<String, dynamic>>.from(quick['quick_messages'] ?? []);
+        _quickMsgs =
+            List<Map<String, dynamic>>.from(quick['quick_messages'] ?? []);
         _loading = false;
       });
     } catch (e) {
@@ -1043,15 +1535,16 @@ class _TripChatScreenState extends State<TripChatScreen> {
     }
   }
 
-  Future<void> _sendMessage(String text, {String type = 'text', String? quickKey}) async {
+  Future<void> _sendMessage(String text,
+      {String type = 'text', String? quickKey}) async {
     try {
       await ApiService.sendChatMessage(widget.tripId, type, text, quickKey);
       setState(() => _messages.add({
-        'sender_id': -1,
-        'message_text': text,
-        'created_at': DateTime.now().toIso8601String(),
-        'isMe': true,
-      }));
+            'sender_id': -1,
+            'message_text': text,
+            'created_at': DateTime.now().toIso8601String(),
+            'isMe': true,
+          }));
       _msgCtrl.clear();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1066,8 +1559,12 @@ class _TripChatScreenState extends State<TripChatScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text('Chat with Driver', style: TextStyle(color: Color(0xFF1A1A2E), fontWeight: FontWeight.w800)),
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A2E)), onPressed: widget.onClose),
+        title: const Text('Chat with Driver',
+            style: TextStyle(
+                color: Color(0xFF1A1A2E), fontWeight: FontWeight.w800)),
+        leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A2E)),
+            onPressed: widget.onClose),
       ),
       body: Column(children: [
         if (_quickMsgs.isNotEmpty)
@@ -1081,15 +1578,20 @@ class _TripChatScreenState extends State<TripChatScreen> {
               itemBuilder: (ctx, i) {
                 final q = _quickMsgs[i];
                 return GestureDetector(
-                  onTap: () => _sendMessage(q['text_bn'] ?? q['text_en'], type: 'quick', quickKey: q['key']),
+                  onTap: () => _sendMessage(q['text_bn'] ?? q['text_en'],
+                      type: 'quick', quickKey: q['key']),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFF3E0),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFFF6B35).withOpacity(0.5)),
+                      border: Border.all(
+                          color: const Color(0xFFFF6B35).withOpacity(0.5)),
                     ),
-                    child: Text(q['text_bn'] ?? q['text_en'] ?? '', style: const TextStyle(fontSize: 13, color: Color(0xFFFF6B35))),
+                    child: Text(q['text_bn'] ?? q['text_en'] ?? '',
+                        style: const TextStyle(
+                            fontSize: 13, color: Color(0xFFFF6B35))),
                   ),
                 );
               },
@@ -1097,7 +1599,8 @@ class _TripChatScreenState extends State<TripChatScreen> {
           ),
         Expanded(
           child: _loading
-              ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF6B35)))
+              ? const Center(
+                  child: CircularProgressIndicator(color: Color(0xFFFF6B35)))
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: _messages.length,
@@ -1105,17 +1608,26 @@ class _TripChatScreenState extends State<TripChatScreen> {
                     final m = _messages[i];
                     final isMe = m['isMe'] == true;
                     return Align(
-                      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                      alignment:
+                          isMe ? Alignment.centerRight : Alignment.centerLeft,
                       child: Container(
                         margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.7),
                         decoration: BoxDecoration(
-                          color: isMe ? const Color(0xFFFF6B35) : const Color(0xFFF5F5F5),
+                          color: isMe
+                              ? const Color(0xFFFF6B35)
+                              : const Color(0xFFF5F5F5),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(m['message_text'] ?? '',
-                            style: TextStyle(fontSize: 14, color: isMe ? Colors.white : const Color(0xFF1A1A2E))),
+                            style: TextStyle(
+                                fontSize: 14,
+                                color: isMe
+                                    ? Colors.white
+                                    : const Color(0xFF1A1A2E))),
                       ),
                     );
                   },
@@ -1123,7 +1635,9 @@ class _TripChatScreenState extends State<TripChatScreen> {
         ),
         Container(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          decoration: BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]),
+          decoration: BoxDecoration(color: Colors.white, boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+          ]),
           child: Row(children: [
             Expanded(
               child: TextField(
@@ -1132,18 +1646,27 @@ class _TripChatScreenState extends State<TripChatScreen> {
                   hintText: 'Type a message...',
                   filled: true,
                   fillColor: const Color(0xFFF5F5F5),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
               ),
             ),
             const SizedBox(width: 8),
             GestureDetector(
-              onTap: () { if (_msgCtrl.text.trim().isNotEmpty) _sendMessage(_msgCtrl.text.trim()); },
+              onTap: () {
+                if (_msgCtrl.text.trim().isNotEmpty)
+                  _sendMessage(_msgCtrl.text.trim());
+              },
               child: Container(
-                width: 48, height: 48,
-                decoration: const BoxDecoration(color: Color(0xFFFF6B35), shape: BoxShape.circle),
-                child: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                    color: Color(0xFFFF6B35), shape: BoxShape.circle),
+                child: const Icon(Icons.send_rounded,
+                    color: Colors.white, size: 22),
               ),
             ),
           ]),
@@ -1159,7 +1682,8 @@ class _TripChatScreenState extends State<TripChatScreen> {
 class TripReceiptScreen extends StatefulWidget {
   final int tripId;
   final VoidCallback onClose;
-  const TripReceiptScreen({super.key, required this.tripId, required this.onClose});
+  const TripReceiptScreen(
+      {super.key, required this.tripId, required this.onClose});
 
   @override
   State<TripReceiptScreen> createState() => _TripReceiptScreenState();
@@ -1179,7 +1703,10 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
     try {
       final res = await ApiService.getTripReceipt(widget.tripId);
       if (res['success'] == true) {
-        setState(() { _receipt = res; _loading = false; });
+        setState(() {
+          _receipt = res;
+          _loading = false;
+        });
       }
     } catch (e) {
       setState(() => _loading = false);
@@ -1191,7 +1718,11 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
-        Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color ?? const Color(0xFF1A1A2E))),
+        Text(value,
+            style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: color ?? const Color(0xFF1A1A2E))),
       ]),
     );
   }
@@ -1203,73 +1734,143 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text('Trip Receipt', style: TextStyle(color: Color(0xFF1A1A2E), fontWeight: FontWeight.w800)),
-        leading: IconButton(icon: const Icon(Icons.close, color: Color(0xFF1A1A2E)), onPressed: widget.onClose),
+        title: const Text('Trip Receipt',
+            style: TextStyle(
+                color: Color(0xFF1A1A2E), fontWeight: FontWeight.w800)),
+        leading: IconButton(
+            icon: const Icon(Icons.close, color: Color(0xFF1A1A2E)),
+            onPressed: widget.onClose),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF6B35)))
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFFFF6B35)))
           : _receipt == null
               ? const Center(child: Text('Receipt not available'))
               : SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
                   child: Column(children: [
                     Container(
-                      width: 70, height: 70,
-                      decoration: const BoxDecoration(color: Color(0xFFF0FFF4), shape: BoxShape.circle),
-                      child: const Center(child: Text('✅', style: TextStyle(fontSize: 36))),
+                      width: 70,
+                      height: 70,
+                      decoration: const BoxDecoration(
+                          color: Color(0xFFF0FFF4), shape: BoxShape.circle),
+                      child: const Center(
+                          child: Text('✅', style: TextStyle(fontSize: 36))),
                     ),
                     const SizedBox(height: 12),
-                    const Text('Trip Completed!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
-                    Text(_receipt!['trip_code'] ?? '', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                    const Text('Trip Completed!',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1A1A2E))),
+                    Text(_receipt!['trip_code'] ?? '',
+                        style:
+                            TextStyle(fontSize: 13, color: Colors.grey[600])),
                     const SizedBox(height: 24),
                     _receiptRow('📍 Pickup', _receipt!['pickup_address'] ?? ''),
                     _receiptRow('🏁 Drop', _receipt!['drop_address'] ?? ''),
                     const Divider(height: 24),
-                    _receiptRow('Distance', '${_receipt!['distance_km'] ?? 0} km'),
-                    _receiptRow('Duration', '${_receipt!['duration_min'] ?? 0} min'),
-                    _receiptRow('Vehicle', _receipt!['vehicle_type']?.toString().replaceAll('_', ' ').toUpperCase() ?? ''),
+                    _receiptRow(
+                        'Distance', '${_receipt!['distance_km'] ?? 0} km'),
+                    _receiptRow(
+                        'Duration', '${_receipt!['duration_min'] ?? 0} min'),
+                    _receiptRow(
+                        'Vehicle',
+                        _receipt!['vehicle_type']
+                                ?.toString()
+                                .replaceAll('_', ' ')
+                                .toUpperCase() ??
+                            ''),
                     const Divider(height: 24),
                     _receiptRow('Base Fare', '₹${_receipt!['base_fare'] ?? 0}'),
                     if ((_receipt!['surge_multiplier'] ?? 1.0) > 1.0)
-                      _receiptRow('Surge (${_receipt!['surge_multiplier']}x)', ''),
+                      _receiptRow(
+                          'Surge (${_receipt!['surge_multiplier']}x)', ''),
                     if ((_receipt!['bonus_amount'] ?? 0) > 0)
-                      _receiptRow('Bonus Added', '+₹${_receipt!['bonus_amount']}'),
+                      _receiptRow(
+                          'Bonus Added', '+₹${_receipt!['bonus_amount']}'),
                     if ((_receipt!['promo_discount'] ?? 0) > 0)
-                      _receiptRow('Promo (${_receipt!['promo_code']})', '-₹${_receipt!['promo_discount']}', color: Colors.green),
+                      _receiptRow('Promo (${_receipt!['promo_code']})',
+                          '-₹${_receipt!['promo_discount']}',
+                          color: Colors.green),
                     if ((_receipt!['kcoin_discount'] ?? 0) > 0)
-                      _receiptRow('K Coins Used (${_receipt!['kcoin_used']})', '-₹${_receipt!['kcoin_discount']}', color: Colors.green),
+                      _receiptRow('K Coins Used (${_receipt!['kcoin_used']})',
+                          '-₹${_receipt!['kcoin_discount']}',
+                          color: Colors.green),
                     const Divider(height: 24),
-                    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                      const Text('Total Paid', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
-                      Text('₹${_receipt!['actual_fare'] ?? 0}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFFFF6B35))),
-                    ]),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Total Paid',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF1A1A2E))),
+                          Text('₹${_receipt!['actual_fare'] ?? 0}',
+                              style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFFFF6B35))),
+                        ]),
                     const SizedBox(height: 8),
-                    _receiptRow('Payment Method', _receipt!['payment_method']?.toString().toUpperCase() ?? ''),
+                    _receiptRow(
+                        'Payment Method',
+                        _receipt!['payment_method']?.toString().toUpperCase() ??
+                            ''),
                     const SizedBox(height: 24),
                     Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(14)),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFF5F5F5),
+                          borderRadius: BorderRadius.circular(14)),
                       child: Row(children: [
-                        CircleAvatar(radius: 24, backgroundColor: const Color(0xFFFFF3E0),
-                            child: Text(_receipt!['driver']?['name']?.toString().substring(0, 1) ?? 'D',
-                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFFFF6B35)))),
+                        CircleAvatar(
+                            radius: 24,
+                            backgroundColor: const Color(0xFFFFF3E0),
+                            child: Text(
+                                _receipt!['driver']?['name']
+                                        ?.toString()
+                                        .substring(0, 1) ??
+                                    'D',
+                                style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFFFF6B35)))),
                         const SizedBox(width: 12),
-                        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(_receipt!['driver']?['name'] ?? 'Driver', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                          Text(_receipt!['driver']?['vehicle_type']?.toString().replaceAll('_', ' ') ?? '', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                        ]),
+                        Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(_receipt!['driver']?['name'] ?? 'Driver',
+                                  style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700)),
+                              Text(
+                                  _receipt!['driver']?['vehicle_type']
+                                          ?.toString()
+                                          .replaceAll('_', ' ') ??
+                                      '',
+                                  style: TextStyle(
+                                      fontSize: 12, color: Colors.grey[600])),
+                            ]),
                       ]),
                     ),
                     const SizedBox(height: 24),
-                    SizedBox(width: double.infinity, child: ElevatedButton(
-                      onPressed: widget.onClose,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF6B35),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                      child: const Text('Done', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
-                    )),
+                    SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: widget.onClose,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFF6B35),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: const Text('Done',
+                              style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white)),
+                        )),
                   ]),
                 ),
     );
@@ -1284,7 +1885,12 @@ class WhereToScreen extends StatefulWidget {
   final String prefilledDest;
   final VoidCallback onBack;
   final int? activeTripId;
-  const WhereToScreen({super.key, required this.service, required this.prefilledDest, required this.onBack, this.activeTripId});
+  const WhereToScreen(
+      {super.key,
+      required this.service,
+      required this.prefilledDest,
+      required this.onBack,
+      this.activeTripId});
 
   @override
   State<WhereToScreen> createState() => _WhereToScreenState();
@@ -1297,7 +1903,6 @@ class _WhereToScreenState extends State<WhereToScreen> {
   PaymentMethod _paymentMethod = paymentMethods[0];
   bool _booked = false;
   bool _showPaymentModal = false;
-  String _selectedCity = 'Bardhaman';
   late String _selectedVehicleType;
   double _bonusAmount = 0.0;
   double _pickupLat = 22.5726;
@@ -1306,7 +1911,7 @@ class _WhereToScreenState extends State<WhereToScreen> {
   double _dropLng = 88.3950;
   bool _useKCoins = false;
   int? _tripId;
-   bool _searching = false;
+  bool _searching = false;
   bool _socketDisconnected = false;
   double _estimatedFare = 0.0;
   double _estimatedDistance = 0.0;
@@ -1323,10 +1928,10 @@ class _WhereToScreenState extends State<WhereToScreen> {
   Symbol? _driverSymbol;
 
   final _quickDests = const [
-    PlaceItem(icon: '🏠', label: 'Home',        sub: 'Sector 15, Noida'),
-    PlaceItem(icon: '💼', label: 'Office',       sub: 'Cyber City, Gurugram'),
+    PlaceItem(icon: '🏠', label: 'Home', sub: 'Sector 15, Noida'),
+    PlaceItem(icon: '💼', label: 'Office', sub: 'Cyber City, Gurugram'),
     PlaceItem(icon: '🛍️', label: 'Select Mall', sub: 'Saket, Delhi'),
-    PlaceItem(icon: '✈️', label: 'Airport',      sub: 'IGI Terminal 3, Delhi'),
+    PlaceItem(icon: '✈️', label: 'Airport', sub: 'IGI Terminal 3, Delhi'),
   ];
 
   @override
@@ -1334,10 +1939,11 @@ class _WhereToScreenState extends State<WhereToScreen> {
     super.initState();
     _destCtrl = TextEditingController(text: widget.prefilledDest);
     final initialVehicle = widget.service.vehicleType;
-    _selectedVehicleType = ['ac_cab', 'non_ac_cab', 'bike', 'auto', 'toto'].contains(initialVehicle)
+    _selectedVehicleType = ['ac_cab', 'non_ac_cab', 'bike', 'auto', 'toto']
+            .contains(initialVehicle)
         ? initialVehicle
         : 'ac_cab';
-    
+
     if (widget.activeTripId != null) {
       _tripId = widget.activeTripId;
       _booked = true;
@@ -1369,7 +1975,8 @@ class _WhereToScreenState extends State<WhereToScreen> {
     try {
       if (_destCtrl.text.isNotEmpty) {
         try {
-          List<geo.Location> locations = await geo.locationFromAddress(_destCtrl.text);
+          List<geo.Location> locations =
+              await geo.locationFromAddress(_destCtrl.text);
           if (locations.isNotEmpty) {
             _dropLat = locations.first.latitude;
             _dropLng = locations.first.longitude;
@@ -1378,9 +1985,11 @@ class _WhereToScreenState extends State<WhereToScreen> {
           debugPrint('Geocoding drop error: $e');
         }
       }
-      if (_pickupCtrl.text.isNotEmpty && _pickupCtrl.text != 'Current Location') {
+      if (_pickupCtrl.text.isNotEmpty &&
+          _pickupCtrl.text != 'Current Location') {
         try {
-          List<geo.Location> locations = await geo.locationFromAddress(_pickupCtrl.text);
+          List<geo.Location> locations =
+              await geo.locationFromAddress(_pickupCtrl.text);
           if (locations.isNotEmpty) {
             _pickupLat = locations.first.latitude;
             _pickupLng = locations.first.longitude;
@@ -1451,13 +2060,13 @@ class _WhereToScreenState extends State<WhereToScreen> {
           _estimatedFare = (trip['estimated_fare'] as num?)?.toDouble() ?? 0.0;
           _selectedVehicleType = trip['vehicle_type'] ?? _selectedVehicleType;
           _otpCode = trip['otp_code']?.toString();
-          
+
           if (trip['driver'] != null) {
             _assignedDriver = trip['driver'];
             _driverLat = (trip['driver']['current_lat'] as num?)?.toDouble();
             _driverLng = (trip['driver']['current_lng'] as num?)?.toDouble();
           }
-          
+
           final riderId = AuthService.riderId;
           final token = AuthService.token;
           if (riderId != null && token != null) {
@@ -1504,7 +2113,7 @@ class _WhereToScreenState extends State<WhereToScreen> {
             final tripId = activeTrip['id'];
             final status = activeTrip['status'] ?? 'requested';
             final otpCode = activeTrip['otp_code']?.toString();
-            
+
             Map<String, dynamic>? driver;
             double? dLat;
             double? dLng;
@@ -1571,8 +2180,8 @@ class _WhereToScreenState extends State<WhereToScreen> {
           _booked = false;
           _searching = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("No driver found nearby. Try again.")));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("No driver found nearby. Try again.")));
       } else if (type == "driver_location") {
         final lat = (data["lat"] as num?)?.toDouble();
         final lng = (data["lng"] as num?)?.toDouble();
@@ -1587,22 +2196,27 @@ class _WhereToScreenState extends State<WhereToScreen> {
         setState(() {
           _tripStatus = 'arrived';
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Driver has arrived at pickup location! 📍"), backgroundColor: kOrange));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Driver has arrived at pickup location! 📍"),
+            backgroundColor: kOrange));
       } else if (type == "trip_started") {
         setState(() {
           _tripStatus = 'started';
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Trip started! Have a safe journey. 🚗"), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Trip started! Have a safe journey. 🚗"),
+            backgroundColor: Colors.green));
       } else if (type == "trip_completed") {
         setState(() {
           _tripStatus = 'completed';
         });
         RiderSocketService.disconnect();
-        Navigator.pushReplacement(context, MaterialPageRoute(
-          builder: (_) => TripReceiptScreen(tripId: _tripId!, onClose: widget.onBack),
-        ));
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  TripReceiptScreen(tripId: _tripId!, onClose: widget.onBack),
+            ));
       } else if (type == "trip_cancelled") {
         RiderSocketService.disconnect();
         setState(() {
@@ -1611,11 +2225,14 @@ class _WhereToScreenState extends State<WhereToScreen> {
           _step = 'input';
           _tripId = null;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Trip cancelled by driver: ${data["reason"] ?? 'No reason given'}"), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+                "Trip cancelled by driver: ${data["reason"] ?? 'No reason given'}"),
+            backgroundColor: Colors.red));
       }
     };
   }
+
   @override
   void dispose() {
     _pickupCtrl.dispose();
@@ -1662,73 +2279,122 @@ class _WhereToScreenState extends State<WhereToScreen> {
                 children: [
                   const SizedBox(height: 40),
                   Container(
-                    width: 80, height: 80,
-                    decoration: const BoxDecoration(color: Color(0xFFFFF3E0), shape: BoxShape.circle),
-                    child: Center(child: Text(widget.service.icon, style: const TextStyle(fontSize: 40))),
+                    width: 80,
+                    height: 80,
+                    decoration: const BoxDecoration(
+                        color: Color(0xFFFFF3E0), shape: BoxShape.circle),
+                    child: Center(
+                        child: Text(widget.service.icon,
+                            style: const TextStyle(fontSize: 40))),
                   ),
                   const SizedBox(height: 20),
-                  const Text('Finding your driver...', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
+                  const Text('Finding your driver...',
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1A1A2E))),
                   const SizedBox(height: 8),
-                  Text('Looking for drivers near you', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                  Text('Looking for drivers near you',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600])),
                   const SizedBox(height: 32),
                   if (!isAmbulance) ...[
-                    const Text('No one accepting? Add a bonus!', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
+                    const Text('No one accepting? Add a bonus!',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1A2E))),
                     const SizedBox(height: 12),
                     Wrap(
-                      spacing: 8, runSpacing: 8,
+                      spacing: 8,
+                      runSpacing: 8,
                       alignment: WrapAlignment.center,
-                      children: [10, 20, 30, 40, 50, 100].map((amount) => GestureDetector(
-                        onTap: () async {
-                          if (_tripId == null) return;
-                          try {
-                            await ApiService.addBonus(_tripId!, amount.toDouble());
-                            setState(() => _bonusAmount += amount);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('+₹$amount bonus added!')));
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Failed to add bonus')));
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF3E0),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: const Color(0xFFFF6B35), width: 1.5),
-                          ),
-                          child: Text('+₹$amount', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFFFF6B35))),
-                        ),
-                      )).toList(),
+                      children: [10, 20, 30, 40, 50, 100]
+                          .map((amount) => GestureDetector(
+                                onTap: () async {
+                                  if (_tripId == null) return;
+                                  try {
+                                    await ApiService.addBonus(
+                                        _tripId!, amount.toDouble());
+                                    setState(() => _bonusAmount += amount);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                '+₹$amount bonus added!')));
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            content:
+                                                Text('Failed to add bonus')));
+                                  }
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFF3E0),
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                        color: const Color(0xFFFF6B35),
+                                        width: 1.5),
+                                  ),
+                                  child: Text('+₹$amount',
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color(0xFFFF6B35))),
+                                ),
+                              ))
+                          .toList(),
                     ),
                     if (_bonusAmount > 0) ...[
                       const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(color: const Color(0xFFFFF3E0), borderRadius: BorderRadius.circular(12)),
-                        child: Text('Total Bonus: ₹$_bonusAmount', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFFFF6B35))),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                            color: const Color(0xFFFFF3E0),
+                            borderRadius: BorderRadius.circular(12)),
+                        child: Text('Total Bonus: ₹$_bonusAmount',
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFFFF6B35))),
                       ),
                     ],
                     const SizedBox(height: 24),
                   ],
                   GestureDetector(
                     onTap: () async {
-                      if (_tripId != null) await ApiService.cancelTrip(_tripId!, 'Cancelled by rider');
+                      if (_tripId != null)
+                        await ApiService.cancelTrip(
+                            _tripId!, 'Cancelled by rider');
                       RiderSocketService.disconnect();
-                      setState(() { _booked = false; _searching = false; _tripId = null; _bonusAmount = 0; });
+                      setState(() {
+                        _booked = false;
+                        _searching = false;
+                        _tripId = null;
+                        _bonusAmount = 0;
+                      });
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                      decoration: BoxDecoration(color: const Color(0xFFFFF3F3), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.red.shade300)),
-                      child: const Text('Cancel Search', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.red)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 14),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFFFF3F3),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.red.shade300)),
+                      child: const Text('Cancel Search',
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.red)),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          if (_socketDisconnected)
-            _buildReconnectionOverlay(),
+          if (_socketDisconnected) _buildReconnectionOverlay(),
         ],
       ),
     );
@@ -1808,53 +2474,121 @@ class _WhereToScreenState extends State<WhereToScreen> {
               children: [
                 Row(
                   children: [
-                    GestureDetector(onTap: widget.onBack, child: Container(width: 40, height: 40, decoration: BoxDecoration(color: kGray, borderRadius: BorderRadius.circular(12)), child: const Center(child: Text('←', style: TextStyle(fontSize: 18))))),
+                    GestureDetector(
+                        onTap: widget.onBack,
+                        child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                                color: kGray,
+                                borderRadius: BorderRadius.circular(12)),
+                            child: const Center(
+                                child: Text('←',
+                                    style: TextStyle(fontSize: 18))))),
                     const SizedBox(width: 14),
-                    Container(width: 36, height: 36, decoration: BoxDecoration(color: widget.service.color, borderRadius: BorderRadius.circular(10)), child: Center(child: ServiceIconWidget(icon: widget.service.icon, size: 20))),
+                    Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                            color: widget.service.color,
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Center(
+                            child: ServiceIconWidget(
+                                icon: widget.service.icon, size: 20))),
                     const SizedBox(width: 10),
-                    Text(widget.service.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: kDark)),
+                    Text(widget.service.name,
+                        style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: kDark)),
                     if (widget.service.bikeOnly) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(color: kOrangeLight, borderRadius: BorderRadius.circular(99), border: Border.all(color: kOrange.withOpacity(0.2))),
-                        child: const Text('🏍️ Bike only', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: kOrange)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                            color: kOrangeLight,
+                            borderRadius: BorderRadius.circular(99),
+                            border:
+                                Border.all(color: kOrange.withOpacity(0.2))),
+                        child: const Text('🏍️ Bike only',
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: kOrange)),
                       ),
                     ],
                   ],
                 ),
                 const SizedBox(height: 20),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  decoration: BoxDecoration(color: kOrangeLight, borderRadius: BorderRadius.circular(14), border: Border.all(color: kOrange.withOpacity(0.2), width: 1.5)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  decoration: BoxDecoration(
+                      color: kOrangeLight,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                          color: kOrange.withOpacity(0.2), width: 1.5)),
                   child: Row(
                     children: [
-                      Container(width: 10, height: 10, decoration: const BoxDecoration(shape: BoxShape.circle, color: kOrange)),
+                      Container(
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                              shape: BoxShape.circle, color: kOrange)),
                       const SizedBox(width: 12),
-                      Expanded(child: TextField(controller: _pickupCtrl, decoration: const InputDecoration(border: InputBorder.none, hintText: 'Pickup location'), style: const TextStyle(fontSize: 14, color: kDark))),
+                      Expanded(
+                          child: TextField(
+                              controller: _pickupCtrl,
+                              decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: 'Pickup location'),
+                              style:
+                                  const TextStyle(fontSize: 14, color: kDark))),
                     ],
                   ),
                 ),
                 const SizedBox(height: 8),
                 StatefulBuilder(
                   builder: (_, ss) => Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    decoration: BoxDecoration(color: kGray, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFEEEEEE), width: 1.5)),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    decoration: BoxDecoration(
+                        color: kGray,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                            color: const Color(0xFFEEEEEE), width: 1.5)),
                     child: Row(
                       children: [
-                        Container(width: 10, height: 10, decoration: BoxDecoration(color: kDark, borderRadius: BorderRadius.circular(2))),
+                        Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                                color: kDark,
+                                borderRadius: BorderRadius.circular(2))),
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
                             controller: _destCtrl,
                             autofocus: true,
                             onChanged: (_) => ss(() {}),
-                            decoration: InputDecoration(border: InputBorder.none, hintText: widget.service.category == 'delivery' ? 'Delivery address...' : 'Where to?'),
+                            decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: widget.service.category == 'delivery'
+                                    ? 'Delivery address...'
+                                    : 'Where to?'),
                             style: const TextStyle(fontSize: 14, color: kDark),
                           ),
                         ),
                         if (_destCtrl.text.isNotEmpty)
-                          GestureDetector(onTap: () { _destCtrl.clear(); ss(() {}); }, child: const Text('✕', style: TextStyle(color: kMuted, fontSize: 16))),
+                          GestureDetector(
+                              onTap: () {
+                                _destCtrl.clear();
+                                ss(() {});
+                              },
+                              child: const Text('✕',
+                                  style:
+                                      TextStyle(color: kMuted, fontSize: 16))),
                       ],
                     ),
                   ),
@@ -1866,26 +2600,65 @@ class _WhereToScreenState extends State<WhereToScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               children: [
-                const Text('SAVED PLACES', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: kMuted, letterSpacing: 0.5)),
+                const Text('SAVED PLACES',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: kMuted,
+                        letterSpacing: 0.5)),
                 const SizedBox(height: 10),
                 ..._quickDests.map((d) {
                   final full = '${d.label}, ${d.sub}';
                   return StatefulBuilder(
                     builder: (_, ss) => GestureDetector(
-                      onTap: () { setState(() => _destCtrl.text = full); },
+                      onTap: () {
+                        setState(() => _destCtrl.text = full);
+                      },
                       child: Container(
                         margin: const EdgeInsets.only(bottom: 6),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        decoration: BoxDecoration(color: _destCtrl.text.startsWith(d.label) ? kOrangeLight : kGray, borderRadius: BorderRadius.circular(14)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                            color: _destCtrl.text.startsWith(d.label)
+                                ? kOrangeLight
+                                : kGray,
+                            borderRadius: BorderRadius.circular(14)),
                         child: Row(
                           children: [
-                            Container(width: 40, height: 40, decoration: BoxDecoration(color: kWhite, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 8, offset: const Offset(0, 2))]), child: Center(child: Text(d.icon, style: const TextStyle(fontSize: 18)))),
+                            Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                    color: kWhite,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                          color: Colors.black.withOpacity(0.07),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2))
+                                    ]),
+                                child: Center(
+                                    child: Text(d.icon,
+                                        style: const TextStyle(fontSize: 18)))),
                             const SizedBox(width: 14),
-                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Text(d.label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kDark)),
-                              Text(d.sub, style: const TextStyle(fontSize: 11.5, color: kMuted)),
-                            ])),
-                            if (_destCtrl.text.startsWith(d.label)) const Text('✓', style: TextStyle(color: kOrange, fontSize: 16)),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  Text(d.label,
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: kDark)),
+                                  Text(d.sub,
+                                      style: const TextStyle(
+                                          fontSize: 11.5, color: kMuted)),
+                                ])),
+                            if (_destCtrl.text.startsWith(d.label))
+                              const Text('✓',
+                                  style:
+                                      TextStyle(color: kOrange, fontSize: 16)),
                           ],
                         ),
                       ),
@@ -1902,20 +2675,33 @@ class _WhereToScreenState extends State<WhereToScreen> {
               builder: (_, ss) {
                 final hasText = _destCtrl.text.isNotEmpty;
                 return ElevatedButton(
-                  onPressed: hasText ? () async {
-                                  await _loadFare();
-                                  setState(() => _step = 'confirm');
-                                } : null,
+                  onPressed: hasText
+                      ? () async {
+                          await _loadFare();
+                          setState(() => _step = 'confirm');
+                        }
+                      : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: hasText ? widget.service.accent : const Color(0xFFEEEEEE),
+                    backgroundColor: hasText
+                        ? widget.service.accent
+                        : const Color(0xFFEEEEEE),
                     foregroundColor: hasText ? kWhite : kMuted,
                     disabledBackgroundColor: const Color(0xFFEEEEEE),
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
                     elevation: hasText ? 8 : 0,
                     shadowColor: widget.service.accent.withOpacity(0.27),
                   ),
-                  child: SizedBox(width: double.infinity, child: Center(child: Text(hasText ? 'Find ${widget.service.name} →' : 'Enter a destination', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)))),
+                  child: SizedBox(
+                      width: double.infinity,
+                      child: Center(
+                          child: Text(
+                              hasText
+                                  ? 'Find ${widget.service.name} →'
+                                  : 'Enter a destination',
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w700)))),
                 );
               },
             ),
@@ -1963,17 +2749,25 @@ class _WhereToScreenState extends State<WhereToScreen> {
                       myLocationEnabled: true,
                     ),
                     Positioned(
-                      top: 52, left: 16,
+                      top: 52,
+                      left: 16,
                       child: GestureDetector(
                         onTap: () => setState(() => _step = 'input'),
                         child: Container(
-                          width: 40, height: 40,
+                          width: 40,
+                          height: 40,
                           decoration: BoxDecoration(
                             color: kWhite,
                             borderRadius: BorderRadius.circular(12),
-                            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 2))],
+                            boxShadow: const [
+                              BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 10,
+                                  offset: Offset(0, 2))
+                            ],
                           ),
-                          child: const Center(child: Text('←', style: TextStyle(fontSize: 18))),
+                          child: const Center(
+                              child: Text('←', style: TextStyle(fontSize: 18))),
                         ),
                       ),
                     ),
@@ -1982,57 +2776,144 @@ class _WhereToScreenState extends State<WhereToScreen> {
               ),
               Container(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
-                decoration: const BoxDecoration(color: kWhite, borderRadius: BorderRadius.vertical(top: Radius.circular(24)), boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 32, offset: Offset(0, -8))]),
+                decoration: const BoxDecoration(
+                    color: kWhite,
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(24)),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 32,
+                          offset: Offset(0, -8))
+                    ]),
                 child: Column(
                   children: [
-                    Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFDDDDDD), borderRadius: BorderRadius.circular(99)))),
+                    Center(
+                        child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                                color: const Color(0xFFDDDDDD),
+                                borderRadius: BorderRadius.circular(99)))),
                     const SizedBox(height: 18),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      decoration: BoxDecoration(color: widget.service.color, borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                          color: widget.service.color,
+                          borderRadius: BorderRadius.circular(14)),
                       child: Row(
                         children: [
-                          Container(width: 44, height: 44, decoration: BoxDecoration(color: kWhite, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 8, offset: const Offset(0, 2))]), child: Center(child: ServiceIconWidget(icon: widget.service.icon, size: 26))),
+                          Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                  color: kWhite,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: Colors.black.withOpacity(0.07),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2))
+                                  ]),
+                              child: Center(
+                                  child: ServiceIconWidget(
+                                      icon: widget.service.icon, size: 26))),
                           const SizedBox(width: 12),
-                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(widget.service.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: kDark)),
-                            Text('${widget.service.bikeOnly ? '🏍️ Bike rider · ' : ''}~${_estimatedDuration > 0 ? _estimatedDuration : 12} min · ${_estimatedDistance > 0 ? _estimatedDistance.toStringAsFixed(1) : '3.2'} km', style: const TextStyle(fontSize: 12, color: kMuted)),
-                          ])),
-                          Text('₹${_estimatedFare.toStringAsFixed(0)}', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: widget.service.accent))
+                          Expanded(
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                Text(widget.service.name,
+                                    style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        color: kDark)),
+                                Text(
+                                    '${widget.service.bikeOnly ? '🏍️ Bike rider · ' : ''}~${_estimatedDuration > 0 ? _estimatedDuration : 12} min · ${_estimatedDistance > 0 ? _estimatedDistance.toStringAsFixed(1) : '3.2'} km',
+                                    style: const TextStyle(
+                                        fontSize: 12, color: kMuted)),
+                              ])),
+                          Text('₹${_estimatedFare.toStringAsFixed(0)}',
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: widget.service.accent))
                         ],
                       ),
                     ),
                     const SizedBox(height: 14),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      decoration: BoxDecoration(color: kGray, borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                          color: kGray,
+                          borderRadius: BorderRadius.circular(14)),
                       child: Column(
                         children: [
-                          Row(children: [Container(width: 8, height: 8, decoration: const BoxDecoration(shape: BoxShape.circle, color: kOrange)), const SizedBox(width: 10), Expanded(child: Text(_pickupCtrl.text, style: const TextStyle(fontSize: 13, color: kDark)))]),
+                          Row(children: [
+                            Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                    shape: BoxShape.circle, color: kOrange)),
+                            const SizedBox(width: 10),
+                            Expanded(
+                                child: Text(_pickupCtrl.text,
+                                    style: const TextStyle(
+                                        fontSize: 13, color: kDark)))
+                          ]),
                           const SizedBox(height: 10),
-                          Row(children: [Container(width: 8, height: 8, decoration: BoxDecoration(color: kDark, borderRadius: BorderRadius.circular(2))), const SizedBox(width: 10), Expanded(child: Text(_destCtrl.text, style: const TextStyle(fontSize: 13, color: kDark)))]),
+                          Row(children: [
+                            Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                    color: kDark,
+                                    borderRadius: BorderRadius.circular(2))),
+                            const SizedBox(width: 10),
+                            Expanded(
+                                child: Text(_destCtrl.text,
+                                    style: const TextStyle(
+                                        fontSize: 13, color: kDark)))
+                          ]),
                         ],
                       ),
                     ),
                     const SizedBox(height: 12),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                      decoration: BoxDecoration(color: const Color(0xFFFFF3E0), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFFF6B35).withOpacity(0.3))),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 4),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFFFF3E0),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                              color: const Color(0xFFFF6B35).withOpacity(0.3))),
                       child: Row(children: [
                         const Text('🚗', style: TextStyle(fontSize: 18)),
                         const SizedBox(width: 8),
-                        const Text('Vehicle:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                        const Text('Vehicle:',
+                            style: TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w600)),
                         const SizedBox(width: 8),
-                        Expanded(child: DropdownButtonHideUnderline(child: DropdownButton<String>(
+                        Expanded(
+                            child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
                           value: _selectedVehicleType,
                           items: const [
-                            DropdownMenuItem(value: 'ac_cab', child: Text('AC Cab')),
-                            DropdownMenuItem(value: 'non_ac_cab', child: Text('Non-AC Cab')),
-                            DropdownMenuItem(value: 'bike', child: Text('Bike')),
-                            DropdownMenuItem(value: 'auto', child: Text('Auto')),
-                            DropdownMenuItem(value: 'toto', child: Text('Toto')),
+                            DropdownMenuItem(
+                                value: 'ac_cab', child: Text('AC Cab')),
+                            DropdownMenuItem(
+                                value: 'non_ac_cab', child: Text('Non-AC Cab')),
+                            DropdownMenuItem(
+                                value: 'bike', child: Text('Bike')),
+                            DropdownMenuItem(
+                                value: 'auto', child: Text('Auto')),
+                            DropdownMenuItem(
+                                value: 'toto', child: Text('Toto')),
                           ],
-                          onChanged: (val) => setState(() => _selectedVehicleType = val!),
+                          onChanged: (val) =>
+                              setState(() => _selectedVehicleType = val!),
                         ))),
                       ]),
                     ),
@@ -2040,26 +2921,54 @@ class _WhereToScreenState extends State<WhereToScreen> {
                     GestureDetector(
                       onTap: () => setState(() => _useKCoins = !_useKCoins),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
                         decoration: BoxDecoration(
-                          color: _useKCoins ? const Color(0xFFFFF3E0) : const Color(0xFFF5F5F5),
+                          color: _useKCoins
+                              ? const Color(0xFFFFF3E0)
+                              : const Color(0xFFF5F5F5),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: _useKCoins ? const Color(0xFFFF6B35) : const Color(0xFFEEEEEE), width: 1.5),
+                          border: Border.all(
+                              color: _useKCoins
+                                  ? const Color(0xFFFF6B35)
+                                  : const Color(0xFFEEEEEE),
+                              width: 1.5),
                         ),
                         child: Row(children: [
                           const Text('🪙', style: TextStyle(fontSize: 22)),
                           const SizedBox(width: 10),
-                          const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text('Use K Coins', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-                            Text('100 coins = ₹10 discount', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                          ])),
+                          const Expanded(
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                Text('Use K Coins',
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700)),
+                                Text('100 coins = ₹10 discount',
+                                    style: TextStyle(
+                                        fontSize: 11, color: Colors.grey)),
+                              ])),
                           Container(
-                            width: 44, height: 24,
-                            decoration: BoxDecoration(color: _useKCoins ? const Color(0xFFFF6B35) : Colors.grey[300], borderRadius: BorderRadius.circular(12)),
+                            width: 44,
+                            height: 24,
+                            decoration: BoxDecoration(
+                                color: _useKCoins
+                                    ? const Color(0xFFFF6B35)
+                                    : Colors.grey[300],
+                                borderRadius: BorderRadius.circular(12)),
                             child: AnimatedAlign(
                               duration: const Duration(milliseconds: 200),
-                              alignment: _useKCoins ? Alignment.centerRight : Alignment.centerLeft,
-                              child: Container(margin: const EdgeInsets.all(3), width: 18, height: 18, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+                              alignment: _useKCoins
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                              child: Container(
+                                  margin: const EdgeInsets.all(3),
+                                  width: 18,
+                                  height: 18,
+                                  decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle)),
                             ),
                           ),
                         ]),
@@ -2069,17 +2978,37 @@ class _WhereToScreenState extends State<WhereToScreen> {
                     GestureDetector(
                       onTap: () => setState(() => _showPaymentModal = true),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        decoration: BoxDecoration(color: kGray, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFEEEEEE), width: 1.5)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                            color: kGray,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                                color: const Color(0xFFEEEEEE), width: 1.5)),
                         child: Row(
                           children: [
-                            Text(_paymentMethod.icon, style: const TextStyle(fontSize: 22)),
+                            Text(_paymentMethod.icon,
+                                style: const TextStyle(fontSize: 22)),
                             const SizedBox(width: 10),
-                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Text(_paymentMethod.label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kDark)),
-                              Text(_paymentMethod.sub, style: const TextStyle(fontSize: 11, color: kMuted)),
-                            ])),
-                            const Text('Change →', style: TextStyle(fontSize: 12, color: kOrange, fontWeight: FontWeight.w700)),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  Text(_paymentMethod.label,
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: kDark)),
+                                  Text(_paymentMethod.sub,
+                                      style: const TextStyle(
+                                          fontSize: 11, color: kMuted)),
+                                ])),
+                            const Text('Change →',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: kOrange,
+                                    fontWeight: FontWeight.w700)),
                           ],
                         ),
                       ),
@@ -2087,12 +3016,21 @@ class _WhereToScreenState extends State<WhereToScreen> {
                     if (widget.service.tag == 'Emergency') ...[
                       const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(color: const Color(0xFFFFF0F0), borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                            color: const Color(0xFFFFF0F0),
+                            borderRadius: BorderRadius.circular(12)),
                         child: const Row(children: [
                           Text('🚨', style: TextStyle(fontSize: 14)),
                           SizedBox(width: 8),
-                          Expanded(child: Text('Nearest ambulance will be dispatched immediately', style: TextStyle(fontSize: 12, color: Color(0xFFE53935), fontWeight: FontWeight.w600))),
+                          Expanded(
+                              child: Text(
+                                  'Nearest ambulance will be dispatched immediately',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFFE53935),
+                                      fontWeight: FontWeight.w600))),
                         ]),
                       ),
                     ],
@@ -2109,9 +3047,11 @@ class _WhereToScreenState extends State<WhereToScreen> {
                             "drop_lat": _dropLat,
                             "drop_lng": _dropLng,
                             "vehicle_type": _selectedVehicleType,
-                            "service_type": widget.service.category == 'delivery' ? widget.service.name.toLowerCase() : 'ride',
+                            "service_type":
+                                widget.service.category == 'delivery'
+                                    ? widget.service.name.toLowerCase()
+                                    : 'ride',
                             "payment_method": _paymentMethod.id,
-                            "city": _selectedCity,
                             "use_kcoins": _useKCoins,
                             "is_ev_request": widget.service.isEV,
                           };
@@ -2129,14 +3069,31 @@ class _WhereToScreenState extends State<WhereToScreen> {
                                 _connectSocket(riderId, token);
                               }
                             } else {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result["error"] ?? "Booking failed")));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(result["error"] ??
+                                          "Booking failed")));
                             }
                           } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Booking error: $e")));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Booking error: $e")));
                           }
                         },
-                        style: ElevatedButton.styleFrom(backgroundColor: widget.service.accent, foregroundColor: kWhite, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 8, shadowColor: widget.service.accent.withOpacity(0.27)),
-                        child: Text(_fareLoading ? 'Getting fare...' : 'Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹${_estimatedFare.toStringAsFixed(0)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: widget.service.accent,
+                            foregroundColor: kWhite,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                            elevation: 8,
+                            shadowColor:
+                                widget.service.accent.withOpacity(0.27)),
+                        child: Text(
+                            _fareLoading
+                                ? 'Getting fare...'
+                                : 'Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹${_estimatedFare.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w700)),
                       ),
                     ),
                   ],
@@ -2161,7 +3118,8 @@ class _WhereToScreenState extends State<WhereToScreen> {
     final driverName = _assignedDriver?['name'] ?? 'Driver';
     final driverPhone = _assignedDriver?['phone'] ?? '';
     final driverRating = _assignedDriver?['rating'] ?? '4.8';
-    final vehicleModel = _assignedDriver?['vehicle_model'] ?? 'Standard Vehicle';
+    final vehicleModel =
+        _assignedDriver?['vehicle_model'] ?? 'Standard Vehicle';
     final vehicleNo = _assignedDriver?['vehicle_no'] ?? 'T&C Applied';
 
     Color statusColor = kOrange;
@@ -2246,11 +3204,13 @@ class _WhereToScreenState extends State<WhereToScreen> {
                         )
                       ],
                     ),
-                    child: const Center(child: Text('←', style: TextStyle(fontSize: 18))),
+                    child: const Center(
+                        child: Text('←', style: TextStyle(fontSize: 18))),
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                     color: statusColor,
                     borderRadius: BorderRadius.circular(20),
@@ -2336,7 +3296,9 @@ class _WhereToScreenState extends State<WhereToScreen> {
                         radius: 28,
                         backgroundColor: kOrangeLight,
                         child: Text(
-                          driverName.isNotEmpty ? driverName.substring(0, 1).toUpperCase() : 'D',
+                          driverName.isNotEmpty
+                              ? driverName.substring(0, 1).toUpperCase()
+                              : 'D',
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
@@ -2361,14 +3323,16 @@ class _WhereToScreenState extends State<WhereToScreen> {
                                 ),
                                 const SizedBox(width: 6),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFFFF8E1),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Row(
                                     children: [
-                                      const Icon(Icons.star, size: 12, color: Colors.amber),
+                                      const Icon(Icons.star,
+                                          size: 12, color: Colors.amber),
                                       const SizedBox(width: 2),
                                       Text(
                                         driverRating.toString(),
@@ -2413,7 +3377,9 @@ class _WhereToScreenState extends State<WhereToScreen> {
                             color: kOrangeLight,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Center(child: Text('💬', style: TextStyle(fontSize: 20))),
+                          child: const Center(
+                              child:
+                                  Text('💬', style: TextStyle(fontSize: 20))),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -2425,7 +3391,9 @@ class _WhereToScreenState extends State<WhereToScreen> {
                               await launchUrl(uri);
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Could not open phone dialer')),
+                                const SnackBar(
+                                    content:
+                                        Text('Could not open phone dialer')),
                               );
                             }
                           }
@@ -2437,7 +3405,9 @@ class _WhereToScreenState extends State<WhereToScreen> {
                             color: const Color(0xFFE8F5E9),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Center(child: Text('📞', style: TextStyle(fontSize: 20))),
+                          child: const Center(
+                              child:
+                                  Text('📞', style: TextStyle(fontSize: 20))),
                         ),
                       ),
                     ],
@@ -2445,14 +3415,19 @@ class _WhereToScreenState extends State<WhereToScreen> {
                   const SizedBox(height: 20),
                   Row(
                     children: [
-                      if (_otpCode != null && (_tripStatus == 'requested' || _tripStatus == 'driver_assigned' || _tripStatus == 'arrived'))
+                      if (_otpCode != null &&
+                          (_tripStatus == 'requested' ||
+                              _tripStatus == 'driver_assigned' ||
+                              _tripStatus == 'arrived'))
                         Expanded(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
                               color: kGray,
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: const Color(0xFFEEEEEE), width: 1.5),
+                              border: Border.all(
+                                  color: const Color(0xFFEEEEEE), width: 1.5),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2480,7 +3455,10 @@ class _WhereToScreenState extends State<WhereToScreen> {
                         )
                       else
                         const Spacer(),
-                      if (_otpCode != null && (_tripStatus == 'requested' || _tripStatus == 'driver_assigned' || _tripStatus == 'arrived'))
+                      if (_otpCode != null &&
+                          (_tripStatus == 'requested' ||
+                              _tripStatus == 'driver_assigned' ||
+                              _tripStatus == 'arrived'))
                         const SizedBox(width: 12),
                       GestureDetector(
                         onTap: () async {
@@ -2489,23 +3467,27 @@ class _WhereToScreenState extends State<WhereToScreen> {
                               await ApiService.raiseSOS(_tripId!);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('🚨 SOS Alert Raised! Support notified.'),
+                                  content: Text(
+                                      '🚨 SOS Alert Raised! Support notified.'),
                                   backgroundColor: Colors.red,
                                 ),
                               );
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Failed to raise SOS')),
+                                const SnackBar(
+                                    content: Text('Failed to raise SOS')),
                               );
                             }
                           }
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFFF0F0),
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.red.shade300, width: 1.5),
+                            border: Border.all(
+                                color: Colors.red.shade300, width: 1.5),
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
@@ -2526,7 +3508,9 @@ class _WhereToScreenState extends State<WhereToScreen> {
                       ),
                     ],
                   ),
-                  if (_tripStatus == 'requested' || _tripStatus == 'driver_assigned' || _tripStatus == 'arrived') ...[
+                  if (_tripStatus == 'requested' ||
+                      _tripStatus == 'driver_assigned' ||
+                      _tripStatus == 'arrived') ...[
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
@@ -2536,7 +3520,8 @@ class _WhereToScreenState extends State<WhereToScreen> {
                             context: context,
                             builder: (ctx) => AlertDialog(
                               title: const Text('Cancel Ride?'),
-                              content: const Text('Are you sure you want to cancel this ride request?'),
+                              content: const Text(
+                                  'Are you sure you want to cancel this ride request?'),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(ctx),
@@ -2547,7 +3532,8 @@ class _WhereToScreenState extends State<WhereToScreen> {
                                     Navigator.pop(ctx);
                                     if (_tripId != null) {
                                       try {
-                                        await ApiService.cancelTrip(_tripId!, 'Cancelled by rider');
+                                        await ApiService.cancelTrip(
+                                            _tripId!, 'Cancelled by rider');
                                         RiderSocketService.disconnect();
                                         setState(() {
                                           _booked = false;
@@ -2555,12 +3541,18 @@ class _WhereToScreenState extends State<WhereToScreen> {
                                           _step = 'input';
                                           _tripId = null;
                                         });
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Ride request cancelled')),
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  'Ride request cancelled')),
                                         );
                                       } catch (e) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Failed to cancel ride')),
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  'Failed to cancel ride')),
                                         );
                                       }
                                     }
@@ -2589,8 +3581,7 @@ class _WhereToScreenState extends State<WhereToScreen> {
               ),
             ),
           ),
-          if (_socketDisconnected)
-            _buildReconnectionOverlay(),
+          if (_socketDisconnected) _buildReconnectionOverlay(),
         ],
       ),
     );
@@ -2598,12 +3589,18 @@ class _WhereToScreenState extends State<WhereToScreen> {
 
   String _getVehicleLabel(String type) {
     switch (type) {
-      case 'ac_cab': return 'AC Cab';
-      case 'non_ac_cab': return 'Non-AC Cab';
-      case 'bike': return 'Bike';
-      case 'auto': return 'Auto';
-      case 'toto': return 'Toto';
-      default: return 'Ride';
+      case 'ac_cab':
+        return 'AC Cab';
+      case 'non_ac_cab':
+        return 'Non-AC Cab';
+      case 'bike':
+        return 'Bike';
+      case 'auto':
+        return 'Auto';
+      case 'toto':
+        return 'Toto';
+      default:
+        return 'Ride';
     }
   }
 }
@@ -2615,18 +3612,36 @@ class _MapGridPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final gridPaint = Paint()..color = Colors.grey.withOpacity(0.15)..strokeWidth = 0.5..style = PaintingStyle.stroke;
-    for (double x = 0; x < size.width; x += 40) canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
-    for (double y = 0; y < size.height; y += 40) canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    final gridPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.15)
+      ..strokeWidth = 0.5
+      ..style = PaintingStyle.stroke;
+    for (double x = 0; x < size.width; x += 40)
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+    for (double y = 0; y < size.height; y += 40)
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
 
-    final roadPaint = Paint()..color = const Color(0xFFE8E0D5)..style = PaintingStyle.fill;
-    canvas.drawRect(Rect.fromLTWH(0, size.height * 0.3, size.width, 16), roadPaint);
-    canvas.drawRect(Rect.fromLTWH(0, size.height * 0.58, size.width, 14), roadPaint);
-    canvas.drawRect(Rect.fromLTWH(size.width * 0.22, 0, 16, size.height), roadPaint);
-    canvas.drawRect(Rect.fromLTWH(size.width * 0.52, 0, 18, size.height), roadPaint);
+    final roadPaint = Paint()
+      ..color = const Color(0xFFE8E0D5)
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(
+        Rect.fromLTWH(0, size.height * 0.3, size.width, 16), roadPaint);
+    canvas.drawRect(
+        Rect.fromLTWH(0, size.height * 0.58, size.width, 14), roadPaint);
+    canvas.drawRect(
+        Rect.fromLTWH(size.width * 0.22, 0, 16, size.height), roadPaint);
+    canvas.drawRect(
+        Rect.fromLTWH(size.width * 0.52, 0, 18, size.height), roadPaint);
 
-    final routePaint = Paint()..color = accentColor.withOpacity(0.8)..strokeWidth = 3..style = PaintingStyle.stroke..strokeCap = StrokeCap.round;
-    final path = Path()..moveTo(size.width * 0.35, size.height * 0.3)..cubicTo(size.width * 0.45, size.height * 0.35, size.width * 0.55, size.height * 0.45, size.width * 0.65, size.height * 0.58);
+    final routePaint = Paint()
+      ..color = accentColor.withOpacity(0.8)
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final path = Path()
+      ..moveTo(size.width * 0.35, size.height * 0.3)
+      ..cubicTo(size.width * 0.45, size.height * 0.35, size.width * 0.55,
+          size.height * 0.45, size.width * 0.65, size.height * 0.58);
     canvas.drawPath(path, routePaint);
   }
 
@@ -2661,14 +3676,21 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     super.initState();
     _promoPageCtrl = PageController(viewportFraction: 0.85);
     final h = DateTime.now().hour;
-    if (h < 12) _greeting = 'Good morning';
-    else if (h < 17) _greeting = 'Good afternoon';
-    else _greeting = 'Good evening';
+    if (h < 12)
+      _greeting = 'Good morning';
+    else if (h < 17)
+      _greeting = 'Good afternoon';
+    else
+      _greeting = 'Good evening';
 
     _promoTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      setState(() { _promoIdx = (_promoIdx + 1) % promos.length; });
+      setState(() {
+        _promoIdx = (_promoIdx + 1) % promos.length;
+      });
       if (_promoPageCtrl.hasClients) {
-        _promoPageCtrl.animateToPage(_promoIdx, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+        _promoPageCtrl.animateToPage(_promoIdx,
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut);
       }
     });
 
@@ -2693,10 +3715,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
         );
         setState(() {
           _restoredTripId = (trip['id'] as num?)?.toInt();
-          _activeScreen = (
-            service: serviceItem,
-            prefilledDest: trip['drop_address'] ?? ''
-          );
+          _activeScreen =
+              (service: serviceItem, prefilledDest: trip['drop_address'] ?? '');
         });
       }
     } catch (e) {
@@ -2705,12 +3725,15 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
   }
 
   final _rideServices = services.where((s) => s.category == 'ride').toList();
-  final _deliveryServices = services.where((s) => s.category == 'delivery').toList();
-  late final _gridRideServices = _rideServices.where((s) => s.id != 10).toList();
+  final _deliveryServices =
+      services.where((s) => s.category == 'delivery').toList();
+  late final _gridRideServices =
+      _rideServices.where((s) => s.id != 10).toList();
   late final _evRide = services.firstWhere((s) => s.id == 10);
 
   void _openService(ServiceItem service, {String prefilledDest = ''}) {
-    setState(() => _activeScreen = (service: service, prefilledDest: prefilledDest));
+    setState(
+        () => _activeScreen = (service: service, prefilledDest: prefilledDest));
   }
 
   void _showNotificationsBottomSheet() {
@@ -2783,7 +3806,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                         child: CircularProgressIndicator(color: kOrange),
                       );
                     }
-                    final list = snapshot.data?['data']?['notifications'] as List?;
+                    final list =
+                        snapshot.data?['data']?['notifications'] as List?;
                     if (snapshot.hasError || list == null || list.isEmpty) {
                       return const Center(
                         child: Column(
@@ -2793,7 +3817,10 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                             SizedBox(height: 12),
                             Text(
                               'No new notifications',
-                              style: TextStyle(fontSize: 14, color: kMuted, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
@@ -2812,7 +3839,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                             color: isUnread ? kOrangeLight : kGray,
                             borderRadius: BorderRadius.circular(14),
                             border: isUnread
-                                ? Border.all(color: kOrange.withOpacity(0.2), width: 1.5)
+                                ? Border.all(
+                                    color: kOrange.withOpacity(0.2), width: 1.5)
                                 : null,
                           ),
                           child: Row(
@@ -2831,7 +3859,9 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                                       notif['title'] ?? 'Notification',
                                       style: TextStyle(
                                         fontSize: 14,
-                                        fontWeight: isUnread ? FontWeight.w800 : FontWeight.w600,
+                                        fontWeight: isUnread
+                                            ? FontWeight.w800
+                                            : FontWeight.w600,
                                         color: kDark,
                                       ),
                                     ),
@@ -2877,7 +3907,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           children: [
             // Handle bar
             Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(2),
@@ -2928,7 +3959,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                       ),
                       child: Column(
                         children: const [
-                          Icon(Icons.camera_alt_rounded, color: Colors.white, size: 32),
+                          Icon(Icons.camera_alt_rounded,
+                              color: Colors.white, size: 32),
                           SizedBox(height: 10),
                           Text(
                             'Camera',
@@ -2963,11 +3995,13 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white.withOpacity(0.15)),
+                        border:
+                            Border.all(color: Colors.white.withOpacity(0.15)),
                       ),
                       child: Column(
                         children: [
-                          Icon(Icons.photo_library_rounded, color: Colors.white.withOpacity(0.9), size: 32),
+                          Icon(Icons.photo_library_rounded,
+                              color: Colors.white.withOpacity(0.9), size: 32),
                           const SizedBox(height: 10),
                           Text(
                             'Gallery',
@@ -3027,7 +4061,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
 
     try {
       final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(source: source, imageQuality: 80);
+      final pickedFile =
+          await picker.pickImage(source: source, imageQuality: 80);
       if (pickedFile != null) {
         // Show high-end loading snackbar
         if (!mounted) return;
@@ -3038,22 +4073,28 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 const SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                      color: Colors.white, strokeWidth: 2),
                 ),
                 const SizedBox(width: 16),
-                Text('Uploading profile picture... 📸', 
-                  style: const TextStyle(fontFamily: 'Sora', fontSize: 13, fontWeight: FontWeight.w600)),
+                Text('Uploading profile picture... 📸',
+                    style: const TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600)),
               ],
             ),
             duration: const Duration(seconds: 4),
             backgroundColor: kDark.withOpacity(0.9),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
         );
 
-        final res = await ApiService.uploadProfilePicture(File(pickedFile.path));
-        
+        final res =
+            await ApiService.uploadProfilePicture(File(pickedFile.path));
+
         if (!mounted) return;
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -3064,21 +4105,29 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           setState(() {});
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Profile picture uploaded successfully! 🎉', 
-                style: TextStyle(fontFamily: 'Sora', fontSize: 13, fontWeight: FontWeight.w600)),
+              content: const Text('Profile picture uploaded successfully! 🎉',
+                  style: TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600)),
               backgroundColor: kOrange,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Upload failed: ${res['error']}', 
-                style: const TextStyle(fontFamily: 'Sora', fontSize: 13, fontWeight: FontWeight.w600)),
+              content: Text('Upload failed: ${res['error']}',
+                  style: const TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600)),
               backgroundColor: const Color(0xFFE53935),
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
           );
         }
@@ -3087,11 +4136,15 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to pick image: $e', 
-            style: const TextStyle(fontFamily: 'Sora', fontSize: 13, fontWeight: FontWeight.w600)),
+          content: Text('Failed to pick image: $e',
+              style: const TextStyle(
+                  fontFamily: 'Sora',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600)),
           backgroundColor: const Color(0xFFE53935),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
     }
@@ -3103,24 +4156,34 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('My Wallet', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
+          const Text('My Wallet',
+              style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1A1A2E))),
           const SizedBox(height: 20),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFFFF6B35), Color(0xFFFF8C42)]),
+              gradient: const LinearGradient(
+                  colors: [Color(0xFFFF6B35), Color(0xFFFF8C42)]),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Wallet Balance', style: TextStyle(fontSize: 13, color: Colors.white70)),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Wallet Balance',
+                  style: TextStyle(fontSize: 13, color: Colors.white70)),
               const SizedBox(height: 8),
               FutureBuilder<Map<String, dynamic>>(
                 future: ApiService.getWalletBalance(),
                 builder: (ctx, snap) {
                   final bal = snap.data?['data']?['wallet_balance'] ?? 0.0;
                   return Text('₹${bal.toStringAsFixed(2)}',
-                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white));
+                      style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white));
                 },
               ),
             ]),
@@ -3132,28 +4195,46 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFFFFF3E0),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFFF6B35).withOpacity(0.3)),
+              border:
+                  Border.all(color: const Color(0xFFFF6B35).withOpacity(0.3)),
             ),
             child: Row(children: [
               const Text('🪙', style: TextStyle(fontSize: 36)),
               const SizedBox(width: 16),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('K Coins', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
-                const SizedBox(height: 4),
-                FutureBuilder<Map<String, dynamic>>(
-                  future: ApiService.getMe(),
-                  builder: (ctx, snap) {
-                    final coins = snap.data?['kcoin_balance'] ?? AuthService.kcoinBalance;
-                    return Text('$coins coins', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xFFFF6B35)));
-                  },
-                ),
-                const SizedBox(height: 4),
-                const Text('100 coins = ₹10 discount on next ride', style: TextStyle(fontSize: 12, color: Colors.grey)),
-              ])),
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    const Text('K Coins',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1A2E))),
+                    const SizedBox(height: 4),
+                    FutureBuilder<Map<String, dynamic>>(
+                      future: ApiService.getMe(),
+                      builder: (ctx, snap) {
+                        final coins = snap.data?['kcoin_balance'] ??
+                            AuthService.kcoinBalance;
+                        return Text('$coins coins',
+                            style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFFFF6B35)));
+                      },
+                    ),
+                    const SizedBox(height: 4),
+                    const Text('100 coins = ₹10 discount on next ride',
+                        style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  ])),
             ]),
           ),
           const SizedBox(height: 24),
-          const Text('How to earn K Coins?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
+          const Text('How to earn K Coins?',
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A2E))),
           const SizedBox(height: 12),
           _coinTip('🚗', 'Complete a ride', 'Every ₹10 = 1 K Coin'),
           _coinTip('🎁', 'Special offers', 'Watch for bonus events'),
@@ -3166,12 +4247,18 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(
+          color: const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(14)),
       child: Row(children: [
         Text(icon, style: const TextStyle(fontSize: 24)),
         const SizedBox(width: 12),
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
+          Text(title,
+              style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A2E))),
           Text(sub, style: const TextStyle(fontSize: 12, color: Colors.grey)),
         ]),
       ]),
@@ -3202,22 +4289,34 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               decoration: BoxDecoration(
                 color: kWhite,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2))
+                ],
               ),
-              child: Center(child: Text(icon, style: const TextStyle(fontSize: 20))),
+              child: Center(
+                  child: Text(icon, style: const TextStyle(fontSize: 20))),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kDark)),
+                  Text(title,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: kDark)),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: const TextStyle(fontSize: 12, color: kMuted)),
+                  Text(subtitle,
+                      style: const TextStyle(fontSize: 12, color: kMuted)),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, color: kMuted, size: 14),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                color: kMuted, size: 14),
           ],
         ),
       ),
@@ -3252,7 +4351,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
 
               // Extract the referral code safely
               final data = snapshot.data?['data'];
-              final referralCode = data?['referral_code']?.toString() ?? 'KRIDE50'; // standard fallback
+              final referralCode = data?['referral_code']?.toString() ??
+                  'KRIDE50'; // standard fallback
 
               return SingleChildScrollView(
                 child: Column(
@@ -3268,7 +4368,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Gift Icon/Emoji with pulsing border effect or stylish box
                     Container(
                       width: 80,
@@ -3276,7 +4376,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                       decoration: BoxDecoration(
                         color: kOrangeLight,
                         shape: BoxShape.circle,
-                        border: Border.all(color: kOrange.withOpacity(0.2), width: 2),
+                        border: Border.all(
+                            color: kOrange.withOpacity(0.2), width: 2),
                       ),
                       child: const Center(
                         child: Text('🎁', style: TextStyle(fontSize: 40)),
@@ -3294,7 +4395,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 10),
-                    
+
                     const Text(
                       'Share your unique referral code with friends. When they register and take their first ride, both of you will receive bonus coins! 🪙',
                       style: TextStyle(
@@ -3309,7 +4410,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                     // Referral Code Box
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 18, horizontal: 16),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFBFBFB),
                         borderRadius: BorderRadius.circular(16),
@@ -3329,7 +4431,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                           const SizedBox(height: 12),
                           // Dashed-style look with rounded orange text
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
                             decoration: BoxDecoration(
                               color: kOrangeLight,
                               borderRadius: BorderRadius.circular(12),
@@ -3364,15 +4467,21 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Referral code "$referralCode" copied to clipboard! 🎁', 
-                                style: const TextStyle(fontFamily: 'Sora', fontSize: 13, fontWeight: FontWeight.w600)),
+                              content: Text(
+                                  'Referral code "$referralCode" copied to clipboard! 🎁',
+                                  style: const TextStyle(
+                                      fontFamily: 'Sora',
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600)),
                               backgroundColor: kOrange,
                               behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
                             ),
                           );
                         },
-                        icon: const Icon(Icons.copy_rounded, color: Colors.white, size: 18),
+                        icon: const Icon(Icons.copy_rounded,
+                            color: Colors.white, size: 18),
                         label: const Text(
                           'Copy Referral Code',
                           style: TextStyle(
@@ -3417,11 +4526,20 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                     alignment: Alignment.bottomRight,
                     children: [
                       Container(
-                        width: 100, height: 100,
+                        width: 100,
+                        height: 100,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: const LinearGradient(colors: [kOrange, kOrangeDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                          boxShadow: [BoxShadow(color: kOrange.withOpacity(0.3), blurRadius: 16, offset: const Offset(0, 4))],
+                          gradient: const LinearGradient(
+                              colors: [kOrange, kOrangeDark],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight),
+                          boxShadow: [
+                            BoxShadow(
+                                color: kOrange.withOpacity(0.3),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4))
+                          ],
                         ),
                         child: ClipOval(
                           child: AuthService.profilePic.isNotEmpty
@@ -3429,28 +4547,68 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                                   ? Image.network(
                                       AuthService.profilePic,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: kWhite))),
+                                      errorBuilder: (_, __, ___) => Center(
+                                          child: Text(
+                                              AuthService.name.isNotEmpty
+                                                  ? AuthService.name[0]
+                                                      .toUpperCase()
+                                                  : 'R',
+                                              style: const TextStyle(
+                                                  fontSize: 40,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: kWhite))),
                                     )
                                   : Image.file(
                                       File(AuthService.profilePic),
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: kWhite))),
+                                      errorBuilder: (_, __, ___) => Center(
+                                          child: Text(
+                                              AuthService.name.isNotEmpty
+                                                  ? AuthService.name[0]
+                                                      .toUpperCase()
+                                                  : 'R',
+                                              style: const TextStyle(
+                                                  fontSize: 40,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: kWhite))),
                                     ))
-                              : Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'R', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: kWhite))),
+                              : Center(
+                                  child: Text(
+                                      AuthService.name.isNotEmpty
+                                          ? AuthService.name[0].toUpperCase()
+                                          : 'R',
+                                      style: const TextStyle(
+                                          fontSize: 40,
+                                          fontWeight: FontWeight.w800,
+                                          color: kWhite))),
                         ),
                       ),
                       Container(
                         padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(color: kOrange, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))]),
-                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                        decoration: const BoxDecoration(
+                            color: kOrange,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2))
+                            ]),
+                        child: const Icon(Icons.camera_alt,
+                            color: Colors.white, size: 16),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(AuthService.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: kDark)),
+                Text(AuthService.name,
+                    style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: kDark)),
                 const SizedBox(height: 4),
-                Text('+91 ${AuthService.phone}', style: const TextStyle(fontSize: 14, color: kMuted)),
+                Text('+91 ${AuthService.phone}',
+                    style: const TextStyle(fontSize: 14, color: kMuted)),
                 const SizedBox(height: 32),
                 _profileOptionTile(
                   icon: '👥',
@@ -3466,19 +4624,35 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                     showModalBottomSheet(
                       context: context,
                       backgroundColor: Colors.white,
-                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(20))),
                       builder: (_) => Container(
                         padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
+                        constraints: BoxConstraints(
+                            maxHeight:
+                                MediaQuery.of(context).size.height * 0.75),
                         child: SingleChildScrollView(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFDDDDDD), borderRadius: BorderRadius.circular(99))),
+                              Container(
+                                  width: 40,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                      color: const Color(0xFFDDDDDD),
+                                      borderRadius: BorderRadius.circular(99))),
                               const SizedBox(height: 20),
-                              const Text('Contact Support 💬', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: kDark)),
+                              const Text('Contact Support 💬',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w800,
+                                      color: kDark)),
                               const SizedBox(height: 12),
-                              const Text('Need assistance with your ride or delivery?', style: TextStyle(fontSize: 14, color: kMuted), textAlign: TextAlign.center),
+                              const Text(
+                                  'Need assistance with your ride or delivery?',
+                                  style: TextStyle(fontSize: 14, color: kMuted),
+                                  textAlign: TextAlign.center),
                               const SizedBox(height: 24),
                               _profileOptionTile(
                                 icon: '📞',
@@ -3486,7 +4660,10 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                                 subtitle: 'Instant phone support (24/7)',
                                 onTap: () {
                                   Navigator.pop(context);
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Calling Helpline: +91 1800-KRIDE 📞')));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Calling Helpline: +91 1800-KRIDE 📞')));
                                 },
                               ),
                               _profileOptionTile(
@@ -3495,7 +4672,10 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                                 subtitle: 'Get support via WhatsApp chat',
                                 onTap: () {
                                   Navigator.pop(context);
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening WhatsApp Support Chat 🟢')));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Opening WhatsApp Support Chat 🟢')));
                                 },
                               ),
                               _profileOptionTile(
@@ -3504,7 +4684,10 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                                 subtitle: 'support@kride.app',
                                 onTap: () {
                                   Navigator.pop(context);
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening email compose ✉️')));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Opening email compose ✉️')));
                                 },
                               ),
                             ],
@@ -3521,16 +4704,23 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                     onPressed: () async {
                       await AuthService.logout();
                       if (!mounted) return;
-                      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const RoleSelectionScreen()), (r) => false);
+                      Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const RoleSelectionScreen()),
+                          (r) => false);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFF0F0),
                       foregroundColor: const Color(0xFFE53935),
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                       elevation: 0,
                     ),
-                    child: const Text('Log Out', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    child: const Text('Log Out',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w700)),
                   ),
                 ),
               ],
@@ -3561,43 +4751,136 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                Text('$_greeting 👋', style: const TextStyle(fontSize: 13, color: kMuted, fontWeight: FontWeight.w500)),
-                                RichText(text: TextSpan(
-                                  text: '${AuthService.name.split(' ').first} ',
-                                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: kDark, fontFamily: 'Sora'),
-                                  children: [TextSpan(text: AuthService.name.split(' ').length > 1 ? AuthService.name.split(' ').sublist(1).join(' ') : '', style: const TextStyle(color: kOrange))],
-                                )),
-                              ]),
+                              Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('$_greeting 👋',
+                                        style: const TextStyle(
+                                            fontSize: 13,
+                                            color: kMuted,
+                                            fontWeight: FontWeight.w500)),
+                                    RichText(
+                                        text: TextSpan(
+                                      text:
+                                          '${AuthService.name.split(' ').first} ',
+                                      style: const TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w800,
+                                          color: kDark,
+                                          fontFamily: 'Sora'),
+                                      children: [
+                                        TextSpan(
+                                            text: AuthService.name
+                                                        .split(' ')
+                                                        .length >
+                                                    1
+                                                ? AuthService.name
+                                                    .split(' ')
+                                                    .sublist(1)
+                                                    .join(' ')
+                                                : '',
+                                            style:
+                                                const TextStyle(color: kOrange))
+                                      ],
+                                    )),
+                                  ]),
                               Row(children: [
                                 GestureDetector(
                                   onTap: _showNotificationsBottomSheet,
                                   child: Stack(children: [
-                                    Container(width: 42, height: 42, decoration: BoxDecoration(color: kGray, borderRadius: BorderRadius.circular(14)), child: const Center(child: Text('🔔', style: TextStyle(fontSize: 18)))),
-                                    Positioned(top: 8, right: 9, child: Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: kOrange, border: Border.all(color: kWhite, width: 2)))),
+                                    Container(
+                                        width: 42,
+                                        height: 42,
+                                        decoration: BoxDecoration(
+                                            color: kGray,
+                                            borderRadius:
+                                                BorderRadius.circular(14)),
+                                        child: const Center(
+                                            child: Text('🔔',
+                                                style:
+                                                    TextStyle(fontSize: 18)))),
+                                    Positioned(
+                                        top: 8,
+                                        right: 9,
+                                        child: Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: kOrange,
+                                                border: Border.all(
+                                                    color: kWhite, width: 2)))),
                                   ]),
                                 ),
                                 const SizedBox(width: 10),
                                 GestureDetector(
-                                  onTap: () => setState(() => _activeTab = 'profile'),
+                                  onTap: () =>
+                                      setState(() => _activeTab = 'profile'),
                                   child: Container(
-                                    width: 42, height: 42,
-                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), gradient: const LinearGradient(colors: [kOrange, kOrangeDark], begin: Alignment.topLeft, end: Alignment.bottomRight)),
+                                    width: 42,
+                                    height: 42,
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(14),
+                                        gradient: const LinearGradient(
+                                            colors: [kOrange, kOrangeDark],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight)),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(14),
                                       child: AuthService.profilePic.isNotEmpty
-                                          ? (AuthService.profilePic.startsWith('http')
+                                          ? (AuthService.profilePic
+                                                  .startsWith('http')
                                               ? Image.network(
                                                   AuthService.profilePic,
                                                   fit: BoxFit.cover,
-                                                  errorBuilder: (_, __, ___) => Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'U', style: const TextStyle(color: kWhite, fontWeight: FontWeight.w800, fontSize: 16))),
+                                                  errorBuilder: (_, __, ___) => Center(
+                                                      child: Text(
+                                                          AuthService.name
+                                                                  .isNotEmpty
+                                                              ? AuthService
+                                                                  .name[0]
+                                                                  .toUpperCase()
+                                                              : 'U',
+                                                          style:
+                                                              const TextStyle(
+                                                                  color: kWhite,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w800,
+                                                                  fontSize:
+                                                                      16))),
                                                 )
                                               : Image.file(
                                                   File(AuthService.profilePic),
                                                   fit: BoxFit.cover,
-                                                  errorBuilder: (_, __, ___) => Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'U', style: const TextStyle(color: kWhite, fontWeight: FontWeight.w800, fontSize: 16))),
+                                                  errorBuilder: (_, __, ___) => Center(
+                                                      child: Text(
+                                                          AuthService.name
+                                                                  .isNotEmpty
+                                                              ? AuthService
+                                                                  .name[0]
+                                                                  .toUpperCase()
+                                                              : 'U',
+                                                          style:
+                                                              const TextStyle(
+                                                                  color: kWhite,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w800,
+                                                                  fontSize:
+                                                                      16))),
                                                 ))
-                                          : Center(child: Text(AuthService.name.isNotEmpty ? AuthService.name[0].toUpperCase() : 'U', style: const TextStyle(color: kWhite, fontWeight: FontWeight.w800, fontSize: 16))),
+                                          : Center(
+                                              child: Text(
+                                                  AuthService.name.isNotEmpty
+                                                      ? AuthService.name[0]
+                                                          .toUpperCase()
+                                                      : 'U',
+                                                  style: const TextStyle(
+                                                      color: kWhite,
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                      fontSize: 16))),
                                     ),
                                   ),
                                 ),
@@ -3616,182 +4899,345 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                             child: GestureDetector(
                               onTap: () => _openService(_rideServices[0]),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                decoration: BoxDecoration(color: kGray, borderRadius: BorderRadius.circular(16), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 12, offset: Offset(0, 2))]),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 14),
+                                decoration: BoxDecoration(
+                                    color: kGray,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                          color: Colors.black12,
+                                          blurRadius: 12,
+                                          offset: Offset(0, 2))
+                                    ]),
                                 child: const Row(children: [
                                   Text('🔍', style: TextStyle(fontSize: 18)),
                                   SizedBox(width: 12),
-                                  Text('Where do you want to go?', style: TextStyle(fontSize: 14, color: kMuted, fontWeight: FontWeight.w500)),
+                                  Text('Where do you want to go?',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          color: kMuted,
+                                          fontWeight: FontWeight.w500)),
                                 ]),
                               ),
                             ),
                           ),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                                const Text('🚗 Ride', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: kDark)),
-                                GestureDetector(onTap: () => setState(() => _seeAll = (title: 'Ride', items: _rideServices)), child: const Text('See all →', style: TextStyle(fontSize: 12, color: kOrange, fontWeight: FontWeight.w600))),
-                              ]),
-                              const SizedBox(height: 16),
-                              // ── EV Ride Banner Block ──
-                              GestureDetector(
-                                onTap: () => _openService(_evRide),
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                                  margin: const EdgeInsets.only(bottom: 16),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: const Color(0xFF81C784).withOpacity(0.5), width: 1.5),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFF2E7D32).withOpacity(0.08),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      )
-                                    ],
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 48,
-                                        height: 48,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(12),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: const Color(0xFF2E7D32).withOpacity(0.1),
-                                              blurRadius: 6,
-                                              offset: const Offset(0, 2),
-                                            )
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text('🚗 Ride',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w800,
+                                                color: kDark)),
+                                        GestureDetector(
+                                            onTap: () => setState(() =>
+                                                _seeAll = (
+                                                  title: 'Ride',
+                                                  items: _rideServices
+                                                )),
+                                            child: const Text('See all →',
+                                                style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: kOrange,
+                                                    fontWeight:
+                                                        FontWeight.w600))),
+                                      ]),
+                                  const SizedBox(height: 16),
+                                  // ── EV Ride Banner Block ──
+                                  GestureDetector(
+                                    onTap: () => _openService(_evRide),
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 16),
+                                      margin: const EdgeInsets.only(bottom: 16),
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            Color(0xFFE8F5E9),
+                                            Color(0xFFC8E6C9)
                                           ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
                                         ),
-                                        child: const Center(
-                                          child: Text('⚡', style: TextStyle(fontSize: 24)),
-                                        ),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                            color: const Color(0xFF81C784)
+                                                .withOpacity(0.5),
+                                            width: 1.5),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFF2E7D32)
+                                                .withOpacity(0.08),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
+                                          )
+                                        ],
                                       ),
-                                      const SizedBox(width: 14),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 48,
+                                            height: 48,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: const Color(0xFF2E7D32)
+                                                      .withOpacity(0.1),
+                                                  blurRadius: 6,
+                                                  offset: const Offset(0, 2),
+                                                )
+                                              ],
+                                            ),
+                                            child: const Center(
+                                              child: Text('⚡',
+                                                  style:
+                                                      TextStyle(fontSize: 24)),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 14),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
-                                                const Text(
-                                                  'EV Ride',
-                                                  style: TextStyle(
-                                                    fontSize: 15,
-                                                    fontWeight: FontWeight.w800,
-                                                    color: Color(0xFF1B5E20),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                  decoration: BoxDecoration(
-                                                    color: const Color(0xFF2E7D32),
-                                                    borderRadius: BorderRadius.circular(99),
-                                                  ),
-                                                  child: const Text(
-                                                    'Eco',
-                                                    style: TextStyle(
-                                                      fontSize: 8,
-                                                      fontWeight: FontWeight.w700,
-                                                      color: Colors.white,
+                                                Row(
+                                                  children: [
+                                                    const Text(
+                                                      'EV Ride',
+                                                      style: TextStyle(
+                                                        fontSize: 15,
+                                                        fontWeight:
+                                                            FontWeight.w800,
+                                                        color:
+                                                            Color(0xFF1B5E20),
+                                                      ),
                                                     ),
+                                                    const SizedBox(width: 8),
+                                                    Container(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          horizontal: 6,
+                                                          vertical: 2),
+                                                      decoration: BoxDecoration(
+                                                        color: const Color(
+                                                            0xFF2E7D32),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(99),
+                                                      ),
+                                                      child: const Text(
+                                                        'Eco',
+                                                        style: TextStyle(
+                                                          fontSize: 8,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 4),
+                                                const Text(
+                                                  'one step closer to the better world',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: Color(0xFF388E3C),
                                                   ),
                                                 ),
                                               ],
                                             ),
-                                            const SizedBox(height: 4),
-                                            const Text(
-                                              'one step closer to the better world',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                                color: Color(0xFF388E3C),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                          ),
+                                          const Icon(
+                                              Icons.arrow_forward_ios_rounded,
+                                              color: Color(0xFF2E7D32),
+                                              size: 16),
+                                        ],
                                       ),
-                                      const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF2E7D32), size: 16),
-                                    ],
+                                    ),
                                   ),
-                                ),
-                              ),
-                              GridView.count(
-                                shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-                                crossAxisCount: 3, crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 0.9,
-                                children: _gridRideServices.map((s) => ServiceCard(service: s, onTap: () => _openService(s))).toList(),
-                              ),
-                            ]),
+                                  GridView.count(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    crossAxisCount: 3,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                    childAspectRatio: 0.9,
+                                    children: _gridRideServices
+                                        .map((s) => ServiceCard(
+                                            service: s,
+                                            onTap: () => _openService(s)))
+                                        .toList(),
+                                  ),
+                                ]),
                           ),
                           Container(height: 8, color: kGray),
                           const SizedBox(height: 20),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                                const Text('📦 Delivery', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: kDark)),
-                                GestureDetector(onTap: () => setState(() => _seeAll = (title: 'Delivery', items: _deliveryServices)), child: const Text('See all →', style: TextStyle(fontSize: 12, color: kOrange, fontWeight: FontWeight.w600))),
-                              ]),
-                              const SizedBox(height: 16),
-                              GridView.count(
-                                shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-                                crossAxisCount: 3, crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 0.9,
-                                children: _deliveryServices.map((s) => ServiceCard(service: s, onTap: () => _openService(s))).toList(),
-                              ),
-                              const SizedBox(height: 14),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                decoration: BoxDecoration(color: kOrangeLight, borderRadius: BorderRadius.circular(12), border: Border.all(color: kOrange.withOpacity(0.13))),
-                                child: const Row(children: [
-                                  Text('🏍️', style: TextStyle(fontSize: 14)),
-                                  SizedBox(width: 8),
-                                  Expanded(child: Text.rich(TextSpan(text: 'All delivery services fulfilled by ', style: TextStyle(fontSize: 11.5, color: kOrange, fontWeight: FontWeight.w600), children: [TextSpan(text: 'bike riders only', style: TextStyle(fontWeight: FontWeight.w800))]))),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text('📦 Delivery',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w800,
+                                                color: kDark)),
+                                        GestureDetector(
+                                            onTap: () => setState(() =>
+                                                _seeAll = (
+                                                  title: 'Delivery',
+                                                  items: _deliveryServices
+                                                )),
+                                            child: const Text('See all →',
+                                                style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: kOrange,
+                                                    fontWeight:
+                                                        FontWeight.w600))),
+                                      ]),
+                                  const SizedBox(height: 16),
+                                  GridView.count(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    crossAxisCount: 3,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                    childAspectRatio: 0.9,
+                                    children: _deliveryServices
+                                        .map((s) => ServiceCard(
+                                            service: s,
+                                            onTap: () => _openService(s)))
+                                        .toList(),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 10),
+                                    decoration: BoxDecoration(
+                                        color: kOrangeLight,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                            color: kOrange.withOpacity(0.13))),
+                                    child: const Row(children: [
+                                      Text('🏍️',
+                                          style: TextStyle(fontSize: 14)),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                          child: Text.rich(TextSpan(
+                                              text:
+                                                  'All delivery services fulfilled by ',
+                                              style: TextStyle(
+                                                  fontSize: 11.5,
+                                                  color: kOrange,
+                                                  fontWeight: FontWeight.w600),
+                                              children: [
+                                            TextSpan(
+                                                text: 'bike riders only',
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.w800))
+                                          ]))),
+                                    ]),
+                                  ),
                                 ]),
-                              ),
-                            ]),
                           ),
                           Container(height: 8, color: kGray),
                           const SizedBox(height: 20),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(0, 0, 0, 24),
                             child: Column(children: [
-                              const Padding(padding: EdgeInsets.fromLTRB(20, 0, 20, 14), child: Align(alignment: Alignment.centerLeft, child: Text('🎁 Offers for you', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: kDark)))),
+                              const Padding(
+                                  padding: EdgeInsets.fromLTRB(20, 0, 20, 14),
+                                  child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text('🎁 Offers for you',
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w800,
+                                              color: kDark)))),
                               SizedBox(
                                 height: 100,
                                 child: PageView.builder(
                                   controller: _promoPageCtrl,
-                                  onPageChanged: (i) => setState(() => _promoIdx = i),
+                                  onPageChanged: (i) =>
+                                      setState(() => _promoIdx = i),
                                   itemCount: promos.length,
-                                  itemBuilder: (_, i) => Padding(padding: const EdgeInsets.only(right: 12), child: PromoCard(promo: promos[i])),
+                                  itemBuilder: (_, i) => Padding(
+                                      padding: const EdgeInsets.only(right: 12),
+                                      child: PromoCard(promo: promos[i])),
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(promos.length, (i) => GestureDetector(
-                                onTap: () { setState(() => _promoIdx = i); _promoPageCtrl.animateToPage(i, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut); },
-                                child: AnimatedContainer(duration: const Duration(milliseconds: 300), margin: const EdgeInsets.symmetric(horizontal: 3), width: _promoIdx == i ? 20 : 6, height: 6, decoration: BoxDecoration(color: _promoIdx == i ? kOrange : const Color(0xFFDDDDDD), borderRadius: BorderRadius.circular(99))),
-                              ))),
+                              Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: List.generate(
+                                      promos.length,
+                                      (i) => GestureDetector(
+                                            onTap: () {
+                                              setState(() => _promoIdx = i);
+                                              _promoPageCtrl.animateToPage(i,
+                                                  duration: const Duration(
+                                                      milliseconds: 300),
+                                                  curve: Curves.easeInOut);
+                                            },
+                                            child: AnimatedContainer(
+                                                duration: const Duration(
+                                                    milliseconds: 300),
+                                                margin:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 3),
+                                                width: _promoIdx == i ? 20 : 6,
+                                                height: 6,
+                                                decoration: BoxDecoration(
+                                                    color: _promoIdx == i
+                                                        ? kOrange
+                                                        : const Color(
+                                                            0xFFDDDDDD),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            99))),
+                                          ))),
                             ]),
                           ),
                           Container(height: 8, color: kGray),
                           const SizedBox(height: 20),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              const Text('🕓 Recent places', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: kDark)),
-                              const SizedBox(height: 14),
-                              ...recentPlaces.map((place) => _RecentPlaceTile(place: place, onTap: () => _openService(_rideServices[0], prefilledDest: '${place.label}, ${place.sub}'))),
-                            ]),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('🕓 Recent places',
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                          color: kDark)),
+                                  const SizedBox(height: 14),
+                                  ...recentPlaces.map((place) => _RecentPlaceTile(
+                                      place: place,
+                                      onTap: () => _openService(
+                                          _rideServices[0],
+                                          prefilledDest:
+                                              '${place.label}, ${place.sub}'))),
+                                ]),
                           ),
                         ],
                       ),
@@ -3804,24 +5250,64 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
             else if (_activeTab == 'wallet')
               SafeArea(child: _buildWalletTab())
             else
-              const SafeArea(child: Center(child: Text('Coming Soon! 🚀', style: TextStyle(fontSize: 18, color: kMuted)))),
+              const SafeArea(
+                  child: Center(
+                      child: Text('Coming Soon! 🚀',
+                          style: TextStyle(fontSize: 18, color: kMuted)))),
 
             // Bottom Nav
             Positioned(
-              bottom: 0, left: 0, right: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
               child: Container(
-                decoration: const BoxDecoration(color: kWhite, border: Border(top: BorderSide(color: Color(0xFFF0F0F0))), boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -4))]),
-                padding: EdgeInsets.only(top: 10, bottom: MediaQuery.of(context).padding.bottom + 10),
+                decoration: const BoxDecoration(
+                    color: kWhite,
+                    border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 20,
+                          offset: Offset(0, -4))
+                    ]),
+                padding: EdgeInsets.only(
+                    top: 10,
+                    bottom: MediaQuery.of(context).padding.bottom + 10),
                 child: Row(
                   children: [
-                    for (final tab in [('home', '🏠', 'Home'), ('activity', '📋', 'Activity'), ('wallet', '💰', 'Wallet'), ('profile', '👤', 'Profile')])
+                    for (final tab in [
+                      ('home', '🏠', 'Home'),
+                      ('activity', '📋', 'Activity'),
+                      ('wallet', '💰', 'Wallet'),
+                      ('profile', '👤', 'Profile')
+                    ])
                       Expanded(
                         child: GestureDetector(
                           onTap: () => setState(() => _activeTab = tab.$1),
-                          child: Column(mainAxisSize: MainAxisSize.min, children: [
-                            AnimatedContainer(duration: const Duration(milliseconds: 200), width: 40, height: 40, decoration: BoxDecoration(color: _activeTab == tab.$1 ? kOrangeLight : Colors.transparent, borderRadius: BorderRadius.circular(14)), child: Center(child: Text(tab.$2, style: const TextStyle(fontSize: 20)))),
+                          child:
+                              Column(mainAxisSize: MainAxisSize.min, children: [
+                            AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                    color: _activeTab == tab.$1
+                                        ? kOrangeLight
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(14)),
+                                child: Center(
+                                    child: Text(tab.$2,
+                                        style: const TextStyle(fontSize: 20)))),
                             const SizedBox(height: 4),
-                            Text(tab.$3, style: TextStyle(fontSize: 10.5, fontWeight: _activeTab == tab.$1 ? FontWeight.w700 : FontWeight.w500, color: _activeTab == tab.$1 ? kOrange : kMuted)),
+                            Text(tab.$3,
+                                style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: _activeTab == tab.$1
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: _activeTab == tab.$1
+                                        ? kOrange
+                                        : kMuted)),
                           ]),
                         ),
                       ),
@@ -3832,13 +5318,27 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
 
             // Modals & Screens
             if (_showLocationModal)
-              Positioned.fill(child: LocationModal(current: _currentLocation, onSelect: (loc) => setState(() { _currentLocation = loc; _showLocationModal = false; }), onClose: () => setState(() => _showLocationModal = false))),
+              Positioned.fill(
+                  child: LocationModal(
+                      current: _currentLocation,
+                      onSelect: (loc) => setState(() {
+                            _currentLocation = loc;
+                            _showLocationModal = false;
+                          }),
+                      onClose: () =>
+                          setState(() => _showLocationModal = false))),
 
             if (_seeAll != null)
-              Positioned.fill(child: SeeAllModal(title: _seeAll!.title, items: _seeAll!.items, onSelect: _openService, onClose: () => setState(() => _seeAll = null))),
+              Positioned.fill(
+                  child: SeeAllModal(
+                      title: _seeAll!.title,
+                      items: _seeAll!.items,
+                      onSelect: _openService,
+                      onClose: () => setState(() => _seeAll = null))),
 
             if (_activeScreen != null)
-              Positioned.fill(child: WhereToScreen(
+              Positioned.fill(
+                  child: WhereToScreen(
                 service: _activeScreen!.service,
                 prefilledDest: _activeScreen!.prefilledDest,
                 activeTripId: _restoredTripId,
@@ -3880,15 +5380,39 @@ class _RecentPlaceTileState extends State<_RecentPlaceTile> {
         duration: const Duration(milliseconds: 150),
         margin: const EdgeInsets.only(bottom: 6),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(color: _hovered ? kOrangeLight : kGray, borderRadius: BorderRadius.circular(14)),
+        decoration: BoxDecoration(
+            color: _hovered ? kOrangeLight : kGray,
+            borderRadius: BorderRadius.circular(14)),
         child: Row(
           children: [
-            Container(width: 40, height: 40, decoration: BoxDecoration(color: kWhite, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.07), blurRadius: 8, offset: const Offset(0, 2))]), child: Center(child: Text(widget.place.icon, style: const TextStyle(fontSize: 18)))),
+            Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                    color: kWhite,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black.withOpacity(0.07),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2))
+                    ]),
+                child: Center(
+                    child: Text(widget.place.icon,
+                        style: const TextStyle(fontSize: 18)))),
             const SizedBox(width: 14),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(widget.place.label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kDark)),
-              Text(widget.place.sub, style: const TextStyle(fontSize: 11.5, color: kMuted)),
-            ])),
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(widget.place.label,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: kDark)),
+                  Text(widget.place.sub,
+                      style: const TextStyle(fontSize: 11.5, color: kMuted)),
+                ])),
             const Text('›', style: TextStyle(color: kMuted, fontSize: 18)),
           ],
         ),

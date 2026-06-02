@@ -108,8 +108,14 @@ class EarningsData {
 }
 
 Map<String, dynamic> _unwrapTripPayload(dynamic raw) {
-  if (raw is Map<String, dynamic>) {
-    for (final key in const [
+  if (raw is! Map<String, dynamic>) {
+    return <String, dynamic>{};
+  }
+
+  var current = Map<String, dynamic>.from(raw);
+
+  while (true) {
+    final nested = _firstValue(current, const [
       'trip',
       'booking',
       'ride',
@@ -117,15 +123,35 @@ Map<String, dynamic> _unwrapTripPayload(dynamic raw) {
       'request',
       'payload',
       'data',
-    ]) {
-      final nested = raw[key];
-      if (nested is Map<String, dynamic>) {
-        return Map<String, dynamic>.from(nested);
-      }
+    ]);
+
+    if (nested is! Map<String, dynamic>) {
+      break;
     }
-    return raw;
+
+    final nestedMap = Map<String, dynamic>.from(nested);
+    final hasBookingFields = nestedMap.keys.any(
+      (key) => const {
+        'id',
+        'trip_id',
+        'booking_id',
+        'trip_code',
+        'pickup_address',
+        'drop_address',
+        'estimated_fare',
+        'fare',
+        'pickup_distance_km',
+        'distance_km',
+      }.contains(key),
+    );
+
+    current = nestedMap;
+    if (hasBookingFields) {
+      break;
+    }
   }
-  return <String, dynamic>{};
+
+  return current;
 }
 
 dynamic _firstValue(Map<String, dynamic> data, List<String> keys) {

@@ -273,6 +273,14 @@ class ApiService {
     return _handle(res);
   }
 
+  static Future<Map<String, dynamic>> verifyTripOtp(
+      int tripId, String otp) async {
+    final uri = Uri.parse('$_base/trip/verify-otp/$tripId')
+        .replace(queryParameters: {'otp': otp});
+    final res = await http.post(uri, headers: _authHeaders).timeout(_timeout);
+    return _handle(res);
+  }
+
   static Future<Map<String, dynamic>> completeTrip(int tripId) async {
     final res = await http.patch(Uri.parse('$_base/trips/$tripId/complete'),
       headers: _authHeaders).timeout(_timeout);
@@ -289,7 +297,7 @@ class ApiService {
 
   static Future<Map<String, dynamic>> getEarningsSummary() async {
     final res = await http.get(
-      Uri.parse('$_base/driver/earnings'),
+      Uri.parse('$_base/driver/earnings/summary'),
       headers: _authHeaders).timeout(_timeout);
     return _handle(res);
   }

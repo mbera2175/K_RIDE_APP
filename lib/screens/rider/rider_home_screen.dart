@@ -2061,6 +2061,33 @@ class _WhereToScreenState extends State<WhereToScreen>
     PlaceItem(icon: '✈️', label: 'Airport', sub: 'IGI Terminal 3, Delhi'),
   ];
 
+  String _normalizeTripStatus(dynamic status) {
+    final text = (status ?? 'requested').toString().trim();
+    if (text.contains('.')) return text.split('.').last;
+    return text.isEmpty ? 'requested' : text;
+  }
+
+  String? _readTripOtp(Map<String, dynamic>? data) {
+    if (data == null) return null;
+    for (final key in ['otp_code', 'otp', 'trip_otp', 'otpCode', 'ride_otp']) {
+      final value = data[key]?.toString().trim();
+      if (value != null && value.isNotEmpty && value.toLowerCase() != 'null') {
+        return value;
+      }
+    }
+    return null;
+  }
+
+  bool get _shouldExpectTripOtp {
+    final status = _normalizeTripStatus(_tripStatus);
+    return status == 'driver_assigned' ||
+        status == 'accepted' ||
+        status == 'arrived';
+  }
+
+  bool get _shouldShowTripOtp =>
+      _shouldExpectTripOtp && _otpCode != null && _otpCode!.trim().isNotEmpty;
+
   @override
   void initState() {
     super.initState();
@@ -2107,7 +2134,7 @@ class _WhereToScreenState extends State<WhereToScreen>
         final res = await ApiService.getActiveTrip();
         if (res['success'] == true && res['data']?['active_trip'] != null) {
           final trip = res['data']['active_trip'];
-          final status = trip['status']?.toString() ?? 'requested';
+          final status = _normalizeTripStatus(trip['status']);
           if (status == 'requested') return;
 
           final driver = trip['driver'] as Map<String, dynamic>?;
@@ -2121,7 +2148,7 @@ class _WhereToScreenState extends State<WhereToScreen>
             _searching = false;
             _step = 'tracking';
             _tripStatus = status;
-            _otpCode = trip['otp_code']?.toString() ?? trip['otp']?.toString();
+            _otpCode = _readTripOtp(trip);
             _assignedDriver = driver;
             _driverLat = dLat;
             _driverLng = dLng;
@@ -2240,7 +2267,7 @@ class _WhereToScreenState extends State<WhereToScreen>
         final trip = res['data']['active_trip'];
         setState(() {
           _tripId = (trip['id'] as num?)?.toInt() ?? _tripId;
-          _tripStatus = trip['status'] ?? 'requested';
+          _tripStatus = _normalizeTripStatus(trip['status']);
           _pickupCtrl.text = trip['pickup_address'] ?? '';
           _pickupLat = (trip['pickup_lat'] as num?)?.toDouble() ?? 22.5726;
           _pickupLng = (trip['pickup_lng'] as num?)?.toDouble() ?? 88.3639;
@@ -2248,7 +2275,7 @@ class _WhereToScreenState extends State<WhereToScreen>
           _dropLng = (trip['drop_lng'] as num?)?.toDouble() ?? 88.3950;
           _estimatedFare = (trip['estimated_fare'] as num?)?.toDouble() ?? 0.0;
           _selectedVehicleType = trip['vehicle_type'] ?? _selectedVehicleType;
-          _otpCode = trip['otp_code']?.toString() ?? trip['otp']?.toString();
+          _otpCode = _readTripOtp(trip);
 
           if (trip['driver'] != null) {
             _assignedDriver = trip['driver'];
@@ -2301,9 +2328,8 @@ class _WhereToScreenState extends State<WhereToScreen>
             _startSearchPolling();
           } else if (activeTrip != null) {
             final tripId = (activeTrip['id'] as num?)?.toInt();
-            final status = activeTrip['status'] ?? 'requested';
-            final otpCode = activeTrip['otp_code']?.toString() ??
-                activeTrip['otp']?.toString();
+            final status = _normalizeTripStatus(activeTrip['status']);
+            final otpCode = _readTripOtp(activeTrip);
 
             Map<String, dynamic>? driver;
             double? dLat;
@@ -2370,13 +2396,10 @@ class _WhereToScreenState extends State<WhereToScreen>
           _tripId = (data["trip_id"] as num?)?.toInt() ??
               (activeTrip?["id"] as num?)?.toInt() ??
               _tripId;
-          _tripStatus =
-              (activeTrip?["status"] ?? data["status"] ?? 'driver_assigned')
-                  .toString();
+          _tripStatus = _normalizeTripStatus(
+              activeTrip?["status"] ?? data["status"] ?? 'driver_assigned');
           _assignedDriver = activeTrip?["driver"] ?? data["driver"];
-          _otpCode = data["otp"]?.toString() ??
-              activeTrip?["otp_code"]?.toString() ??
-              activeTrip?["otp"]?.toString();
+          _otpCode = _readTripOtp(data) ?? _readTripOtp(activeTrip);
           _driverLat = (_assignedDriver?["current_lat"] as num?)?.toDouble();
           _driverLng = (_assignedDriver?["current_lng"] as num?)?.toDouble();
         });
@@ -2409,6 +2432,7 @@ class _WhereToScreenState extends State<WhereToScreen>
       } else if (type == "trip_started") {
         setState(() {
           _tripStatus = 'started';
+          _otpCode = null;
         });
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Trip started! Have a safe journey. 🚗"),
@@ -2416,6 +2440,7 @@ class _WhereToScreenState extends State<WhereToScreen>
       } else if (type == "trip_completed") {
         setState(() {
           _tripStatus = 'completed';
+          _otpCode = null;
         });
         _stopSearchPolling();
         RiderSocketService.disconnect();
@@ -2433,6 +2458,7 @@ class _WhereToScreenState extends State<WhereToScreen>
           _searching = false;
           _step = 'input';
           _tripId = null;
+          _otpCode = null;
         });
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
@@ -3344,6 +3370,9 @@ class _WhereToScreenState extends State<WhereToScreen>
   }
 
   Widget _buildTrackingStep() {
+    final tripStatus = _normalizeTripStatus(_tripStatus);
+    final showOtp = _shouldShowTripOtp;
+    final expectOtp = _shouldExpectTripOtp;
     final driverName = _assignedDriver?['name'] ?? 'Driver';
     final driverPhone = _assignedDriver?['phone'] ?? '';
     final driverPhotoUrl =
@@ -3361,23 +3390,23 @@ class _WhereToScreenState extends State<WhereToScreen>
     String statusTitle = 'Driver Assigned';
     String statusSubtitle = 'Driver is on their way to pick you up';
 
-    if (_tripStatus == 'requested') {
+    if (tripStatus == 'requested') {
       statusTitle = 'Searching for Driver';
       statusSubtitle = 'We are matching you with the nearest driver';
-    } else if (_tripStatus == 'driver_assigned' || _tripStatus == 'accepted') {
+    } else if (tripStatus == 'driver_assigned' || tripStatus == 'accepted') {
       statusTitle = 'Trip Accepted';
       statusSubtitle = 'Your driver accepted the ride and is on the way';
     }
 
-    if (_tripStatus == 'arrived') {
+    if (tripStatus == 'arrived') {
       statusColor = Colors.green;
       statusTitle = 'Driver Arrived';
       statusSubtitle = 'Please meet the driver at your pickup point';
-    } else if (_tripStatus == 'started') {
+    } else if (tripStatus == 'started') {
       statusColor = Colors.blue;
       statusTitle = 'On Trip';
       statusSubtitle = 'Heading to your destination';
-    } else if (_tripStatus == 'completed') {
+    } else if (tripStatus == 'completed') {
       statusColor = Colors.grey;
       statusTitle = 'Trip Completed';
       statusSubtitle = 'Thank you for riding with KRide';
@@ -3691,53 +3720,74 @@ class _WhereToScreenState extends State<WhereToScreen>
                   const SizedBox(height: 20),
                   Row(
                     children: [
-                      if (_otpCode != null &&
-                          (_tripStatus == 'requested' ||
-                              _tripStatus == 'driver_assigned' ||
-                              _tripStatus == 'accepted' ||
-                              _tripStatus == 'arrived'))
+                      if (showOtp)
                         Expanded(
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
+                                horizontal: 16, vertical: 14),
                             decoration: BoxDecoration(
-                              color: kGray,
-                              borderRadius: BorderRadius.circular(14),
+                              color: kOrangeLight,
+                              borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                  color: const Color(0xFFEEEEEE), width: 1.5),
+                                  color: kOrange.withOpacity(0.25), width: 1.5),
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Share OTP to start:',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: kMuted,
-                                  ),
+                                Row(
+                                  children: const [
+                                    Text('🔐', style: TextStyle(fontSize: 16)),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Share this OTP with driver',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: kOrange,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  _otpCode!,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: kOrange,
-                                    letterSpacing: 2,
+                                const SizedBox(height: 6),
+                                Center(
+                                  child: Text(
+                                    _otpCode!,
+                                    style: const TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w900,
+                                      color: kOrange,
+                                      letterSpacing: 6,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
                         )
+                      else if (expectOtp)
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF8E1),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                  color: Colors.amber.shade300, width: 1.5),
+                            ),
+                            child: const Text(
+                              'OTP is loading. Keep this screen open, or reconnect if it does not appear.',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF8A5A00),
+                              ),
+                            ),
+                          ),
+                        )
                       else
                         const Spacer(),
-                      if (_otpCode != null &&
-                          (_tripStatus == 'requested' ||
-                              _tripStatus == 'driver_assigned' ||
-                              _tripStatus == 'accepted' ||
-                              _tripStatus == 'arrived'))
-                        const SizedBox(width: 12),
+                      if (showOtp || expectOtp) const SizedBox(width: 12),
                       GestureDetector(
                         onTap: () async {
                           if (_tripId != null) {
@@ -3786,10 +3836,10 @@ class _WhereToScreenState extends State<WhereToScreen>
                       ),
                     ],
                   ),
-                  if (_tripStatus == 'requested' ||
-                      _tripStatus == 'driver_assigned' ||
-                      _tripStatus == 'accepted' ||
-                      _tripStatus == 'arrived') ...[
+                  if (tripStatus == 'requested' ||
+                      tripStatus == 'driver_assigned' ||
+                      tripStatus == 'accepted' ||
+                      tripStatus == 'arrived') ...[
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,

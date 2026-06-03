@@ -980,7 +980,7 @@ class ActiveTripPanel extends StatelessWidget {
 
   static const _steps = [
     ('accepted', 'Head to Pickup', 'arrived', "I've Arrived", kInfo, '🚗'),
-    ('arrived', 'Waiting for Rider', 'start', 'Start Trip', kOrange, '⏳'),
+    ('arrived', 'Verify rider OTP', 'start', 'Verify OTP & Start', kOrange, '🔐'),
     (
       'started',
       'Trip in Progress',
@@ -2360,6 +2360,80 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     );
   }
 
+  Future<String?> _askTripOtp() async {
+    final controller = TextEditingController();
+    final otp = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Verify Rider OTP',
+            style:
+                GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w800)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Ask the rider for the 6 digit trip OTP before starting the ride.',
+              style: GoogleFonts.sora(fontSize: 13, color: kMuted),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              textAlign: TextAlign.center,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              style: GoogleFonts.sora(
+                  fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: 8),
+              decoration: InputDecoration(
+                counterText: '',
+                hintText: '000000',
+                hintStyle: GoogleFonts.sora(
+                    color: kMuted.withOpacity(0.35), letterSpacing: 8),
+                filled: true,
+                fillColor: kGray,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none),
+                focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: kOrange, width: 2)),
+              ),
+            ),
+          ],
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text('Cancel', style: GoogleFonts.sora(color: kMuted)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final value = controller.text.trim();
+              if (value.length == 6) {
+                Navigator.pop(dialogContext, value);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kOrange,
+              foregroundColor: kWhite,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text('Start Trip',
+                style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    return otp;
+  }
+
   Future<void> _handleTripAction(String action) async {
     if (_activeTrip == null) return;
     final tripId = _activeTrip!.id;
@@ -2369,7 +2443,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         res = await ApiService.markArrived(tripId);
         break;
       case 'start':
-        res = await ApiService.startTrip(tripId);
+        final otp = await _askTripOtp();
+        if (otp == null) return;
+        res = await ApiService.verifyTripOtp(tripId, otp);
         break;
       case 'complete':
         res = await ApiService.completeTrip(tripId);

@@ -3936,6 +3936,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
   String _currentLocation = 'Connaught Place, New Delhi';
   bool _showLocationModal = false;
   Timer? _promoTimer;
+  Timer? _activeTripTimer;
   late PageController _promoPageCtrl;
   int? _restoredTripId;
 
@@ -3963,11 +3964,15 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     });
 
     _checkActiveTrip();
+    _activeTripTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      _checkActiveTrip();
+    });
   }
 
   @override
   void dispose() {
     _promoTimer?.cancel();
+    _activeTripTimer?.cancel();
     _promoPageCtrl.dispose();
     super.dispose();
   }
@@ -3981,11 +3986,16 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           (s) => s.vehicleType == trip['vehicle_type'] || s.tag == 'Standard',
           orElse: () => services.first,
         );
-        setState(() {
-          _restoredTripId = (trip['id'] as num?)?.toInt();
-          _activeScreen =
-              (service: serviceItem, prefilledDest: trip['drop_address'] ?? '');
-        });
+        final tripId = (trip['id'] as num?)?.toInt();
+        if (mounted && (_activeScreen == null || _restoredTripId != tripId)) {
+          setState(() {
+            _restoredTripId = tripId;
+            _activeScreen = (
+              service: serviceItem,
+              prefilledDest: trip['drop_address'] ?? '',
+            );
+          });
+        }
       }
     } catch (e) {
       debugPrint('Check active trip error: $e');
@@ -5632,10 +5642,13 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                   service: _activeScreen!.service,
                   prefilledDest: _activeScreen!.prefilledDest,
                   activeTripId: _restoredTripId,
-                  onBack: () => setState(() {
-                    _activeScreen = null;
-                    _restoredTripId = null;
-                  }),
+                  onBack: () {
+                    setState(() {
+                      _activeScreen = null;
+                      _restoredTripId = null;
+                    });
+                    _checkActiveTrip();
+                  },
                 )),
             ],
           ),

@@ -2081,6 +2081,12 @@ class _WhereToScreenState extends State<WhereToScreen>
     } else {
       _getLocation();
     }
+
+    final riderId = AuthService.riderId;
+    final token = AuthService.token;
+    if (riderId != null && token != null) {
+      _connectSocket(riderId, token);
+    }
   }
 
   @override
@@ -3274,10 +3280,16 @@ class _WhereToScreenState extends State<WhereToScreen>
                           try {
                             final result = await ApiService.bookTrip(body);
                             if (result["success"] == true) {
+                              final bookedTrip =
+                                  result["data"] as Map<String, dynamic>? ??
+                                      const {};
+                              final tripId =
+                                  (bookedTrip["trip_id"] as num?)?.toInt() ??
+                                      (result["trip_id"] as num?)?.toInt();
                               setState(() {
                                 _booked = true;
                                 _searching = true;
-                                _tripId = result["trip_id"];
+                                _tripId = tripId;
                               });
                               _startSearchPolling();
                               final riderId = AuthService.riderId;

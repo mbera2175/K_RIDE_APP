@@ -1817,6 +1817,10 @@ class TripReceiptScreen extends StatefulWidget {
 class _TripReceiptScreenState extends State<TripReceiptScreen> {
   Map<String, dynamic>? _receipt;
   bool _loading = true;
+  bool _submittingRating = false;
+  bool _rated = false;
+  int _rating = 5;
+  final _ratingCommentCtrl = TextEditingController();
 
   @override
   void initState() {
@@ -1829,13 +1833,40 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
       final res = await ApiService.getTripReceipt(widget.tripId);
       if (res['success'] == true) {
         setState(() {
-          _receipt = res;
+          _receipt = Map<String, dynamic>.from(res['data'] ?? {});
           _loading = false;
         });
       }
     } catch (e) {
       setState(() => _loading = false);
     }
+  }
+
+  Future<void> _submitRating() async {
+    if (_submittingRating || _rated) return;
+    setState(() => _submittingRating = true);
+    final res = await ApiService.rateDriver(
+        widget.tripId, _rating, _ratingCommentCtrl.text.trim());
+    if (!mounted) return;
+    setState(() {
+      _submittingRating = false;
+      _rated = res['success'] == true || res['status'] == 400;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(res['success'] == true
+          ? 'Thanks for rating your driver.'
+          : (res['error'] ?? 'Rating skipped.')),
+      backgroundColor: res['success'] == true ? Colors.green : Colors.red,
+    ));
+    if (res['success'] == true || res['status'] == 400) {
+      widget.onClose();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ratingCommentCtrl.dispose();
+    super.dispose();
   }
 
   Widget _receiptRow(String label, String value, {Color? color}) {
@@ -1980,18 +2011,70 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
                       ]),
                     ),
                     const SizedBox(height: 24),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFFFF8E1),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFFFD180))),
+                      child: Column(children: [
+                        const Text('Rate your driver',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF1A1A2E))),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            5,
+                            (i) => IconButton(
+                              onPressed: _rated
+                                  ? null
+                                  : () => setState(() => _rating = i + 1),
+                              icon: Icon(
+                                i < _rating
+                                    ? Icons.star_rounded
+                                    : Icons.star_border_rounded,
+                                color: const Color(0xFFFF6B35),
+                                size: 34,
+                              ),
+                            ),
+                          ),
+                        ),
+                        TextField(
+                          controller: _ratingCommentCtrl,
+                          enabled: !_rated,
+                          minLines: 2,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            hintText: 'Optional comment',
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none),
+                          ),
+                        ),
+                      ]),
+                    ),
+                    const SizedBox(height: 16),
                     SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: widget.onClose,
+                          onPressed: _submittingRating ? null : _submitRating,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFFF6B35),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14)),
                           ),
-                          child: const Text('Done',
-                              style: TextStyle(
+                          child: Text(
+                              _submittingRating
+                                  ? 'Submitting...'
+                                  : 'Submit Review',
+                              style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.white)),
@@ -2386,6 +2469,7 @@ class _WhereToScreenState extends State<WhereToScreen>
         return;
       }
       if (type == "driver_assigned" ||
+          type == "driver_accepted" ||
           type == "trip_accepted" ||
           type == "accepted") {
         final activeTrip = data["active_trip"] as Map<String, dynamic>?;
@@ -2398,7 +2482,15 @@ class _WhereToScreenState extends State<WhereToScreen>
               _tripId;
           _tripStatus = _normalizeTripStatus(
               activeTrip?["status"] ?? data["status"] ?? 'driver_assigned');
-          _assignedDriver = activeTrip?["driver"] ?? data["driver"];
+          _assignedDriver = activeTrip?["driver"] ??
+              data["driver"] ??
+              {
+                "name": data["driver_name"],
+                "phone": data["driver_phone"],
+                "profile_pic_url": data["profile_pic"],
+                "vehicle_model": data["vehicle_model"],
+                "rc_number": data["rc_number"],
+              };
           _otpCode = _readTripOtp(data) ?? _readTripOtp(activeTrip);
           _driverLat = (_assignedDriver?["current_lat"] as num?)?.toDouble();
           _driverLng = (_assignedDriver?["current_lng"] as num?)?.toDouble();
@@ -2471,10 +2563,50 @@ class _WhereToScreenState extends State<WhereToScreen>
   @override
   void dispose() {
     _stopSearchPolling();
+    RiderSocketService.onMessage = null;
+    RiderSocketService.onDisconnect = null;
+    RiderSocketService.onReconnect = null;
     WidgetsBinding.instance.removeObserver(this);
     _pickupCtrl.dispose();
     _destCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _cancelCurrentRide({bool closeAfterCancel = false}) async {
+    final tripId = _tripId;
+    try {
+      if (tripId != null) {
+        final res = await ApiService.cancelTrip(tripId, 'Cancelled by rider');
+        if (res['success'] != true) {
+          throw Exception(res['error'] ?? 'Cancel failed');
+        }
+      }
+      if (!mounted) return;
+      RiderSocketService.disconnect();
+      _stopSearchPolling();
+      setState(() {
+        _booked = false;
+        _searching = false;
+        _step = 'input';
+        _tripId = null;
+        _otpCode = null;
+        _assignedDriver = null;
+        _driverLat = null;
+        _driverLng = null;
+        _bonusAmount = 0;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ride request cancelled')),
+      );
+      if (closeAfterCancel) {
+        widget.onBack();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to cancel ride')),
+      );
+    }
   }
 
   @override
@@ -2611,19 +2743,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                     const SizedBox(height: 24),
                   ],
                   GestureDetector(
-                    onTap: () async {
-                      if (_tripId != null)
-                        await ApiService.cancelTrip(
-                            _tripId!, 'Cancelled by rider');
-                      RiderSocketService.disconnect();
-                      _stopSearchPolling();
-                      setState(() {
-                        _booked = false;
-                        _searching = false;
-                        _tripId = null;
-                        _bonusAmount = 0;
-                      });
-                    },
+                    onTap: _cancelCurrentRide,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 32, vertical: 14),
@@ -3859,33 +3979,8 @@ class _WhereToScreenState extends State<WhereToScreen>
                                 TextButton(
                                   onPressed: () async {
                                     Navigator.pop(ctx);
-                                    if (_tripId != null) {
-                                      try {
-                                        await ApiService.cancelTrip(
-                                            _tripId!, 'Cancelled by rider');
-                                        RiderSocketService.disconnect();
-                                        _stopSearchPolling();
-                                        setState(() {
-                                          _booked = false;
-                                          _searching = false;
-                                          _step = 'input';
-                                          _tripId = null;
-                                        });
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  'Ride request cancelled')),
-                                        );
-                                      } catch (e) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  'Failed to cancel ride')),
-                                        );
-                                      }
-                                    }
+                                    await _cancelCurrentRide(
+                                        closeAfterCancel: true);
                                   },
                                   child: const Text(
                                     'Yes, Cancel',

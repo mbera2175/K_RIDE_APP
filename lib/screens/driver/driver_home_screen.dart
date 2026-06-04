@@ -980,7 +980,14 @@ class ActiveTripPanel extends StatelessWidget {
 
   static const _steps = [
     ('accepted', 'Head to Pickup', 'arrived', "I've Arrived", kInfo, '🚗'),
-    ('arrived', 'Verify rider OTP', 'start', 'Verify OTP & Start', kOrange, '🔐'),
+    (
+      'arrived',
+      'Verify rider OTP',
+      'start',
+      'Verify OTP & Start',
+      kOrange,
+      '🔐'
+    ),
     (
       'started',
       'Trip in Progress',
@@ -1008,6 +1015,9 @@ class ActiveTripPanel extends StatelessWidget {
     final label = cur.$2;
     final btn = cur.$4;
     final action = cur.$3;
+    final canCancel = trip.status == 'accepted' ||
+        trip.status == 'driver_assigned' ||
+        trip.status == 'arrived';
 
     return Positioned(
       bottom: 0,
@@ -1226,6 +1236,23 @@ class ActiveTripPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
+            if (canCancel) ...[
+              SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  onPressed: () => onAction('cancel'),
+                  icon: const Text('✕', style: TextStyle(fontSize: 16)),
+                  label: const Text('Cancel Ride'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: kError,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+            ],
             // Cash + SOS buttons
             Row(children: [
               if (trip.status == 'completed')
@@ -2368,14 +2395,13 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('Verify Rider OTP',
-            style:
-                GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w800)),
+            style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w800)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Ask the rider for the 6 digit trip OTP before starting the ride.',
+              'Ask the rider for the 4 digit trip OTP before starting the ride.',
               style: GoogleFonts.sora(fontSize: 13, color: kMuted),
             ),
             const SizedBox(height: 16),
@@ -2383,14 +2409,14 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
               controller: controller,
               autofocus: true,
               keyboardType: TextInputType.number,
-              maxLength: 6,
+              maxLength: 4,
               textAlign: TextAlign.center,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               style: GoogleFonts.sora(
                   fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: 8),
               decoration: InputDecoration(
                 counterText: '',
-                hintText: '000000',
+                hintText: '0000',
                 hintStyle: GoogleFonts.sora(
                     color: kMuted.withOpacity(0.35), letterSpacing: 8),
                 filled: true,
@@ -2414,7 +2440,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
           ElevatedButton(
             onPressed: () {
               final value = controller.text.trim();
-              if (value.length == 6) {
+              if (value.length == 4) {
                 Navigator.pop(dialogContext, value);
               }
             },
@@ -2434,9 +2460,183 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     return otp;
   }
 
+  Future<String?> _askCancelReason() async {
+    final controller = TextEditingController(text: 'Driver cancelled');
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Cancel Ride',
+            style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w800)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          minLines: 2,
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: 'Reason for cancellation',
+            filled: true,
+            fillColor: kGray,
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text('Back', style: GoogleFonts.sora(color: kMuted)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final value = controller.text.trim();
+              Navigator.pop(
+                  dialogContext, value.isEmpty ? 'Driver cancelled' : value);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kError,
+              foregroundColor: kWhite,
+            ),
+            child: Text('Cancel Ride',
+                style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    return reason;
+  }
+
+  Future<bool> _confirmCashCollected(TripData trip) async {
+    final amount = trip.totalFare > 0 ? trip.totalFare : trip.fare.toDouble();
+    final amountLabel =
+        amount % 1 == 0 ? amount.toStringAsFixed(0) : amount.toStringAsFixed(2);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Confirm Cash Receipt',
+            style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w800)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Collect cash from the rider before closing this trip.',
+                style: GoogleFonts.sora(fontSize: 13, color: kMuted)),
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: kOrangeLight,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text('₹$amountLabel',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.sora(
+                      fontSize: 30,
+                      color: kOrange,
+                      fontWeight: FontWeight.w900)),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kSuccess,
+              foregroundColor: kWhite,
+            ),
+            child: Text('Cash Collected',
+                style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    return confirmed == true;
+  }
+
+  Future<void> _askDriverReview(TripData trip) async {
+    var score = 5;
+    final commentController = TextEditingController();
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text('Rate Rider',
+              style:
+                  GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w800)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  5,
+                  (i) => IconButton(
+                    onPressed: () => setDialogState(() => score = i + 1),
+                    icon: Icon(
+                      i < score
+                          ? Icons.star_rounded
+                          : Icons.star_border_rounded,
+                      color: kOrange,
+                      size: 34,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: commentController,
+                minLines: 2,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Optional comment',
+                  filled: true,
+                  fillColor: kGray,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () async {
+                final res = await ApiService.rateDriver(
+                    trip.id, score, commentController.text.trim());
+                if (!mounted) return;
+                Navigator.pop(dialogContext);
+                _showSnack(
+                  res['success']
+                      ? 'Review submitted.'
+                      : (res['error'] ?? 'Review skipped.'),
+                  isError: !res['success'],
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kOrange,
+                foregroundColor: kWhite,
+              ),
+              child: Text('Submit Review',
+                  style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+      ),
+    );
+    commentController.dispose();
+  }
+
   Future<void> _handleTripAction(String action) async {
     if (_activeTrip == null) return;
-    final tripId = _activeTrip!.id;
+    final trip = _activeTrip!;
+    final tripId = trip.id;
     Map<String, dynamic> res;
     switch (action) {
       case 'arrived':
@@ -2453,6 +2653,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       case 'cash':
         res = await ApiService.markCashCollected(tripId);
         break;
+      case 'cancel':
+        final reason = await _askCancelReason();
+        if (reason == null) return;
+        res = await ApiService.cancelDriverTrip(tripId, reason);
+        break;
       case 'sos':
         await ApiService.raiseSOS(tripId);
         _showSnack('🚨 SOS Alert raised! Help is on the way.', isError: false);
@@ -2463,6 +2668,27 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     if (res['success']) {
       if (action == 'complete') {
         _showSnack('Trip completed! 🎉', isError: false);
+        if (trip.payment.toLowerCase().contains('cash')) {
+          final confirmed = await _confirmCashCollected(trip);
+          if (confirmed) {
+            final cashRes = await ApiService.markCashCollected(tripId);
+            if (!cashRes['success']) {
+              _showSnack(cashRes['error'] ?? 'Cash confirmation failed',
+                  isError: true);
+              return;
+            }
+          }
+        }
+        await _askDriverReview(trip);
+        setState(() => _activeTrip = null);
+        _loadEarnings();
+      } else if (action == 'cash') {
+        _showSnack('Cash collection confirmed.', isError: false);
+        await _askDriverReview(trip);
+        setState(() => _activeTrip = null);
+        _loadEarnings();
+      } else if (action == 'cancel') {
+        _showSnack('Ride cancelled.', isError: false);
         setState(() => _activeTrip = null);
         _loadEarnings();
       } else {

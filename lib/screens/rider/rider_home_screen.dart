@@ -1815,6 +1815,14 @@ class TripReceiptScreen extends StatefulWidget {
 }
 
 class _TripReceiptScreenState extends State<TripReceiptScreen> {
+  static const _quickComments = [
+    'Great driver',
+    'Clean vehicle',
+    'Safe driving',
+    'Friendly service',
+    'On time pickup',
+  ];
+
   Map<String, dynamic>? _receipt;
   bool _loading = true;
   bool _submittingRating = false;
@@ -2043,6 +2051,40 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          alignment: WrapAlignment.center,
+                          children: _quickComments.map((text) {
+                            final selected = _ratingCommentCtrl.text == text;
+                            return ChoiceChip(
+                              label: Text(text),
+                              selected: selected,
+                              selectedColor: const Color(0xFFFFE0B2),
+                              onSelected: _rated
+                                  ? null
+                                  : (_) => setState(() {
+                                        _ratingCommentCtrl.text = text;
+                                      }),
+                              labelStyle: TextStyle(
+                                fontSize: 12,
+                                fontWeight: selected
+                                    ? FontWeight.w800
+                                    : FontWeight.w500,
+                                color: selected
+                                    ? const Color(0xFFFF6B35)
+                                    : const Color(0xFF1A1A2E),
+                              ),
+                              side: BorderSide(
+                                color: selected
+                                    ? const Color(0xFFFF6B35)
+                                    : const Color(0xFFE0E0E0),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 12),
                         TextField(
                           controller: _ratingCommentCtrl,
                           enabled: !_rated,

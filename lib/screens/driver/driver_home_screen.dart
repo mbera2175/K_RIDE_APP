@@ -1299,6 +1299,193 @@ class ActiveTripPanel extends StatelessWidget {
   }
 }
 
+class DriverTripReviewScreen extends StatefulWidget {
+  final TripData trip;
+  const DriverTripReviewScreen({super.key, required this.trip});
+
+  @override
+  State<DriverTripReviewScreen> createState() => _DriverTripReviewScreenState();
+}
+
+class _DriverTripReviewScreenState extends State<DriverTripReviewScreen> {
+  static const _quickComments = [
+    'Polite rider',
+    'Easy pickup',
+    'Smooth trip',
+    'Good communication',
+    'Paid on time',
+  ];
+
+  final _commentController = TextEditingController();
+  int _score = 5;
+  bool _submitting = false;
+
+  Future<void> _submitReview() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+
+    final res = await ApiService.rateDriver(
+      widget.trip.id,
+      _score,
+      _commentController.text.trim(),
+    );
+
+    if (!mounted) return;
+    setState(() => _submitting = false);
+
+    if (res['success'] == true || res['status'] == 400) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Review submitted.'),
+        backgroundColor: kSuccess,
+      ));
+      Navigator.pop(context, true);
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(res['error'] ?? 'Review skipped.'),
+      backgroundColor: kError,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: kWhite,
+      appBar: AppBar(
+        backgroundColor: kWhite,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        title: Text('Review Rider',
+            style: GoogleFonts.sora(
+                color: kDark, fontSize: 18, fontWeight: FontWeight.w800)),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 76,
+                height: 76,
+                decoration: const BoxDecoration(
+                    color: kOrangeLight, shape: BoxShape.circle),
+                child: const Icon(Icons.person_rounded,
+                    color: kOrange, size: 42),
+              ),
+              const SizedBox(height: 14),
+              Text(widget.trip.riderName,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.sora(
+                      fontSize: 22, fontWeight: FontWeight.w900, color: kDark)),
+              const SizedBox(height: 6),
+              Text('Trip ${widget.trip.tripCode} completed',
+                  style: GoogleFonts.sora(fontSize: 13, color: kMuted)),
+              const SizedBox(height: 28),
+              Text('How was this rider?',
+                  style: GoogleFonts.sora(
+                      fontSize: 16, fontWeight: FontWeight.w800, color: kDark)),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  5,
+                  (i) => IconButton(
+                    onPressed: _submitting
+                        ? null
+                        : () => setState(() => _score = i + 1),
+                    icon: Icon(
+                      i < _score
+                          ? Icons.star_rounded
+                          : Icons.star_border_rounded,
+                      color: kOrange,
+                      size: 40,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Quick review',
+                    style: GoogleFonts.sora(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: kDark)),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _quickComments.map((text) {
+                  final selected = _commentController.text == text;
+                  return ChoiceChip(
+                    label: Text(text),
+                    selected: selected,
+                    selectedColor: kOrangeLight,
+                    onSelected: _submitting
+                        ? null
+                        : (_) => setState(() {
+                              _commentController.text = text;
+                            }),
+                    labelStyle: GoogleFonts.sora(
+                      fontSize: 12,
+                      color: selected ? kOrange : kDark,
+                      fontWeight:
+                          selected ? FontWeight.w800 : FontWeight.w500,
+                    ),
+                    side: BorderSide(
+                        color: selected ? kOrange : kGray2, width: 1),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _commentController,
+                enabled: !_submitting,
+                minLines: 3,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  hintText: 'Write your own comment',
+                  filled: true,
+                  fillColor: kGray,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _submitting ? null : _submitReview,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kOrange,
+                    foregroundColor: kWhite,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: Text(_submitting ? 'Submitting...' : 'Submit Review',
+                      style: GoogleFonts.sora(
+                          fontSize: 15, fontWeight: FontWeight.w800)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class DriverTripChatScreen extends StatefulWidget {
   final int tripId;
   final String riderName;
@@ -2564,79 +2751,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
   }
 
   Future<void> _askDriverReview(TripData trip) async {
-    var score = 5;
-    final commentController = TextEditingController();
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('Rate Rider',
-              style:
-                  GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w800)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  5,
-                  (i) => IconButton(
-                    onPressed: () => setDialogState(() => score = i + 1),
-                    icon: Icon(
-                      i < score
-                          ? Icons.star_rounded
-                          : Icons.star_border_rounded,
-                      color: kOrange,
-                      size: 34,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: commentController,
-                minLines: 2,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: 'Optional comment',
-                  filled: true,
-                  fillColor: kGray,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () async {
-                final res = await ApiService.rateDriver(
-                    trip.id, score, commentController.text.trim());
-                if (!mounted) return;
-                Navigator.pop(dialogContext);
-                _showSnack(
-                  res['success']
-                      ? 'Review submitted.'
-                      : (res['error'] ?? 'Review skipped.'),
-                  isError: !res['success'],
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kOrange,
-                foregroundColor: kWhite,
-              ),
-              child: Text('Submit Review',
-                  style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
-            ),
-          ],
-        ),
-      ),
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => DriverTripReviewScreen(trip: trip)),
     );
-    commentController.dispose();
   }
 
   Future<void> _handleTripAction(String action) async {

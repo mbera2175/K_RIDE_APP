@@ -2775,14 +2775,18 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
           final confirmed = await _confirmCashCollected(trip);
           if (!confirmed) return;
 
-          final cashRes = await ApiService.markCashCollected(tripId);
-          if (!cashRes['success']) {
-            _showSnack(cashRes['error'] ?? 'Cash confirmation failed',
-                isError: true);
-            return;
+          res = await ApiService.completeTrip(tripId);
+          if (res['success']) {
+            final cashRes = await ApiService.markCashCollected(tripId);
+            if (!cashRes['success']) {
+              _showSnack(cashRes['error'] ?? 'Cash confirmation failed',
+                  isError: true);
+              res = cashRes;
+            }
           }
+        } else {
+          res = await ApiService.completeTrip(tripId);
         }
-        res = await ApiService.completeTrip(tripId);
         break;
       case 'cash':
         res = await ApiService.markCashCollected(tripId);

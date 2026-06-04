@@ -2654,6 +2654,17 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         res = await ApiService.verifyTripOtp(tripId, otp);
         break;
       case 'complete':
+        if (trip.payment.toLowerCase().contains('cash')) {
+          final confirmed = await _confirmCashCollected(trip);
+          if (!confirmed) return;
+
+          final cashRes = await ApiService.markCashCollected(tripId);
+          if (!cashRes['success']) {
+            _showSnack(cashRes['error'] ?? 'Cash confirmation failed',
+                isError: true);
+            return;
+          }
+        }
         res = await ApiService.completeTrip(tripId);
         break;
       case 'cash':
@@ -2674,17 +2685,6 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     if (res['success']) {
       if (action == 'complete') {
         _showSnack('Trip completed! 🎉', isError: false);
-        if (trip.payment.toLowerCase().contains('cash')) {
-          final confirmed = await _confirmCashCollected(trip);
-          if (confirmed) {
-            final cashRes = await ApiService.markCashCollected(tripId);
-            if (!cashRes['success']) {
-              _showSnack(cashRes['error'] ?? 'Cash confirmation failed',
-                  isError: true);
-              return;
-            }
-          }
-        }
         await _askDriverReview(trip);
         setState(() => _activeTrip = null);
         _loadEarnings();

@@ -219,6 +219,11 @@ String _asText(dynamic value, {String fallback = ''}) {
   return text.isEmpty ? fallback : text;
 }
 
+String _normalizeTripStatus(dynamic value, {String fallback = 'requested'}) {
+  final text = _asText(value, fallback: fallback);
+  return text.contains('.') ? text.split('.').last : text;
+}
+
 TripData _mapToTripData(dynamic raw) {
   final data = _unwrapTripPayload(raw);
 
@@ -313,7 +318,7 @@ TripData _mapToTripData(dynamic raw) {
         _firstValue(data, const ['is_non_ac_request', 'non_ac_request']) ==
             true,
     message: _asText(_firstValue(data, const ['message', 'note', 'remarks'])),
-    status: _asText(
+    status: _normalizeTripStatus(
         _firstValue(data, const ['status', 'trip_status', 'booking_status']),
         fallback: 'requested'),
   );
@@ -1008,16 +1013,17 @@ class ActiveTripPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final status = _normalizeTripStatus(trip.status);
     final cur =
-        _steps.firstWhere((s) => s.$1 == trip.status, orElse: () => _steps[0]);
+        _steps.firstWhere((s) => s.$1 == status, orElse: () => _steps[0]);
     final color = cur.$5 as Color;
     final icon = cur.$6;
     final label = cur.$2;
     final btn = cur.$4;
     final action = cur.$3;
-    final canCancel = trip.status == 'accepted' ||
-        trip.status == 'driver_assigned' ||
-        trip.status == 'arrived';
+    final canCancel = status == 'accepted' ||
+        status == 'driver_assigned' ||
+        status == 'arrived';
 
     return Positioned(
       bottom: 0,
@@ -1255,7 +1261,7 @@ class ActiveTripPanel extends StatelessWidget {
             ],
             // Cash + SOS buttons
             Row(children: [
-              if (trip.status == 'completed')
+              if (status == 'completed')
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => onAction('cash'),
@@ -1270,7 +1276,7 @@ class ActiveTripPanel extends StatelessWidget {
                     ),
                   ),
                 ),
-              if (trip.status == 'completed') const SizedBox(width: 10),
+              if (status == 'completed') const SizedBox(width: 10),
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () => onAction('sos'),

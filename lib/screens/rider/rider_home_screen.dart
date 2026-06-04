@@ -2599,7 +2599,9 @@ class _WhereToScreenState extends State<WhereToScreen>
         const SnackBar(content: Text('Ride request cancelled')),
       );
       if (closeAfterCancel) {
-        widget.onBack();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) widget.onBack();
+        });
       }
     } catch (e) {
       if (!mounted) return;

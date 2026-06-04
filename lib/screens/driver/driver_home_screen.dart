@@ -220,8 +220,24 @@ String _asText(dynamic value, {String fallback = ''}) {
 }
 
 String _normalizeTripStatus(dynamic value, {String fallback = 'requested'}) {
-  final text = _asText(value, fallback: fallback);
-  return text.contains('.') ? text.split('.').last : text;
+  var text = _asText(value, fallback: fallback).trim().toLowerCase();
+  if (text.contains('.')) text = text.split('.').last;
+  if (text == 'driver_assigned' || text == 'trip_accepted' || text == 'accepted') {
+    return 'accepted';
+  }
+  if (text == 'driver_arrived' || text == 'arrived') {
+    return 'arrived';
+  }
+  if (text == 'trip_started' || text == 'on_trip' || text == 'ontrip' || text == 'started') {
+    return 'started';
+  }
+  if (text == 'trip_completed' || text == 'completed') {
+    return 'completed';
+  }
+  if (text == 'trip_cancelled' || text == 'cancelled') {
+    return 'cancelled';
+  }
+  return text.isEmpty ? fallback : text;
 }
 
 TripData _mapToTripData(dynamic raw) {

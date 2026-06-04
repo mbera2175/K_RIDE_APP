@@ -2165,6 +2165,7 @@ class _WhereToScreenState extends State<WhereToScreen>
   bool _searching = false;
   bool _socketDisconnected = false;
   Timer? _searchPollTimer;
+  Timer? _trackingPollTimer;
   double _estimatedFare = 0.0;
   double _estimatedDistance = 0.0;
   int _estimatedDuration = 0;
@@ -2187,8 +2188,23 @@ class _WhereToScreenState extends State<WhereToScreen>
   ];
 
   String _normalizeTripStatus(dynamic status) {
-    final text = (status ?? 'requested').toString().trim();
-    if (text.contains('.')) return text.split('.').last;
+    var text = (status ?? 'requested').toString().trim().toLowerCase();
+    if (text.contains('.')) text = text.split('.').last;
+    if (text == 'driver_assigned' || text == 'trip_accepted' || text == 'accepted') {
+      return 'accepted';
+    }
+    if (text == 'driver_arrived' || text == 'arrived') {
+      return 'arrived';
+    }
+    if (text == 'trip_started' || text == 'on_trip' || text == 'ontrip' || text == 'started') {
+      return 'started';
+    }
+    if (text == 'trip_completed' || text == 'completed') {
+      return 'completed';
+    }
+    if (text == 'trip_cancelled' || text == 'cancelled') {
+      return 'cancelled';
+    }
     return text.isEmpty ? 'requested' : text;
   }
 
@@ -2230,6 +2246,7 @@ class _WhereToScreenState extends State<WhereToScreen>
       _searching = false;
       _step = 'tracking';
       _loadActiveTripDetails();
+      _startTrackingPolling();
     } else {
       _getLocation();
     }
@@ -2312,6 +2329,80 @@ class _WhereToScreenState extends State<WhereToScreen>
   void _stopSearchPolling() {
     _searchPollTimer?.cancel();
     _searchPollTimer = null;
+  }
+
+  void _startTrackingPolling() {
+    _trackingPollTimer?.cancel();
+    _trackingPollTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
+      if (!mounted || _step != 'tracking' || _tripId == null) return;
+      try {
+        final res = await ApiService.getActiveTrip();
+        if (res['success'] == true) {
+          final trip = res['data']?['active_trip'];
+          if (trip == null) {
+            _trackingPollTimer?.cancel();
+            await _handleFinishedTrip();
+          } else {
+            final status = _normalizeTripStatus(trip['status']);
+            final driver = trip['driver'] as Map<String, dynamic>?;
+            final dLat = (driver?['current_lat'] as num?)?.toDouble();
+            final dLng = (driver?['current_lng'] as num?)?.toDouble();
+            if (mounted) {
+              setState(() {
+                _tripStatus = status;
+                if (driver != null) {
+                  _assignedDriver = driver;
+                }
+                if (dLat != null && dLng != null) {
+                  _driverLat = dLat;
+                  _driverLng = dLng;
+                }
+              });
+              if (dLat != null && dLng != null) {
+                _updateDriverMarker(dLat, dLng);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Tracking poll error: $e');
+      }
+    });
+  }
+
+  void _stopTrackingPolling() {
+    _trackingPollTimer?.cancel();
+    _trackingPollTimer = null;
+  }
+
+  Future<void> _handleFinishedTrip() async {
+    if (_tripId == null) return;
+    try {
+      final res = await ApiService.getTripReceipt(_tripId!);
+      if (res['success'] == true) {
+        RiderSocketService.disconnect();
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => TripReceiptScreen(
+              tripId: _tripId!,
+              onClose: widget.onBack,
+            ),
+          ),
+        );
+      } else {
+        RiderSocketService.disconnect();
+        if (!mounted) return;
+        widget.onBack();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Trip was cancelled')),
+        );
+      }
+    } catch (e) {
+      RiderSocketService.disconnect();
+      if (mounted) widget.onBack();
+    }
   }
 
   Future<void> _getLocation() async {
@@ -2496,6 +2587,7 @@ class _WhereToScreenState extends State<WhereToScreen>
               _driverLng = dLng;
             });
             _stopSearchPolling();
+            _startTrackingPolling();
 
             if (dLat != null && dLng != null) {
               _updateDriverMarker(dLat, dLng);
@@ -2557,6 +2649,7 @@ class _WhereToScreenState extends State<WhereToScreen>
           _driverLng = (_assignedDriver?["current_lng"] as num?)?.toDouble();
         });
         _stopSearchPolling();
+        _startTrackingPolling();
       } else if (type == "no_driver_found") {
         setState(() {
           _booked = false;
@@ -2690,6 +2783,7 @@ class _WhereToScreenState extends State<WhereToScreen>
             setState(() {
               _step = 'tracking';
             });
+            _startTrackingPolling();
           },
         );
       }
@@ -2701,6 +2795,11 @@ class _WhereToScreenState extends State<WhereToScreen>
 
     return WillPopScope(
       onWillPop: () async {
+        final status = _normalizeTripStatus(_tripStatus);
+        if (_step == 'tracking' &&
+            (status == 'accepted' || status == 'arrived' || status == 'started')) {
+          return false;
+        }
         widget.onBack();
         return false;
       },
@@ -3643,26 +3742,29 @@ class _WhereToScreenState extends State<WhereToScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                GestureDetector(
-                  onTap: widget.onBack,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: kWhite,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 10,
-                          offset: Offset(0, 2),
-                        )
-                      ],
+                if (tripStatus == 'requested')
+                  GestureDetector(
+                    onTap: widget.onBack,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: kWhite,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 10,
+                            offset: Offset(0, 2),
+                          )
+                        ],
+                      ),
+                      child: const Center(
+                          child: Text('←', style: TextStyle(fontSize: 18))),
                     ),
-                    child: const Center(
-                        child: Text('←', style: TextStyle(fontSize: 18))),
-                  ),
-                ),
+                  )
+                else
+                  const SizedBox(width: 40),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -4183,10 +4285,52 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       }
     });
 
+    // Refresh profile details (including profile picture URL) from server on startup
+    _refreshProfileDetails();
+
     _checkActiveTrip();
     _activeTripTimer = Timer.periodic(const Duration(seconds: 4), (_) {
       _checkActiveTrip();
     });
+  }
+
+  /// Fetch the latest profile data from the server and persist it locally.
+  /// This ensures the S3 profile picture URL survives app restarts.
+  Future<void> _refreshProfileDetails() async {
+    try {
+      final res = await ApiService.getMe();
+      if (res['success'] == true && res['data'] != null) {
+        final data = res['data'] as Map<String, dynamic>;
+        // Try every known key the backend might use for the profile picture URL
+        final picUrl = (
+          data['profile_picture_url'] ??
+          data['profile_pic_url'] ??
+          data['profile_pic'] ??
+          data['avatar_url'] ??
+          ''
+        ).toString();
+        if (picUrl.isNotEmpty) {
+          await AuthService.updateProfilePic(picUrl);
+        }
+        // Also refresh name/phone in case they changed
+        if (data['full_name'] != null) {
+          await AuthService.saveSession({
+            'access_token': AuthService.token,
+            'role': AuthService.role,
+            'full_name': data['full_name'],
+            'phone': data['phone'] ?? AuthService.phone,
+            'user_id': data['user_id'] ?? AuthService.userId,
+            'wallet_balance': data['wallet_balance'] ?? AuthService.walletBalance,
+            'kcoin_balance': data['kcoin_balance'] ?? AuthService.kcoinBalance,
+            'rider_id': data['rider_id'] ?? AuthService.riderId,
+            'profile_pic': picUrl.isNotEmpty ? picUrl : AuthService.profilePic,
+          });
+        }
+        if (mounted) setState(() {});
+      }
+    } catch (e) {
+      debugPrint('Profile refresh error: $e');
+    }
   }
 
   @override
@@ -4597,9 +4741,22 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         if (res['success']) {
-          // Extract the permanent S3 URL (or Base64 fallback) returned by the backend
-          final url = res['data']?['profile_picture_url'] ?? pickedFile.path;
-          await AuthService.updateProfilePic(url);
+          // Extract the permanent S3 URL — try every key the backend might return
+          final responseData = res['data'] as Map<String, dynamic>? ?? {};
+          final url = (
+            responseData['profile_picture_url'] ??
+            responseData['profile_pic_url'] ??
+            responseData['profile_pic'] ??
+            responseData['avatar_url'] ??
+            responseData['url'] ??
+            ''
+          ).toString();
+          // Persist the S3 URL so it survives app restarts
+          if (url.isNotEmpty) {
+            await AuthService.updateProfilePic(url);
+          }
+          // Re-fetch from server to confirm the saved URL and keep local cache in sync
+          _refreshProfileDetails();
           setState(() {});
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

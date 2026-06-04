@@ -2262,6 +2262,25 @@ class _WhereToScreenState extends State<WhereToScreen>
           final status = _normalizeTripStatus(trip['status']);
           if (status == 'requested') return;
 
+          // If trip is already completed (e.g. driver completed while app was polling),
+          // navigate straight to the receipt & rating screen.
+          if (status == 'completed') {
+            _searchPollTimer?.cancel();
+            RiderSocketService.disconnect();
+            final completedTripId = (trip['id'] as num?)?.toInt() ?? _tripId;
+            if (!mounted || completedTripId == null) return;
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TripReceiptScreen(
+                  tripId: completedTripId,
+                  onClose: widget.onBack,
+                ),
+              ),
+            );
+            return;
+          }
+
           final driver = trip['driver'] as Map<String, dynamic>?;
           final dLat = (driver?['current_lat'] as num?)?.toDouble();
           final dLng = (driver?['current_lng'] as num?)?.toDouble();
@@ -5746,11 +5765,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 SafeArea(child: _buildProfileTab())
               else if (_activeTab == 'wallet')
                 SafeArea(child: _buildWalletTab())
-              else
-                const SafeArea(
-                    child: Center(
-                        child: Text('Coming Soon! 🚀',
-                            style: TextStyle(fontSize: 18, color: kMuted)))),
+              else if (_activeTab == 'activity')
+                _RiderActivityTab(),
 
               // Bottom Nav
               Positioned(
@@ -5855,6 +5871,242 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RIDER ACTIVITY TAB
+// ══════════════════════════════════════════════════════════════
+class _RiderActivityTab extends StatefulWidget {
+  const _RiderActivityTab();
+
+  @override
+  State<_RiderActivityTab> createState() => _RiderActivityTabState();
+}
+
+class _RiderActivityTabState extends State<_RiderActivityTab> {
+  List<Map<String, dynamic>> _trips = [];
+  bool _loading = true;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    setState(() {
+      _loading = true;
+      _hasError = false;
+    });
+    try {
+      final res = await ApiService.getRiderHistory(limit: 50);
+      if (res['success'] == true) {
+        final data = res['data'];
+        final tripsList = (data['trips'] ?? data['results'] ?? data ?? []) as List;
+        setState(() {
+          _trips = tripsList.map((t) => Map<String, dynamic>.from(t)).toList();
+          _loading = false;
+        });
+      } else {
+        setState(() {
+          _hasError = true;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _hasError = true;
+        _loading = false;
+      });
+    }
+  }
+
+  Color _statusColor(String? status) {
+    if (status == 'completed') return const Color(0xFF2E7D32);
+    if (status == 'cancelled') return const Color(0xFFD32F2F);
+    return kMuted;
+  }
+
+  Widget _badge(String? status) {
+    final color = _statusColor(status);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8)),
+      child: Text(
+        (status ?? '').replaceAll('_', ' ').toUpperCase(),
+        style: TextStyle(
+            fontSize: 10, color: color, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+
+  Widget _tripCard(Map<String, dynamic> trip) {
+    final fare = trip['actual_fare'] ?? trip['estimated_fare'] ?? 0;
+    final dist = trip['distance_km'] ?? '';
+    final code = trip['trip_code'] ?? '';
+    final pickup = trip['pickup_address'] ?? '';
+    final drop = trip['drop_address'] ?? '';
+    final status = (trip['status'] ?? '').toString();
+    final rawDate = trip['created_at'] ?? trip['updated_at'] ?? '';
+    String dateLabel = '';
+    if (rawDate.isNotEmpty) {
+      try {
+        final dt = DateTime.parse(rawDate).toLocal();
+        dateLabel =
+            '${dt.day}/${dt.month}/${dt.year}  ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+      } catch (_) {}
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+          color: kWhite,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 3))
+          ]),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Text('#$code',
+              style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: kMuted)),
+          _badge(status),
+        ]),
+        if (dateLabel.isNotEmpty) ...[
+          const SizedBox(height: 2),
+          Text(dateLabel,
+              style: const TextStyle(fontSize: 11, color: kMuted)),
+        ],
+        const SizedBox(height: 8),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+              width: 8,
+              height: 8,
+              margin: const EdgeInsets.only(top: 4),
+              decoration: const BoxDecoration(
+                  shape: BoxShape.circle, color: Color(0xFF2E7D32))),
+          const SizedBox(width: 8),
+          Expanded(
+              child: Text(pickup,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, color: kDark))),
+        ]),
+        const SizedBox(height: 4),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+              width: 8,
+              height: 8,
+              margin: const EdgeInsets.only(top: 4),
+              decoration: BoxDecoration(
+                  color: kOrange,
+                  borderRadius: BorderRadius.circular(2))),
+          const SizedBox(width: 8),
+          Expanded(
+              child: Text(drop,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, color: kMuted))),
+        ]),
+        const SizedBox(height: 10),
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Text('₹$fare',
+              style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: kOrange)),
+          if (dist.toString().isNotEmpty)
+            Text('$dist km',
+                style: const TextStyle(fontSize: 12, color: kMuted)),
+        ]),
+      ]),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('My Activity',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: kDark)),
+              if (!_loading)
+                GestureDetector(
+                  onTap: _loadHistory,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                        color: kOrangeLight,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.refresh_rounded,
+                        color: kOrange, size: 18),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: _loading
+              ? const Center(
+                  child: CircularProgressIndicator(color: kOrange))
+              : _hasError
+                  ? Center(
+                      child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                          const Text('Could not load trips',
+                              style: TextStyle(color: kMuted, fontSize: 15)),
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: _loadHistory,
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: kOrange,
+                                foregroundColor: kWhite),
+                            child: const Text('Retry'),
+                          )
+                        ]))
+                  : _trips.isEmpty
+                      ? const Center(
+                          child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                              Text('🚗', style: TextStyle(fontSize: 40)),
+                              SizedBox(height: 12),
+                              Text('No trips yet',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: kDark)),
+                              SizedBox(height: 4),
+                              Text('Your ride history will appear here',
+                                  style: TextStyle(
+                                      fontSize: 13, color: kMuted)),
+                            ]))
+                      : ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                          itemCount: _trips.length,
+                          itemBuilder: (_, i) => _tripCard(_trips[i]),
+                        ),
+        ),
+      ]),
     );
   }
 }

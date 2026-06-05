@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mappls_gl/mappls_gl.dart';
 import 'utils/app_colors.dart';
+import 'utils/constants.dart';
 import 'services/auth_service.dart';
 import 'services/driver_background_service.dart';
 import 'screens/rider/rider_home_screen.dart';
@@ -14,9 +16,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-
-
-  await AuthService.init(); // ← load saved session
+  await AuthService.init(); // load saved session
   await initializeBackgroundService();
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);

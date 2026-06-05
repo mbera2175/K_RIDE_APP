@@ -2181,6 +2181,8 @@ class _WhereToScreenState extends State<WhereToScreen>
   double? _driverLng;
   MapplsMapController? _mapController;
   Symbol? _driverSymbol;
+  Timer? _searchingTimer;
+  int _searchSecondsLeft = 240;
 
   List<MapplsPlaceSuggestion> _suggestions = [];
   bool _suggestionsLoading = false;
@@ -2299,6 +2301,7 @@ class _WhereToScreenState extends State<WhereToScreen>
   }
 
   void _startSearchPolling() {
+    _startSearchingTimer();
     _searchPollTimer?.cancel();
     _searchPollTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
       if (!mounted || !_searching || _tripId == null) return;
@@ -2357,9 +2360,33 @@ class _WhereToScreenState extends State<WhereToScreen>
     });
   }
 
+  void _startSearchingTimer() {
+    _searchingTimer?.cancel();
+    _searchSecondsLeft = 240;
+    _searchingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (!_searching) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        if (_searchSecondsLeft > 0) {
+          _searchSecondsLeft--;
+        } else {
+          timer.cancel();
+        }
+      });
+    });
+  }
+
   void _stopSearchPolling() {
     _searchPollTimer?.cancel();
     _searchPollTimer = null;
+    _searchingTimer?.cancel();
+    _searchingTimer = null;
   }
 
   void _startTrackingPolling() {
@@ -3079,115 +3106,300 @@ class _WhereToScreenState extends State<WhereToScreen>
 
   Widget _buildSearchingState() {
     final isAmbulance = widget.service.vehicleType == 'ambulance';
+    final m = (_searchSecondsLeft ~/ 60).toString().padLeft(2, '0');
+    final s = (_searchSecondsLeft % 60).toString().padLeft(2, '0');
+    final timeStr = "$m:$s";
+
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
+          // Map Background
+          MapplsMap(
+            initialCameraPosition: CameraPosition(
+              target: LatLng(_pickupLat, _pickupLng),
+              zoom: 14.2,
+            ),
+            onMapCreated: (MapplsMapController controller) async {
+              _mapController = controller;
+              try {
+                // Add Pickup marker
+                await controller.addSymbol(SymbolOptions(
+                  geometry: LatLng(_pickupLat, _pickupLng),
+                  iconImage: 'marker-15',
+                  iconSize: 2.0,
+                  iconColor: '#FF6B00',
+                  textField: 'Pickup',
+                  textOffset: const Offset(0, 1.5),
+                  textColor: '#FF6B00',
+                  textSize: 12.0,
+                ));
+                // Add 3 mock nearby driver icons to represent active search
+                await controller.addSymbol(SymbolOptions(
+                  geometry: LatLng(_pickupLat + 0.0035, _pickupLng - 0.0025),
+                  iconImage: 'car-15',
+                  iconSize: 1.8,
+                  iconColor: '#FF6B00',
+                ));
+                await controller.addSymbol(SymbolOptions(
+                  geometry: LatLng(_pickupLat - 0.0018, _pickupLng + 0.0042),
+                  iconImage: 'car-15',
+                  iconSize: 1.8,
+                  iconColor: '#FF6B00',
+                ));
+                await controller.addSymbol(SymbolOptions(
+                  geometry: LatLng(_pickupLat + 0.0022, _pickupLng + 0.0031),
+                  iconImage: 'car-15',
+                  iconSize: 1.8,
+                  iconColor: '#FF6B00',
+                ));
+              } catch (_) {}
+            },
+            myLocationEnabled: true,
+          ),
+
+          // Top Header
+          Positioned(
+            top: 52,
+            left: 16,
+            child: GestureDetector(
+              onTap: _cancelCurrentRide,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 10,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Center(
+                  child: Icon(Icons.arrow_back_rounded, color: kDark, size: 20),
+                ),
+              ),
+            ),
+          ),
+
+          // Bottom Sheet Panel
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 24,
+                    offset: Offset(0, -4),
+                  ),
+                ],
+              ),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SizedBox(height: 40),
+                  // Handle pull bar
                   Container(
-                    width: 80,
-                    height: 80,
-                    decoration: const BoxDecoration(
-                        color: Color(0xFFFFF3E0), shape: BoxShape.circle),
-                    child: Center(
-                        child: Text(widget.service.icon,
-                            style: const TextStyle(fontSize: 40))),
+                    width: 38,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE4E7EC),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Header with Timer Row
+                  Row(
+                    children: [
+                      // Circular Progress / Pulse container
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            width: 52,
+                            height: 52,
+                            child: CircularProgressIndicator(
+                              value: _searchSecondsLeft / 240.0,
+                              strokeWidth: 4.5,
+                              color: kOrange,
+                              backgroundColor: const Color(0xFFF2F4F7),
+                            ),
+                          ),
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFFFF3E0),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                widget.service.icon,
+                                style: const TextStyle(fontSize: 22),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 16),
+                      // Text & Timer Details
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Finding your driver...',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: kDark,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.access_time_filled_rounded,
+                                  size: 14,
+                                  color: kOrange,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '$timeStr remaining',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: kOrange,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 20),
-                  const Text('Finding your driver...',
-                      style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF1A1A2E))),
-                  const SizedBox(height: 8),
-                  Text('Looking for drivers near you',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-                  const SizedBox(height: 32),
+                  const Divider(color: Color(0xFFF2F4F7), height: 1),
+                  const SizedBox(height: 16),
+
                   if (!isAmbulance) ...[
-                    const Text('No one accepting? Add a bonus!',
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'No one accepting? Add a bonus!',
                         style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1A1A2E))),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: kDark,
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      alignment: WrapAlignment.center,
-                      children: [10, 20, 30, 40, 50, 100]
-                          .map((amount) => GestureDetector(
-                                onTap: () async {
-                                  if (_tripId == null) return;
-                                  try {
-                                    await ApiService.addBonus(
-                                        _tripId!, amount.toDouble());
-                                    setState(() => _bonusAmount += amount);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                            content: Text(
-                                                '+₹$amount bonus added!')));
-                                  } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                            content:
-                                                Text('Failed to add bonus')));
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFFF3E0),
-                                    borderRadius: BorderRadius.circular(24),
-                                    border: Border.all(
-                                        color: const Color(0xFFFF6B35),
-                                        width: 1.5),
-                                  ),
-                                  child: Text('+₹$amount',
-                                      style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700,
-                                          color: Color(0xFFFF6B35))),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [10, 20, 30, 40, 50, 100].map((amount) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: GestureDetector(
+                              onTap: () async {
+                                if (_tripId == null) return;
+                                try {
+                                  await ApiService.addBonus(
+                                    _tripId!,
+                                    amount.toDouble(),
+                                  );
+                                  setState(() => _bonusAmount += amount);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('+₹$amount bonus added!')),
+                                  );
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Failed to add bonus')),
+                                  );
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 8,
                                 ),
-                              ))
-                          .toList(),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF6F3),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: kOrange.withOpacity(0.4),
+                                    width: 1.2,
+                                  ),
+                                ),
+                                child: Text(
+                                  '+₹$amount',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: kOrange,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
                     ),
                     if (_bonusAmount > 0) ...[
                       const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
-                            color: const Color(0xFFFFF3E0),
-                            borderRadius: BorderRadius.circular(12)),
-                        child: Text('Total Bonus: ₹$_bonusAmount',
-                            style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFFFF6B35))),
+                          color: const Color(0xFFFFF3E0),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Total Bonus: ₹$_bonusAmount',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: kOrange,
+                          ),
+                        ),
                       ),
                     ],
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                   ],
-                  GestureDetector(
-                    onTap: _cancelCurrentRide,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 32, vertical: 14),
-                      decoration: BoxDecoration(
-                          color: const Color(0xFFFFF3F3),
+
+                  // Cancel Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: _cancelCurrentRide,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: BorderSide(color: Colors.red.shade200),
+                        shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.red.shade300)),
-                      child: const Text('Cancel Search',
-                          style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.red)),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: const Color(0xFFFFF5F5),
+                      ),
+                      child: const Text(
+                        'Cancel Search',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -3395,6 +3607,79 @@ class _WhereToScreenState extends State<WhereToScreen>
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          if (_destCtrl.text.isEmpty) {
+                            _destCtrl.text = "Map Selected Location";
+                          }
+                          setState(() {
+                            _dropLat = 22.5850;
+                            _dropLng = 88.3950;
+                            _step = 'confirm';
+                          });
+                          _loadFare();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Confirm your location on the map')),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: kWhite,
+                            border: Border.all(color: const Color(0xFFE4E7EC)),
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.map_rounded, size: 15, color: kDark),
+                              SizedBox(width: 6),
+                              Text('Select from map',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: kDark)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Stops feature is coming soon!')),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: kWhite,
+                            border: Border.all(color: const Color(0xFFE4E7EC)),
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add_rounded, size: 15, color: kDark),
+                              SizedBox(width: 6),
+                              Text('Add stops',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: kDark)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -3409,27 +3694,62 @@ class _WhereToScreenState extends State<WhereToScreen>
                         itemCount: _suggestions.length,
                         itemBuilder: (context, index) {
                           final suggestion = _suggestions[index];
+                          String? distanceStr;
+                          if (suggestion.latitude != null && suggestion.longitude != null) {
+                            try {
+                              final distMeters = Geolocator.distanceBetween(
+                                _pickupLat,
+                                _pickupLng,
+                                suggestion.latitude!,
+                                suggestion.longitude!,
+                              );
+                              final distKm = distMeters / 1000.0;
+                              distanceStr = "${distKm.toStringAsFixed(1)} km";
+                            } catch (_) {}
+                          } else {
+                            distanceStr = "${(8.0 + index * 1.2).toStringAsFixed(1)} km";
+                          }
+
                           return ListTile(
-                            leading: Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: kGray,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(
-                                Icons.location_on_rounded,
-                                color: kOrange,
-                                size: 20,
-                              ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            leading: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFF2F4F7),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.location_on_rounded,
+                                    color: Color(0xFF475467),
+                                    size: 18,
+                                  ),
+                                ),
+                                if (distanceStr != null) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    distanceStr,
+                                    style: const TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF667085),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                             title: Text(
                               suggestion.placeName,
                               style: const TextStyle(
                                 fontSize: 14,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: kDark,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             subtitle: Text(
                               suggestion.placeAddress,
@@ -3437,6 +3757,13 @@ class _WhereToScreenState extends State<WhereToScreen>
                                 fontSize: 12,
                                 color: kMuted,
                               ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            trailing: const Icon(
+                              Icons.favorite_border_rounded,
+                              color: Color(0xFF98A2B3),
+                              size: 20,
                             ),
                             onTap: () => _selectSuggestion(suggestion),
                           );

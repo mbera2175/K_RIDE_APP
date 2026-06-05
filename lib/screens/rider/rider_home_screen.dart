@@ -6538,27 +6538,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                                             ))),
                               ]),
                             ),
-                            Container(height: 8, color: kGray),
-                            const SizedBox(height: 20),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text('🕓 Recent places',
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w800,
-                                            color: kDark)),
-                                    const SizedBox(height: 14),
-                                    ...recentPlaces.map((place) => _RecentPlaceTile(
-                                        place: place,
-                                        onTap: () => _openService(
-                                            _rideServices[0],
-                                            prefilledDest:
-                                                '${place.label}, ${place.sub}'))),
-                                  ]),
-                            ),
+
                           ],
                         ),
                       ),

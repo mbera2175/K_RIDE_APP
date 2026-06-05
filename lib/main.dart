@@ -16,15 +16,8 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ── Mappls SDK Initialization ───────────────────────────────────
-  // Must be called before runApp() so the map can authenticate and render.
-  MapplsAccountManager.setMapSDKKey('c59951af1ef53a9e6cc8fb8a7080d5d8');
-  MapplsAccountManager.setRestApiKey('c59951af1ef53a9e6cc8fb8a7080d5d8');
-  MapplsAccountManager.setAtlasClientId(
-      '96dHZVzsAutf7JmkOzGCFwHsVMopiBc3omOm6Nz9I61Oj27HCVNsH44gi4vQBl9ZxAk3l9rrauxdqOYwUmUkOlCz7RrIFlKN');
-  MapplsAccountManager.setAtlasClientSecret(
-      'lrFxI-iSEg8FAEuoX9z0UYKFbEDDr2gtxSFnMaxGyAmNBp8A__5GQ8yGbmpIL3g5qYPFCzw-0wb_u9xpbjl1i8lZ49AasxwH3PCiRF2PpuY=');
-  // ────────────────────────────────────────────────────────────────
+  // Note: mappls_gl 2.0.5 reads API keys from AndroidManifest.xml meta-data
+  // (injected via build.gradle.kts manifestPlaceholders) — no Dart init needed.
 
   await AuthService.init(); // load saved session
   await initializeBackgroundService();

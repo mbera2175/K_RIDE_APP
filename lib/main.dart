@@ -15,10 +15,10 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-   MapplsAccountManager.setMapSDKKey("c59951af1ef53a9e6cc8fb8a7080d5d8");
-   MapplsAccountManager.setRestAPIKey("c59951af1ef53a9e6cc8fb8a7080d5d8");
-   MapplsAccountManager.setAtlasClientId("96dHZVzsAutf7JmkOzGCFwHsVMopiBc3omOm6Nz9I61Oj27HCVNsH44gi4vQBl9ZxAk3l9rrauxdqOYwUmUkOlCz7RrIFlKN");
-   MapplsAccountManager.setAtlasClientSecret("lrFxI-iSEg8FAEuoX9z0UYKFbEDDr2gtxSFnMaxGyAmNBp8A__5GQ8yGbmpIL3g5qYPFCzw-0wb_u9xpbjl1i8lZ49AasxwH3PCiRF2PpuY=");
+   MapplsAccountManager.mapSDKKey = "c59951af1ef53a9e6cc8fb8a7080d5d8";
+   MapplsAccountManager.restAPIKey = "c59951af1ef53a9e6cc8fb8a7080d5d8";
+   MapplsAccountManager.atlasClientId = "96dHZVzsAutf7JmkOzGCFwHsVMopiBc3omOm6Nz9I61Oj27HCVNsH44gi4vQBl9ZxAk3l9rrauxdqOYwUmUkOlCz7RrIFlKN";
+   MapplsAccountManager.atlasClientSecret = "lrFxI-iSEg8FAEuoX9z0UYKFbEDDr2gtxSFnMaxGyAmNBp8A__5GQ8yGbmpIL3g5qYPFCzw-0wb_u9xpbjl1i8lZ49AasxwH3PCiRF2PpuY=";
 
   await AuthService.init(); // ← load saved session
   await initializeBackgroundService();

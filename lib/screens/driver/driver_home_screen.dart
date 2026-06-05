@@ -49,6 +49,11 @@ class TripData {
   final double pickupDistanceKm;
   final double tripDistanceKm;
 
+  final double? pickupLat;
+  final double? pickupLng;
+  final double? dropLat;
+  final double? dropLng;
+
   final String payment;
   final String riderRating;
   final String riderName;
@@ -71,6 +76,10 @@ class TripData {
     required this.duration,
     required this.pickupDistanceKm,
     required this.tripDistanceKm,
+    this.pickupLat,
+    this.pickupLng,
+    this.dropLat,
+    this.dropLng,
     required this.payment,
     required this.riderRating,
     required this.riderName,
@@ -99,6 +108,10 @@ class TripData {
         duration: duration,
         pickupDistanceKm: pickupDistanceKm ?? this.pickupDistanceKm,
         tripDistanceKm: tripDistanceKm ?? this.tripDistanceKm,
+        pickupLat: pickupLat,
+        pickupLng: pickupLng,
+        dropLat: dropLat,
+        dropLng: dropLng,
         payment: payment,
         riderRating: riderRating,
         riderName: riderName,
@@ -308,6 +321,10 @@ TripData _mapToTripData(dynamic raw) {
         fallback: '0'),
     pickupDistanceKm: pickupDistance,
     tripDistanceKm: tripDistance,
+    pickupLat: _asDouble(_firstValue(data, const ['pickup_lat', 'pickup_latitude', 'lat'])),
+    pickupLng: _asDouble(_firstValue(data, const ['pickup_lng', 'pickup_longitude', 'lng'])),
+    dropLat: _asDouble(_firstValue(data, const ['drop_lat', 'drop_latitude'])),
+    dropLng: _asDouble(_firstValue(data, const ['drop_lng', 'drop_longitude'])),
     payment: _asText(
         _firstValue(data, const ['payment_method', 'payment', 'payment_type']),
         fallback: 'Cash'),
@@ -2344,7 +2361,6 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
   TripData? _incomingTrip;
   TripData? _activeTrip;
   MapplsMapController? _mapController;
-  List<Polyline> _routeLines = [];
   int _navIndex = 0;
   final Offset _driverPos = const Offset(0.5, 0.42);
   String _greeting = 'Good morning';
@@ -2852,22 +2868,50 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
   Future<void> _drawTripRoute() async {
     if (_activeTrip == null || _mapController == null) return;
     
-    LatLng source;
-    LatLng destination;
-    
     final status = _normalizeTripStatus(_activeTrip!.status);
+    LatLng? source;
+    LatLng? destination;
     
-    if (status == 'accepted' || status == 'driver_assigned') {
+    if (status == 'accepted' || status == 'driver_assigned' || status == 'arrived') {
       // Driver to Pickup
-      source = LatLng(_currentLat, _currentLng);
-      // Note: TripData needs pickup coordinates. 
-      // Assuming coordinates are passed or available via API
-      // If not available, we use markers for now.
-      return; 
+      if (_currentLat != 0 && _activeTrip!.pickupLat != null) {
+        source = LatLng(_currentLat, _currentLng);
+        destination = LatLng(_activeTrip!.pickupLat!, _activeTrip!.pickupLng!);
+      }
     } else if (status == 'started') {
       // Pickup to Drop
-      // source = ...
-      // destination = ...
+      if (_activeTrip!.pickupLat != null && _activeTrip!.dropLat != null) {
+        source = LatLng(_activeTrip!.pickupLat!, _activeTrip!.pickupLng!);
+        destination = LatLng(_activeTrip!.dropLat!, _activeTrip!.dropLng!);
+      }
+    }
+
+    if (source != null && destination != null) {
+      final points = await MapService.getRoute(source, destination);
+      if (points.isNotEmpty) {
+        _mapController!.clearLines();
+        _mapController!.addLine(LineOptions(
+          geometry: points,
+          lineColor: status == 'started' ? "#00C853" : "#FF6B00",
+          lineWidth: 5.0,
+          lineOpacity: 0.8,
+        ));
+
+        // Auto-zoom to fit the route
+        _mapController!.animateCamera(CameraUpdate.newLatLngBounds(
+          LatLngBounds(
+            southwest: LatLng(
+              source.latitude < destination.latitude ? source.latitude : destination.latitude,
+              source.longitude < destination.longitude ? source.longitude : destination.longitude,
+            ),
+            northeast: LatLng(
+              source.latitude > destination.latitude ? source.latitude : destination.latitude,
+              source.longitude > destination.longitude ? source.longitude : destination.longitude,
+            ),
+          ),
+          left: 50, right: 50, top: 120, bottom: 250,
+        ));
+      }
     }
   }
 
@@ -3397,8 +3441,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
               if (snap.connectionState == ConnectionState.waiting)
                 return const Center(
                     child: CircularProgressIndicator(color: kOrange));
-              final res = snap.data as Map<String, dynamic>?;
-              if (res == null || !res['success'])
+              final res = snap.data as Map<String, dynamic>?;              if (res == null || !res['success'])
                 return Center(
                     child: Text('Could not load trips',
                         style: GoogleFonts.sora(color: kMuted)));

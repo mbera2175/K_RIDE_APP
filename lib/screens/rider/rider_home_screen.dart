@@ -1,0 +1,6336 @@
+import 'package:geolocator/geolocator.dart';
+import 'package:mappls_gl/mappls_gl.dart';
+import 'dart:async';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../services/auth_service.dart';
+import '../../services/api_service.dart';
+import '../../services/rider_socket_service.dart';
+import '../auth/role_selection_screen.dart';
+import 'package:geocoding/geocoding.dart' as geo;
+import 'package:url_launcher/url_launcher.dart';
+
+// ── Constants ──
+const kOrange = Color(0xFFFF6B00);
+const kOrangeLight = Color(0xFFFFF3E8);
+const kOrangeDark = Color(0xFFE55A00);
+const kWhite = Color(0xFFFFFFFF);
+const kGray = Color(0xFFF6F6F6);
+const kDark = Color(0xFF1A1A1A);
+const kMuted = Color(0xFF9E9E9E);
+
+// ── Data models ──
+class ServiceItem {
+  final int id;
+  final String name;
+  final String icon;
+  final String category;
+  final String vehicleType;
+  final String? tag;
+  final Color color;
+  final Color accent;
+  final bool bikeOnly;
+  final bool isEV;
+
+  const ServiceItem({
+    required this.id,
+    required this.name,
+    required this.icon,
+    required this.category,
+    required this.vehicleType,
+    this.tag,
+    required this.color,
+    required this.accent,
+    required this.bikeOnly,
+    this.isEV = false,
+  });
+}
+
+class PaymentMethod {
+  final String id;
+  final String icon;
+  final String label;
+  final String sub;
+
+  const PaymentMethod({
+    required this.id,
+    required this.icon,
+    required this.label,
+    required this.sub,
+  });
+}
+
+class PromoItem {
+  final String title;
+  final String sub;
+  final List<Color> gradientColors;
+
+  const PromoItem({
+    required this.title,
+    required this.sub,
+    required this.gradientColors,
+  });
+}
+
+class PlaceItem {
+  final String icon;
+  final String label;
+  final String sub;
+
+  const PlaceItem({
+    required this.icon,
+    required this.label,
+    required this.sub,
+  });
+}
+
+// ── Static data ──
+const services = [
+  ServiceItem(
+      id: 1,
+      name: 'AC Cab',
+      icon: '🚖',
+      category: 'ride',
+      vehicleType: 'ac_cab',
+      tag: 'Comfortable',
+      color: kOrangeLight,
+      accent: kOrange,
+      bikeOnly: false),
+  ServiceItem(
+      id: 2,
+      name: 'Non-AC Cab',
+      icon: '🚕',
+      category: 'ride',
+      vehicleType: 'non_ac_cab',
+      tag: 'Budget',
+      color: kOrangeLight,
+      accent: kOrange,
+      bikeOnly: false),
+  ServiceItem(
+      id: 3,
+      name: 'Bike',
+      icon: '🏍️',
+      category: 'ride',
+      vehicleType: 'bike',
+      tag: 'Fastest',
+      color: kOrangeLight,
+      accent: kOrange,
+      bikeOnly: false),
+  ServiceItem(
+      id: 4,
+      name: 'Auto',
+      icon: '🛺',
+      category: 'ride',
+      vehicleType: 'auto',
+      tag: null,
+      color: kOrangeLight,
+      accent: kOrange,
+      bikeOnly: false),
+  ServiceItem(
+      id: 5,
+      name: 'Toto',
+      icon: '🛵',
+      category: 'ride',
+      vehicleType: 'toto',
+      tag: 'EV',
+      color: Color(0xFFF0FFF4),
+      accent: Color(0xFF2E7D32),
+      bikeOnly: false),
+  ServiceItem(
+      id: 6,
+      name: 'Ambulance',
+      icon: '🚑',
+      category: 'ride',
+      vehicleType: 'ambulance',
+      tag: 'Emergency',
+      color: Color(0xFFFFF0F0),
+      accent: Color(0xFFE53935),
+      bikeOnly: false),
+  ServiceItem(
+      id: 10,
+      name: 'EV Ride',
+      icon: '⚡',
+      category: 'ride',
+      vehicleType: 'ac_cab',
+      tag: 'Eco',
+      color: Color(0xFFF0FFF4),
+      accent: Color(0xFF2E7D32),
+      bikeOnly: false,
+      isEV: true),
+  ServiceItem(
+      id: 7,
+      name: 'Food',
+      icon: '🍱',
+      category: 'delivery',
+      vehicleType: 'bike',
+      tag: 'Bike only',
+      color: kOrangeLight,
+      accent: kOrange,
+      bikeOnly: true),
+  ServiceItem(
+      id: 8,
+      name: 'Parcel',
+      icon: '📦',
+      category: 'delivery',
+      vehicleType: 'bike',
+      tag: 'Bike only',
+      color: Color(0xFFF3F0FF),
+      accent: Color(0xFF5E35B1),
+      bikeOnly: true),
+  ServiceItem(
+      id: 9,
+      name: 'Medicine',
+      icon: '💊',
+      category: 'delivery',
+      vehicleType: 'bike',
+      tag: 'Bike only',
+      color: Color(0xFFF0F8FF),
+      accent: Color(0xFF0277BD),
+      bikeOnly: true),
+];
+
+const paymentMethods = [
+  PaymentMethod(
+      id: 'cash', icon: '💵', label: 'Cash', sub: 'Pay driver directly'),
+  PaymentMethod(
+      id: 'upi', icon: '📱', label: 'UPI', sub: 'GPay, PhonePe, Paytm'),
+  PaymentMethod(
+      id: 'wallet', icon: '👛', label: 'K Wallet', sub: 'Use wallet balance'),
+];
+
+const promos = [
+  PromoItem(
+      title: 'First ride free!',
+      sub: 'Use code KRIDE1',
+      gradientColors: [kOrange, kOrangeDark]),
+  PromoItem(
+      title: 'Food delivery',
+      sub: 'Up to 40% off today',
+      gradientColors: [Color(0xFF2E7D32), Color(0xFF43A047)]),
+  PromoItem(
+      title: 'Refer & Earn',
+      sub: '₹50 per referral',
+      gradientColors: [Color(0xFF5E35B1), Color(0xFF7B1FA2)]),
+];
+
+const recentPlaces = [
+  PlaceItem(icon: '🏠', label: 'Home', sub: 'Sector 15, Noida'),
+  PlaceItem(icon: '💼', label: 'Office', sub: 'Cyber City, Gurugram'),
+  PlaceItem(icon: '🛍️', label: 'Select Mall', sub: 'Saket, Delhi'),
+  PlaceItem(icon: '✈️', label: 'Airport', sub: 'IGI Terminal 3, Delhi'),
+];
+
+const savedLocations = [
+  PlaceItem(icon: '🏠', label: 'Home', sub: 'Sector 15, Noida'),
+  PlaceItem(icon: '💼', label: 'Office', sub: 'Cyber City, Gurugram'),
+  PlaceItem(icon: '✈️', label: 'Airport', sub: 'IGI Terminal 3, Delhi'),
+  PlaceItem(icon: '🛍️', label: 'Select Mall', sub: 'Saket, Delhi'),
+];
+
+// ══════════════════════════════════════════════════════════════
+//  TOTO ICON
+// ══════════════════════════════════════════════════════════════
+class TotoIcon extends StatelessWidget {
+  final double size;
+  const TotoIcon({super.key, this.size = 32});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _TotoPainter()),
+    );
+  }
+}
+
+class _TotoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.width / 128;
+    final p = Paint()..style = PaintingStyle.fill;
+
+    p.color = const Color(0xFFFFF7F0);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.width, size.height),
+            Radius.circular(28 * s)),
+        p);
+
+    final border = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2 * s
+      ..color = const Color(0xFFFFD7B8);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(6 * s, 6 * s, 116 * s, 116 * s),
+            Radius.circular(24 * s)),
+        border);
+
+    final stroke2 = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2 * s
+      ..color = const Color(0xFF222222);
+
+    p.color = const Color(0xFF1DB954);
+    final roofPath = Path()
+      ..moveTo(32 * s, 34 * s)
+      ..cubicTo(32 * s, 30 * s, 35 * s, 27 * s, 39 * s, 27 * s)
+      ..lineTo(85 * s, 27 * s)
+      ..cubicTo(92 * s, 27 * s, 98 * s, 31 * s, 101 * s, 37 * s)
+      ..lineTo(104 * s, 43 * s)
+      ..lineTo(33 * s, 43 * s)
+      ..close();
+    canvas.drawPath(roofPath, p);
+
+    p.color = const Color(0xFFDDF5FF);
+    final wsPath = Path()
+      ..moveTo(28 * s, 44 * s)
+      ..cubicTo(28 * s, 38 * s, 33 * s, 33 * s, 39 * s, 33 * s)
+      ..lineTo(50 * s, 33 * s)
+      ..lineTo(50 * s, 70 * s)
+      ..lineTo(28 * s, 70 * s)
+      ..close();
+    canvas.drawPath(wsPath, p);
+    canvas.drawPath(wsPath, stroke2);
+
+    p.color = const Color(0xFF20C05C);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(35 * s, 52 * s, 60 * s, 36 * s),
+            Radius.circular(8 * s)),
+        p);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(35 * s, 52 * s, 60 * s, 36 * s),
+            Radius.circular(8 * s)),
+        stroke2);
+
+    p.color = const Color(0xFF19A84F);
+    final frontPath = Path()
+      ..moveTo(24 * s, 58 * s)
+      ..cubicTo(24 * s, 53 * s, 28 * s, 49 * s, 33 * s, 49 * s)
+      ..lineTo(43 * s, 49 * s)
+      ..lineTo(43 * s, 88 * s)
+      ..lineTo(31 * s, 88 * s)
+      ..cubicTo(27 * s, 88 * s, 24 * s, 85 * s, 24 * s, 81 * s)
+      ..close();
+    canvas.drawPath(frontPath, p);
+    canvas.drawPath(frontPath, stroke2);
+
+    p.color = const Color(0xFF2A2A2A);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(48 * s, 57 * s, 18 * s, 12 * s),
+            Radius.circular(3 * s)),
+        p);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(70 * s, 57 * s, 18 * s, 12 * s),
+            Radius.circular(3 * s)),
+        p);
+
+    final framePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2 * s
+      ..color = const Color(0xFF222222);
+    canvas.drawLine(Offset(46 * s, 34 * s), Offset(46 * s, 88 * s), framePaint);
+    canvas.drawLine(Offset(68 * s, 34 * s), Offset(68 * s, 88 * s), framePaint);
+    canvas.drawLine(Offset(90 * s, 38 * s), Offset(90 * s, 88 * s), framePaint);
+
+    p.color = const Color(0xFFFFF3B0);
+    canvas.drawCircle(Offset(28 * s, 67 * s), 6 * s, p);
+    canvas.drawCircle(Offset(28 * s, 67 * s), 6 * s, stroke2);
+
+    void drawWheel(double cx, double cy, double r) {
+      p.color = const Color(0xFF222222);
+      canvas.drawCircle(Offset(cx * s, cy * s), r * s, p);
+      p.color = const Color(0xFFD9D9D9);
+      canvas.drawCircle(Offset(cx * s, cy * s), 5 * s, p);
+    }
+
+    drawWheel(42, 95, 10);
+    drawWheel(89, 95, 10);
+    drawWheel(24, 92, 11);
+
+    p.color = Colors.black.withOpacity(0.08);
+    canvas.drawOval(
+        Rect.fromCenter(
+            center: Offset(64 * s, 108 * s), width: 68 * s, height: 8 * s),
+        p);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class AutoIcon extends StatelessWidget {
+  final double size;
+  const AutoIcon({super.key, this.size = 32});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _AutoPainter()),
+    );
+  }
+}
+
+class _AutoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.width / 128;
+    final p = Paint()..style = PaintingStyle.fill;
+
+    p.color = const Color(0xFFFFF7F0);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.width, size.height),
+            Radius.circular(28 * s)),
+        p);
+
+    final border = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2 * s
+      ..color = const Color(0xFFFFD7B8);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(6 * s, 6 * s, 116 * s, 116 * s),
+            Radius.circular(24 * s)),
+        border);
+
+    final stroke2 = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2 * s
+      ..color = const Color(0xFF222222);
+
+    p.color = const Color(0xFFFFCC00);
+    final roofPath = Path()
+      ..moveTo(32 * s, 34 * s)
+      ..cubicTo(32 * s, 30 * s, 35 * s, 27 * s, 39 * s, 27 * s)
+      ..lineTo(85 * s, 27 * s)
+      ..cubicTo(92 * s, 27 * s, 98 * s, 31 * s, 101 * s, 37 * s)
+      ..lineTo(104 * s, 43 * s)
+      ..lineTo(33 * s, 43 * s)
+      ..close();
+    canvas.drawPath(roofPath, p);
+
+    p.color = const Color(0xFFDDF5FF);
+    final wsPath = Path()
+      ..moveTo(28 * s, 44 * s)
+      ..cubicTo(28 * s, 38 * s, 33 * s, 33 * s, 39 * s, 33 * s)
+      ..lineTo(50 * s, 33 * s)
+      ..lineTo(50 * s, 70 * s)
+      ..lineTo(28 * s, 70 * s)
+      ..close();
+    canvas.drawPath(wsPath, p);
+    canvas.drawPath(wsPath, stroke2);
+
+    p.color = const Color(0xFFFFCC00);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(35 * s, 52 * s, 60 * s, 36 * s),
+            Radius.circular(8 * s)),
+        p);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(35 * s, 52 * s, 60 * s, 36 * s),
+            Radius.circular(8 * s)),
+        stroke2);
+
+    p.color = const Color(0xFFFFD600);
+    final frontPath = Path()
+      ..moveTo(24 * s, 58 * s)
+      ..cubicTo(24 * s, 53 * s, 28 * s, 49 * s, 33 * s, 49 * s)
+      ..lineTo(43 * s, 49 * s)
+      ..lineTo(43 * s, 88 * s)
+      ..lineTo(31 * s, 88 * s)
+      ..cubicTo(27 * s, 88 * s, 24 * s, 85 * s, 24 * s, 81 * s)
+      ..close();
+    canvas.drawPath(frontPath, p);
+    canvas.drawPath(frontPath, stroke2);
+
+    p.color = const Color(0xFF2A2A2A);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(48 * s, 57 * s, 18 * s, 12 * s),
+            Radius.circular(3 * s)),
+        p);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(70 * s, 57 * s, 18 * s, 12 * s),
+            Radius.circular(3 * s)),
+        p);
+
+    final framePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2 * s
+      ..color = const Color(0xFF222222);
+    canvas.drawLine(Offset(46 * s, 34 * s), Offset(46 * s, 88 * s), framePaint);
+    canvas.drawLine(Offset(68 * s, 34 * s), Offset(68 * s, 88 * s), framePaint);
+    canvas.drawLine(Offset(90 * s, 38 * s), Offset(90 * s, 88 * s), framePaint);
+
+    p.color = const Color(0xFFFFF3B0);
+    canvas.drawCircle(Offset(28 * s, 67 * s), 6 * s, p);
+    canvas.drawCircle(Offset(28 * s, 67 * s), 6 * s, stroke2);
+
+    void drawWheel(double cx, double cy, double r) {
+      p.color = const Color(0xFF222222);
+      canvas.drawCircle(Offset(cx * s, cy * s), r * s, p);
+      p.color = const Color(0xFFD9D9D9);
+      canvas.drawCircle(Offset(cx * s, cy * s), 5 * s, p);
+    }
+
+    drawWheel(42, 95, 10);
+    drawWheel(89, 95, 10);
+    drawWheel(24, 92, 11);
+
+    p.color = Colors.black.withOpacity(0.08);
+    canvas.drawOval(
+        Rect.fromCenter(
+            center: Offset(64 * s, 108 * s), width: 68 * s, height: 8 * s),
+        p);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SERVICE ICON
+// ══════════════════════════════════════════════════════════════
+class ServiceIconWidget extends StatelessWidget {
+  final String icon;
+  final double size;
+  const ServiceIconWidget({super.key, required this.icon, this.size = 30});
+
+  @override
+  Widget build(BuildContext context) {
+    if (icon == 'auto') return AutoIcon(size: size);
+    if (icon == 'toto') return TotoIcon(size: size);
+    return Text(icon,
+        style: TextStyle(
+            fontSize: size,
+            fontFamily: 'Roboto',
+            fontFamilyFallback: const [
+              'Noto Color Emoji',
+              'Apple Color Emoji',
+              'Segoe UI Emoji'
+            ]));
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SERVICE CARD
+// ══════════════════════════════════════════════════════════════
+class ServiceCard extends StatefulWidget {
+  final ServiceItem service;
+  final VoidCallback onTap;
+  const ServiceCard({super.key, required this.service, required this.onTap});
+
+  @override
+  State<ServiceCard> createState() => _ServiceCardState();
+}
+
+class _ServiceCardState extends State<ServiceCard> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.93 : 1.0,
+        duration: const Duration(milliseconds: 150),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: widget.service.color,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                          color: widget.service.accent.withOpacity(0.13),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4))
+                    ],
+                    border: Border.all(
+                        color: widget.service.accent.withOpacity(0.13),
+                        width: 1.5),
+                  ),
+                  child: Center(
+                      child: ServiceIconWidget(
+                          icon: widget.service.icon, size: 30)),
+                ),
+                if (widget.service.tag != null)
+                  Positioned(
+                    top: -6,
+                    right: -6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: widget.service.accent,
+                        borderRadius: BorderRadius.circular(99),
+                        boxShadow: [
+                          BoxShadow(
+                              color: widget.service.accent.withOpacity(0.33),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2))
+                        ],
+                      ),
+                      child: Text(widget.service.tag!,
+                          style: const TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                              color: kWhite)),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.service.name,
+              style: const TextStyle(
+                  fontSize: 11.5, fontWeight: FontWeight.w600, color: kDark),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PROMO CARD
+// ══════════════════════════════════════════════════════════════
+class PromoCard extends StatelessWidget {
+  final PromoItem promo;
+  const PromoCard({super.key, required this.promo});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 220,
+      height: 100,
+      clipBehavior: Clip.hardEdge,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+            colors: promo.gradientColors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight),
+      ),
+      child: Stack(
+        children: [
+          Positioned(right: -20, top: -20, child: _circle(90, 0.12)),
+          Positioned(right: 20, bottom: -30, child: _circle(70, 0.08)),
+          Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(promo.title,
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: kWhite)),
+                const SizedBox(height: 4),
+                Text(promo.sub,
+                    style: TextStyle(
+                        fontSize: 12, color: kWhite.withOpacity(0.8))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _circle(double size, double opacity) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+            shape: BoxShape.circle, color: Colors.white.withOpacity(opacity)),
+      );
+}
+
+// ══════════════════════════════════════════════════════════════
+//  LOCATION MODAL
+// ══════════════════════════════════════════════════════════════
+class LocationModal extends StatefulWidget {
+  final String current;
+  final ValueChanged<String> onSelect;
+  final VoidCallback onClose;
+  const LocationModal(
+      {super.key,
+      required this.current,
+      required this.onSelect,
+      required this.onClose});
+
+  @override
+  State<LocationModal> createState() => _LocationModalState();
+}
+
+class _LocationModalState extends State<LocationModal> {
+  final _controller = TextEditingController();
+  bool _locating = false;
+
+  void _useCurrentLocation() async {
+    setState(() => _locating = true);
+    await Future.delayed(const Duration(milliseconds: 1500));
+    widget.onSelect('Connaught Place, New Delhi');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onClose,
+      child: Container(
+        color: Colors.black54,
+        alignment: Alignment.bottomCenter,
+        child: GestureDetector(
+          onTap: () {},
+          child: Container(
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.85),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+            decoration: const BoxDecoration(
+              color: kWhite,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                      child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFDDDDDD),
+                              borderRadius: BorderRadius.circular(99)))),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Set pickup location',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: kDark)),
+                      GestureDetector(
+                        onTap: widget.onClose,
+                        child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                                color: kGray,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: const Icon(Icons.close,
+                                size: 14, color: kDark)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    decoration: BoxDecoration(
+                        color: kGray,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                            color: const Color(0xFFEEEEEE), width: 1.5)),
+                    child: Row(
+                      children: [
+                        const Text('🔍', style: TextStyle(fontSize: 16)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: TextField(
+                            controller: _controller,
+                            onChanged: (_) => setState(() {}),
+                            decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                hintText: 'Type your location...',
+                                hintStyle: TextStyle(
+                                    color: Color(0xFFBDBDBD), fontSize: 14)),
+                            style: const TextStyle(fontSize: 14, color: kDark),
+                          ),
+                        ),
+                        if (_controller.text.isNotEmpty)
+                          GestureDetector(
+                            onTap: () => widget.onSelect(_controller.text),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                  color: kOrange,
+                                  borderRadius: BorderRadius.circular(8)),
+                              child: const Text('Set',
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: kWhite)),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  GestureDetector(
+                    onTap: _useCurrentLocation,
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                          color: kOrangeLight,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                              color: kOrange.withOpacity(0.2), width: 1.5)),
+                      child: Row(
+                        children: [
+                          Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                  color: kOrange,
+                                  borderRadius: BorderRadius.circular(12)),
+                              child: Center(
+                                  child: Text(_locating ? '⏳' : '🎯',
+                                      style: const TextStyle(fontSize: 18)))),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                  _locating
+                                      ? 'Detecting location...'
+                                      : 'Use current location',
+                                  style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: kOrange)),
+                              const Text('Uses GPS to find you',
+                                  style:
+                                      TextStyle(fontSize: 12, color: kMuted)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text('SAVED PLACES',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: kMuted,
+                          letterSpacing: 0.5)),
+                  const SizedBox(height: 10),
+                  ...savedLocations.map((loc) {
+                    final full = '${loc.label}, ${loc.sub}';
+                    final selected = widget.current == full;
+                    return GestureDetector(
+                      onTap: () => widget.onSelect(full),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                            color: selected ? kOrangeLight : kGray,
+                            borderRadius: BorderRadius.circular(14)),
+                        child: Row(
+                          children: [
+                            Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                    color: kWhite,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                          color: Colors.black.withOpacity(0.07),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2))
+                                    ]),
+                                child: Center(
+                                    child: Text(loc.icon,
+                                        style: const TextStyle(fontSize: 18)))),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(loc.label,
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: kDark)),
+                                  Text(loc.sub,
+                                      style: const TextStyle(
+                                          fontSize: 12, color: kMuted)),
+                                ],
+                              ),
+                            ),
+                            if (selected)
+                              const Text('✓',
+                                  style:
+                                      TextStyle(color: kOrange, fontSize: 16)),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PAYMENT MODAL
+// ══════════════════════════════════════════════════════════════
+class PaymentModal extends StatelessWidget {
+  final PaymentMethod selected;
+  final ValueChanged<PaymentMethod> onSelect;
+  final VoidCallback onClose;
+  const PaymentModal(
+      {super.key,
+      required this.selected,
+      required this.onSelect,
+      required this.onClose});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onClose,
+      child: Container(
+        color: Colors.black54,
+        alignment: Alignment.bottomCenter,
+        child: GestureDetector(
+          onTap: () {},
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+            decoration: const BoxDecoration(
+                color: kWhite,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(
+                    child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                            color: const Color(0xFFDDDDDD),
+                            borderRadius: BorderRadius.circular(99)))),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Payment method',
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: kDark)),
+                    GestureDetector(
+                        onTap: onClose,
+                        child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                                color: kGray,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: const Icon(Icons.close, size: 14))),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                ...paymentMethods.map((pm) {
+                  final sel = selected.id == pm.id;
+                  return GestureDetector(
+                    onTap: () {
+                      onSelect(pm);
+                      onClose();
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: sel ? kOrangeLight : kGray,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                            color: sel ? kOrange : Colors.transparent,
+                            width: 2),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                  color: kWhite,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: Colors.black.withOpacity(0.07),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2))
+                                  ]),
+                              child: Center(
+                                  child: Text(pm.icon,
+                                      style: const TextStyle(fontSize: 22)))),
+                          const SizedBox(width: 14),
+                          Expanded(
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                Text(pm.label,
+                                    style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        color: kDark)),
+                                Text(pm.sub,
+                                    style: const TextStyle(
+                                        fontSize: 12, color: kMuted)),
+                              ])),
+                          if (sel)
+                            const Text('✓',
+                                style: TextStyle(color: kOrange, fontSize: 20)),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SEE ALL MODAL
+// ══════════════════════════════════════════════════════════════
+class SeeAllModal extends StatelessWidget {
+  final String title;
+  final List<ServiceItem> items;
+  final ValueChanged<ServiceItem> onSelect;
+  final VoidCallback onClose;
+  const SeeAllModal(
+      {super.key,
+      required this.title,
+      required this.items,
+      required this.onSelect,
+      required this.onClose});
+
+  @override
+  Widget build(BuildContext context) {
+    final isRide = title.toLowerCase() == 'ride';
+    ServiceItem? evRide;
+    try {
+      if (isRide) {
+        evRide = items.firstWhere((s) => s.id == 10);
+      }
+    } catch (_) {}
+
+    final gridItems = isRide && evRide != null
+        ? items.where((s) => s.id != 10).toList()
+        : items;
+
+    return GestureDetector(
+      onTap: onClose,
+      child: Container(
+        color: Colors.black54,
+        alignment: Alignment.bottomCenter,
+        child: GestureDetector(
+          onTap: () {},
+          child: Container(
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.8),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+            decoration: const BoxDecoration(
+                color: kWhite,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                        color: const Color(0xFFDDDDDD),
+                        borderRadius: BorderRadius.circular(99))),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('All $title services',
+                        style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: kDark)),
+                    GestureDetector(
+                        onTap: onClose,
+                        child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                                color: kGray,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: const Icon(Icons.close, size: 14))),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                if (isRide && evRide != null) ...[
+                  GestureDetector(
+                    onTap: () {
+                      onSelect(evRide!);
+                      onClose();
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 16),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFE8F5E9), Color(0xFFC8E6C9)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                            color: const Color(0xFF81C784).withOpacity(0.5),
+                            width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF2E7D32).withOpacity(0.08),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      const Color(0xFF2E7D32).withOpacity(0.1),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                )
+                              ],
+                            ),
+                            child: const Center(
+                              child: Text('⚡', style: TextStyle(fontSize: 24)),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Text(
+                                      'EV Ride',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF1B5E20),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF2E7D32),
+                                        borderRadius: BorderRadius.circular(99),
+                                      ),
+                                      child: const Text(
+                                        'Eco',
+                                        style: TextStyle(
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                const Text(
+                                  'one step closer to the better world',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF388E3C),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios_rounded,
+                              color: Color(0xFF2E7D32), size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+                Flexible(
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: 20,
+                            mainAxisSpacing: 20,
+                            childAspectRatio: 0.9),
+                    itemCount: gridItems.length,
+                    itemBuilder: (_, i) {
+                      final s = gridItems[i];
+                      return GestureDetector(
+                        onTap: () {
+                          onSelect(s);
+                          onClose();
+                        },
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Stack(clipBehavior: Clip.none, children: [
+                              Container(
+                                  width: 64,
+                                  height: 64,
+                                  decoration: BoxDecoration(
+                                      color: s.color,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                          color: s.accent.withOpacity(0.13),
+                                          width: 1.5),
+                                      boxShadow: [
+                                        BoxShadow(
+                                            color: s.accent.withOpacity(0.13),
+                                            blurRadius: 14,
+                                            offset: const Offset(0, 4))
+                                      ]),
+                                  child: Center(
+                                      child: ServiceIconWidget(
+                                          icon: s.icon, size: 30))),
+                              if (s.tag != null)
+                                Positioned(
+                                    top: -6,
+                                    right: -6,
+                                    child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                            color: s.accent,
+                                            borderRadius:
+                                                BorderRadius.circular(99)),
+                                        child: Text(s.tag!,
+                                            style: const TextStyle(
+                                                fontSize: 8,
+                                                fontWeight: FontWeight.w700,
+                                                color: kWhite)))),
+                            ]),
+                            const SizedBox(height: 8),
+                            Text(s.name,
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: kDark),
+                                textAlign: TextAlign.center),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  BOOKING SUCCESS SCREEN
+// ══════════════════════════════════════════════════════════════
+class BookingSuccessScreen extends StatefulWidget {
+  final ServiceItem service;
+  final String destination;
+  final PaymentMethod payment;
+  final VoidCallback onDone;
+  const BookingSuccessScreen(
+      {super.key,
+      required this.service,
+      required this.destination,
+      required this.payment,
+      required this.onDone});
+
+  @override
+  State<BookingSuccessScreen> createState() => _BookingSuccessScreenState();
+}
+
+class _BookingSuccessScreenState extends State<BookingSuccessScreen>
+    with SingleTickerProviderStateMixin {
+  int _countdown = 3;
+  Timer? _timer;
+  late AnimationController _pingController;
+  late Animation<double> _pingAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _pingController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1500))
+      ..repeat();
+    _pingAnim = Tween(begin: 1.0, end: 2.0).animate(_pingController);
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      setState(() => _countdown--);
+      if (_countdown <= 0) {
+        t.cancel();
+        widget.onDone();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pingController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: kWhite,
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              AnimatedBuilder(
+                animation: _pingAnim,
+                builder: (_, __) => Transform.scale(
+                  scale: _pingAnim.value,
+                  child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: kOrange.withOpacity(0.3), width: 3))),
+                ),
+              ),
+              Container(
+                width: 120,
+                height: 120,
+                decoration: const BoxDecoration(
+                    shape: BoxShape.circle, color: kOrangeLight),
+                child: Center(
+                  child: Container(
+                    width: 90,
+                    height: 90,
+                    decoration: const BoxDecoration(
+                        shape: BoxShape.circle, color: kOrange),
+                    child: const Center(
+                        child: Text('✓',
+                            style: TextStyle(fontSize: 40, color: kWhite))),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          const Text('Booking Confirmed!',
+              style: TextStyle(
+                  fontSize: 24, fontWeight: FontWeight.w800, color: kDark),
+              textAlign: TextAlign.center),
+          const SizedBox(height: 8),
+          Text('Your ${widget.service.name} is being assigned',
+              style: const TextStyle(fontSize: 14, color: kMuted),
+              textAlign: TextAlign.center),
+          const SizedBox(height: 32),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+                color: kGray, borderRadius: BorderRadius.circular(20)),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                            color: widget.service.color,
+                            borderRadius: BorderRadius.circular(14)),
+                        child: Center(
+                            child: ServiceIconWidget(
+                                icon: widget.service.icon, size: 26))),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                          Text(widget.service.name,
+                              style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: kDark)),
+                          const Text('Driver being assigned...',
+                              style: TextStyle(fontSize: 12, color: kMuted)),
+                        ])),
+                    Text('₹89',
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: widget.service.accent)),
+                  ],
+                ),
+                Divider(height: 32, color: Colors.grey.shade200),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('DESTINATION',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 4),
+                          Text(widget.destination,
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  color: kDark,
+                                  fontWeight: FontWeight.w600)),
+                        ]),
+                    Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text('PAYMENT',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 4),
+                          Text('${widget.payment.icon} ${widget.payment.label}',
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  color: kDark,
+                                  fontWeight: FontWeight.w600)),
+                        ]),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text('Going to tracking in ${_countdown}s...',
+              style: const TextStyle(fontSize: 13, color: kMuted)),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: widget.onDone,
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: kOrange,
+                  foregroundColor: kWhite,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  elevation: 8,
+                  shadowColor: kOrange.withOpacity(0.27)),
+              child: const Text('Track my ride →',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TRIP CHAT SCREEN  ← TOP-LEVEL (was nested inside _RiderHomeScreenState)
+// ══════════════════════════════════════════════════════════════
+class TripChatScreen extends StatefulWidget {
+  final int tripId;
+  final String driverName;
+  final String driverPhone;
+  final String driverPhotoUrl;
+  final VoidCallback onClose;
+  const TripChatScreen(
+      {super.key,
+      required this.tripId,
+      this.driverName = '',
+      this.driverPhone = '',
+      this.driverPhotoUrl = '',
+      required this.onClose});
+
+  @override
+  State<TripChatScreen> createState() => _TripChatScreenState();
+}
+
+class _TripChatScreenState extends State<TripChatScreen> {
+  final _msgCtrl = TextEditingController();
+  final _scrollCtrl = ScrollController();
+  List<Map<String, dynamic>> _messages = [];
+  List<Map<String, dynamic>> _quickMsgs = [];
+  bool _loading = true;
+  bool _sending = false;
+  Timer? _pollTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (mounted) _loadData(silent: true);
+    });
+  }
+
+  void _scrollToBottom() {
+    if (_scrollCtrl.hasClients) {
+      _scrollCtrl.animateTo(
+        _scrollCtrl.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  bool _isMe(Map<String, dynamic> message) {
+    final myId = AuthService.userId;
+    final senderId = (message['sender_id'] as num?)?.toInt();
+    return myId != 0 && senderId == myId;
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    _msgCtrl.dispose();
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadData({bool silent = false}) async {
+    try {
+      final msgs = await ApiService.getChatMessages(widget.tripId);
+      final quick = await ApiService.getQuickMessages();
+      if (!mounted) return;
+      setState(() {
+        _messages = List<Map<String, dynamic>>.from(
+            msgs['data']?['messages'] ?? msgs['messages'] ?? const []);
+        _quickMsgs = List<Map<String, dynamic>>.from(quick['data']
+                ?['quick_messages'] ??
+            quick['quick_messages'] ??
+            const []);
+        _loading = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _scrollToBottom();
+      });
+    } catch (e) {
+      if (!mounted) return;
+      if (!silent) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  Future<void> _sendMessage(String text,
+      {String type = 'text', String? quickKey}) async {
+    if (_sending) return;
+    setState(() => _sending = true);
+    try {
+      final res =
+          await ApiService.sendChatMessage(widget.tripId, type, text, quickKey);
+      if (res['success'] == true) {
+        _msgCtrl.clear();
+        await _loadData(silent: true);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to send message')));
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Chat with Driver',
+                style: TextStyle(
+                    color: Color(0xFF1A1A2E), fontWeight: FontWeight.w800)),
+            if (widget.driverName.isNotEmpty)
+              Text(widget.driverName,
+                  style: const TextStyle(
+                      color: Color(0xFF6B6B6B),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600)),
+          ],
+        ),
+        titleSpacing: 0,
+        leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A2E)),
+            onPressed: widget.onClose),
+      ),
+      body: Column(children: [
+        if (widget.driverName.isNotEmpty || widget.driverPhone.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF7F0),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFFFE0CC)),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: const Color(0xFFFFE8D6),
+                  backgroundImage: widget.driverPhotoUrl.isNotEmpty
+                      ? CachedNetworkImageProvider(widget.driverPhotoUrl)
+                      : null,
+                  child: widget.driverPhotoUrl.isEmpty
+                      ? Text(
+                          widget.driverName.isNotEmpty
+                              ? widget.driverName.substring(0, 1).toUpperCase()
+                              : 'D',
+                          style: const TextStyle(
+                            color: Color(0xFFFF6B35),
+                            fontWeight: FontWeight.w800,
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.driverName.isNotEmpty
+                            ? widget.driverName
+                            : 'Driver accepted your trip',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1A1A2E),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.driverPhone.isNotEmpty
+                            ? widget.driverPhone
+                            : 'Phone number unavailable',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF6B6B6B),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (widget.driverPhone.isNotEmpty)
+                  IconButton(
+                    onPressed: () async {
+                      final uri = Uri.parse('tel:${widget.driverPhone}');
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri,
+                            mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    icon: const Icon(Icons.call, color: Color(0xFFFF6B35)),
+                  ),
+              ],
+            ),
+          ),
+        if (_quickMsgs.isNotEmpty)
+          Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _quickMsgs.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (ctx, i) {
+                final q = _quickMsgs[i];
+                return GestureDetector(
+                  onTap: () => _sendMessage(q['text_bn'] ?? q['text_en'],
+                      type: 'quick', quickKey: q['key']),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF3E0),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: const Color(0xFFFF6B35).withOpacity(0.5)),
+                    ),
+                    child: Text(q['text_bn'] ?? q['text_en'] ?? '',
+                        style: const TextStyle(
+                            fontSize: 13, color: Color(0xFFFF6B35))),
+                  ),
+                );
+              },
+            ),
+          ),
+        Expanded(
+          child: _loading
+              ? const Center(
+                  child: CircularProgressIndicator(color: Color(0xFFFF6B35)))
+              : ListView.builder(
+                  controller: _scrollCtrl,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _messages.length,
+                  itemBuilder: (ctx, i) {
+                    final m = _messages[i];
+                    final isMe = _isMe(m);
+                    return Align(
+                      alignment:
+                          isMe ? Alignment.centerRight : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.7),
+                        decoration: BoxDecoration(
+                          color: isMe
+                              ? const Color(0xFFFF6B35)
+                              : const Color(0xFFF5F5F5),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(m['message_text'] ?? '',
+                            style: TextStyle(
+                                fontSize: 14,
+                                color: isMe
+                                    ? Colors.white
+                                    : const Color(0xFF1A1A2E))),
+                      ),
+                    );
+                  },
+                ),
+        ),
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          decoration: BoxDecoration(color: Colors.white, boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+          ]),
+          child: Row(children: [
+            Expanded(
+              child: TextField(
+                controller: _msgCtrl,
+                decoration: InputDecoration(
+                  hintText: 'Type a message...',
+                  filled: true,
+                  fillColor: const Color(0xFFF5F5F5),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () {
+                if (_msgCtrl.text.trim().isNotEmpty && !_sending)
+                  _sendMessage(_msgCtrl.text.trim());
+              },
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                    color: Color(0xFFFF6B35), shape: BoxShape.circle),
+                child: const Icon(Icons.send_rounded,
+                    color: Colors.white, size: 22),
+              ),
+            ),
+          ]),
+        ),
+      ]),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TRIP RECEIPT SCREEN  ← TOP-LEVEL (was nested inside _RiderHomeScreenState)
+// ══════════════════════════════════════════════════════════════
+class TripReceiptScreen extends StatefulWidget {
+  final int tripId;
+  final VoidCallback onClose;
+  const TripReceiptScreen(
+      {super.key, required this.tripId, required this.onClose});
+
+  @override
+  State<TripReceiptScreen> createState() => _TripReceiptScreenState();
+}
+
+class _TripReceiptScreenState extends State<TripReceiptScreen> {
+  static const _quickComments = [
+    'Great driver',
+    'Clean vehicle',
+    'Safe driving',
+    'Friendly service',
+    'On time pickup',
+  ];
+
+  Map<String, dynamic>? _receipt;
+  bool _loading = true;
+  bool _submittingRating = false;
+  bool _rated = false;
+  int _rating = 5;
+  final _ratingCommentCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReceipt();
+  }
+
+  Future<void> _loadReceipt() async {
+    try {
+      final res = await ApiService.getTripReceipt(widget.tripId);
+      if (res['success'] == true) {
+        setState(() {
+          _receipt = Map<String, dynamic>.from(res['data'] ?? {});
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _submitRating() async {
+    if (_submittingRating || _rated) return;
+    setState(() => _submittingRating = true);
+    final res = await ApiService.rateDriver(
+        widget.tripId, _rating, _ratingCommentCtrl.text.trim());
+    if (!mounted) return;
+    setState(() {
+      _submittingRating = false;
+      _rated = res['success'] == true || res['status'] == 400;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(res['success'] == true
+          ? 'Thanks for rating your driver.'
+          : (res['error'] ?? 'Rating skipped.')),
+      backgroundColor: res['success'] == true ? Colors.green : Colors.red,
+    ));
+    if (res['success'] == true || res['status'] == 400) {
+      widget.onClose();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ratingCommentCtrl.dispose();
+    super.dispose();
+  }
+
+  Widget _receiptRow(String label, String value, {Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+        Text(value,
+            style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: color ?? const Color(0xFF1A1A2E))),
+      ]),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text('Trip Receipt',
+            style: TextStyle(
+                color: Color(0xFF1A1A2E), fontWeight: FontWeight.w800)),
+        leading: IconButton(
+            icon: const Icon(Icons.close, color: Color(0xFF1A1A2E)),
+            onPressed: widget.onClose),
+      ),
+      body: _loading
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFFFF6B35)))
+          : _receipt == null
+              ? const Center(child: Text('Receipt not available'))
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(children: [
+                    Container(
+                      width: 70,
+                      height: 70,
+                      decoration: const BoxDecoration(
+                          color: Color(0xFFF0FFF4), shape: BoxShape.circle),
+                      child: const Center(
+                          child: Text('✅', style: TextStyle(fontSize: 36))),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text('Trip Completed!',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1A1A2E))),
+                    Text(_receipt!['trip_code'] ?? '',
+                        style:
+                            TextStyle(fontSize: 13, color: Colors.grey[600])),
+                    const SizedBox(height: 24),
+                    _receiptRow('📍 Pickup', _receipt!['pickup_address'] ?? ''),
+                    _receiptRow('🏁 Drop', _receipt!['drop_address'] ?? ''),
+                    const Divider(height: 24),
+                    _receiptRow(
+                        'Distance', '${_receipt!['distance_km'] ?? 0} km'),
+                    _receiptRow(
+                        'Duration', '${_receipt!['duration_min'] ?? 0} min'),
+                    _receiptRow(
+                        'Vehicle',
+                        _receipt!['vehicle_type']
+                                ?.toString()
+                                .replaceAll('_', ' ')
+                                .toUpperCase() ??
+                            ''),
+                    const Divider(height: 24),
+                    _receiptRow('Base Fare', '₹${_receipt!['base_fare'] ?? 0}'),
+                    if ((_receipt!['surge_multiplier'] ?? 1.0) > 1.0)
+                      _receiptRow(
+                          'Surge (${_receipt!['surge_multiplier']}x)', ''),
+                    if ((_receipt!['bonus_amount'] ?? 0) > 0)
+                      _receiptRow(
+                          'Bonus Added', '+₹${_receipt!['bonus_amount']}'),
+                    if ((_receipt!['promo_discount'] ?? 0) > 0)
+                      _receiptRow('Promo (${_receipt!['promo_code']})',
+                          '-₹${_receipt!['promo_discount']}',
+                          color: Colors.green),
+                    if ((_receipt!['kcoin_discount'] ?? 0) > 0)
+                      _receiptRow('K Coins Used (${_receipt!['kcoin_used']})',
+                          '-₹${_receipt!['kcoin_discount']}',
+                          color: Colors.green),
+                    const Divider(height: 24),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Total Paid',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF1A1A2E))),
+                          Text('₹${_receipt!['actual_fare'] ?? 0}',
+                              style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFFFF6B35))),
+                        ]),
+                    const SizedBox(height: 8),
+                    _receiptRow(
+                        'Payment Method',
+                        _receipt!['payment_method']?.toString().toUpperCase() ??
+                            ''),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFF5F5F5),
+                          borderRadius: BorderRadius.circular(14)),
+                      child: Row(children: [
+                        CircleAvatar(
+                            radius: 24,
+                            backgroundColor: const Color(0xFFFFF3E0),
+                            child: Text(
+                                _receipt!['driver']?['name']
+                                        ?.toString()
+                                        .substring(0, 1) ??
+                                    'D',
+                                style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFFFF6B35)))),
+                        const SizedBox(width: 12),
+                        Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(_receipt!['driver']?['name'] ?? 'Driver',
+                                  style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700)),
+                              Text(
+                                  _receipt!['driver']?['vehicle_type']
+                                          ?.toString()
+                                          .replaceAll('_', ' ') ??
+                                      '',
+                                  style: TextStyle(
+                                      fontSize: 12, color: Colors.grey[600])),
+                            ]),
+                      ]),
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFFFF8E1),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFFFD180))),
+                      child: Column(children: [
+                        const Text('Rate your driver',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF1A1A2E))),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            5,
+                            (i) => IconButton(
+                              onPressed: _rated
+                                  ? null
+                                  : () => setState(() => _rating = i + 1),
+                              icon: Icon(
+                                i < _rating
+                                    ? Icons.star_rounded
+                                    : Icons.star_border_rounded,
+                                color: const Color(0xFFFF6B35),
+                                size: 34,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          alignment: WrapAlignment.center,
+                          children: _quickComments.map((text) {
+                            final selected = _ratingCommentCtrl.text == text;
+                            return ChoiceChip(
+                              label: Text(text),
+                              selected: selected,
+                              selectedColor: const Color(0xFFFFE0B2),
+                              onSelected: _rated
+                                  ? null
+                                  : (_) => setState(() {
+                                        _ratingCommentCtrl.text = text;
+                                      }),
+                              labelStyle: TextStyle(
+                                fontSize: 12,
+                                fontWeight: selected
+                                    ? FontWeight.w800
+                                    : FontWeight.w500,
+                                color: selected
+                                    ? const Color(0xFFFF6B35)
+                                    : const Color(0xFF1A1A2E),
+                              ),
+                              side: BorderSide(
+                                color: selected
+                                    ? const Color(0xFFFF6B35)
+                                    : const Color(0xFFE0E0E0),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _ratingCommentCtrl,
+                          enabled: !_rated,
+                          minLines: 2,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            hintText: 'Optional comment',
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none),
+                          ),
+                        ),
+                      ]),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _submittingRating ? null : _submitRating,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFF6B35),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: Text(
+                              _submittingRating
+                                  ? 'Submitting...'
+                                  : 'Submit Review',
+                              style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white)),
+                        )),
+                  ]),
+                ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  WHERE TO SCREEN
+// ══════════════════════════════════════════════════════════════
+class WhereToScreen extends StatefulWidget {
+  final ServiceItem service;
+  final String prefilledDest;
+  final VoidCallback onBack;
+  final int? activeTripId;
+  const WhereToScreen(
+      {super.key,
+      required this.service,
+      required this.prefilledDest,
+      required this.onBack,
+      this.activeTripId});
+
+  @override
+  State<WhereToScreen> createState() => _WhereToScreenState();
+}
+
+class _WhereToScreenState extends State<WhereToScreen>
+    with WidgetsBindingObserver {
+  final _pickupCtrl = TextEditingController(text: 'Connaught Place, New Delhi');
+  late TextEditingController _destCtrl;
+  String _step = 'input';
+  PaymentMethod _paymentMethod = paymentMethods[0];
+  bool _booked = false;
+  bool _showPaymentModal = false;
+  late String _selectedVehicleType;
+  double _bonusAmount = 0.0;
+  double _pickupLat = 22.5726;
+  double _pickupLng = 88.3639;
+  double _dropLat = 22.5850;
+  double _dropLng = 88.3950;
+  bool _useKCoins = false;
+  int? _tripId;
+  bool _searching = false;
+  bool _socketDisconnected = false;
+  Timer? _searchPollTimer;
+  Timer? _trackingPollTimer;
+  double _estimatedFare = 0.0;
+  double _estimatedDistance = 0.0;
+  int _estimatedDuration = 0;
+  bool _fareLoading = false;
+
+  // Active Tracking state
+  String _tripStatus = 'requested';
+  Map<String, dynamic>? _assignedDriver;
+  String? _otpCode;
+  double? _driverLat;
+  double? _driverLng;
+  MapplsMapController? _mapController;
+  Symbol? _driverSymbol;
+
+  final _quickDests = const [
+    PlaceItem(icon: '🏠', label: 'Home', sub: 'Sector 15, Noida'),
+    PlaceItem(icon: '💼', label: 'Office', sub: 'Cyber City, Gurugram'),
+    PlaceItem(icon: '🛍️', label: 'Select Mall', sub: 'Saket, Delhi'),
+    PlaceItem(icon: '✈️', label: 'Airport', sub: 'IGI Terminal 3, Delhi'),
+  ];
+
+  String _normalizeTripStatus(dynamic status) {
+    var text = (status ?? 'requested').toString().trim().toLowerCase();
+    if (text.contains('.')) text = text.split('.').last;
+    if (text == 'driver_assigned' || text == 'trip_accepted' || text == 'accepted') {
+      return 'accepted';
+    }
+    if (text == 'driver_arrived' || text == 'arrived') {
+      return 'arrived';
+    }
+    if (text == 'trip_started' || text == 'on_trip' || text == 'ontrip' || text == 'started') {
+      return 'started';
+    }
+    if (text == 'trip_completed' || text == 'completed') {
+      return 'completed';
+    }
+    if (text == 'trip_cancelled' || text == 'cancelled') {
+      return 'cancelled';
+    }
+    return text.isEmpty ? 'requested' : text;
+  }
+
+  String? _readTripOtp(Map<String, dynamic>? data) {
+    if (data == null) return null;
+    for (final key in ['otp_code', 'otp', 'trip_otp', 'otpCode', 'ride_otp']) {
+      final value = data[key]?.toString().trim();
+      if (value != null && value.isNotEmpty && value.toLowerCase() != 'null') {
+        return value;
+      }
+    }
+    return null;
+  }
+
+  bool get _shouldExpectTripOtp {
+    final status = _normalizeTripStatus(_tripStatus);
+    return status == 'driver_assigned' ||
+        status == 'accepted' ||
+        status == 'arrived';
+  }
+
+  bool get _shouldShowTripOtp =>
+      _shouldExpectTripOtp && _otpCode != null && _otpCode!.trim().isNotEmpty;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _destCtrl = TextEditingController(text: widget.prefilledDest);
+    final initialVehicle = widget.service.vehicleType;
+    _selectedVehicleType = ['ac_cab', 'non_ac_cab', 'bike', 'auto', 'toto']
+            .contains(initialVehicle)
+        ? initialVehicle
+        : 'ac_cab';
+
+    if (widget.activeTripId != null) {
+      _tripId = widget.activeTripId;
+      _booked = true;
+      _searching = false;
+      _step = 'tracking';
+      _loadActiveTripDetails();
+      _startTrackingPolling();
+    } else {
+      _getLocation();
+    }
+
+    final riderId = AuthService.riderId;
+    final token = AuthService.token;
+    if (riderId != null && token != null) {
+      _connectSocket(riderId, token);
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        mounted &&
+        _tripId != null &&
+        (_searching || _step == 'tracking')) {
+      _loadActiveTripDetails();
+    }
+  }
+
+  void _startSearchPolling() {
+    _searchPollTimer?.cancel();
+    _searchPollTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
+      if (!mounted || !_searching || _tripId == null) return;
+      try {
+        final res = await ApiService.getActiveTrip();
+        if (res['success'] == true && res['data']?['active_trip'] != null) {
+          final trip = res['data']['active_trip'];
+          final status = _normalizeTripStatus(trip['status']);
+          if (status == 'requested') return;
+
+          // If trip is already completed (e.g. driver completed while app was polling),
+          // navigate straight to the receipt & rating screen.
+          if (status == 'completed') {
+            _searchPollTimer?.cancel();
+            RiderSocketService.disconnect();
+            final completedTripId = (trip['id'] as num?)?.toInt() ?? _tripId;
+            if (!mounted || completedTripId == null) return;
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TripReceiptScreen(
+                  tripId: completedTripId,
+                  onClose: widget.onBack,
+                ),
+              ),
+            );
+            return;
+          }
+
+          final driver = trip['driver'] as Map<String, dynamic>?;
+          final dLat = (driver?['current_lat'] as num?)?.toDouble();
+          final dLng = (driver?['current_lng'] as num?)?.toDouble();
+
+          if (!mounted) return;
+          setState(() {
+            _tripId = (trip['id'] as num?)?.toInt() ?? _tripId;
+            _booked = true;
+            _searching = false;
+            _step = 'tracking';
+            _tripStatus = status;
+            _otpCode = _readTripOtp(trip);
+            _assignedDriver = driver;
+            _driverLat = dLat;
+            _driverLng = dLng;
+          });
+
+          if (dLat != null && dLng != null) {
+            _updateDriverMarker(dLat, dLng);
+          }
+          _searchPollTimer?.cancel();
+        }
+      } catch (e) {
+        debugPrint('Search poll error: $e');
+      }
+    });
+  }
+
+  void _stopSearchPolling() {
+    _searchPollTimer?.cancel();
+    _searchPollTimer = null;
+  }
+
+  void _startTrackingPolling() {
+    _trackingPollTimer?.cancel();
+    _trackingPollTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
+      if (!mounted || _step != 'tracking' || _tripId == null) return;
+      try {
+        final res = await ApiService.getActiveTrip();
+        if (res['success'] == true) {
+          final trip = res['data']?['active_trip'];
+          if (trip == null) {
+            _trackingPollTimer?.cancel();
+            await _handleFinishedTrip();
+          } else {
+            final status = _normalizeTripStatus(trip['status']);
+            final driver = trip['driver'] as Map<String, dynamic>?;
+            final dLat = (driver?['current_lat'] as num?)?.toDouble();
+            final dLng = (driver?['current_lng'] as num?)?.toDouble();
+            if (mounted) {
+              setState(() {
+                _tripStatus = status;
+                if (driver != null) {
+                  _assignedDriver = driver;
+                }
+                if (dLat != null && dLng != null) {
+                  _driverLat = dLat;
+                  _driverLng = dLng;
+                }
+              });
+              if (dLat != null && dLng != null) {
+                _updateDriverMarker(dLat, dLng);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Tracking poll error: $e');
+      }
+    });
+  }
+
+  void _stopTrackingPolling() {
+    _trackingPollTimer?.cancel();
+    _trackingPollTimer = null;
+  }
+
+  Future<void> _handleFinishedTrip() async {
+    if (_tripId == null) return;
+    try {
+      final res = await ApiService.getTripReceipt(_tripId!);
+      if (res['success'] == true) {
+        RiderSocketService.disconnect();
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => TripReceiptScreen(
+              tripId: _tripId!,
+              onClose: widget.onBack,
+            ),
+          ),
+        );
+      } else {
+        RiderSocketService.disconnect();
+        if (!mounted) return;
+        widget.onBack();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Trip was cancelled')),
+        );
+      }
+    } catch (e) {
+      RiderSocketService.disconnect();
+      if (mounted) widget.onBack();
+    }
+  }
+
+  Future<void> _getLocation() async {
+    try {
+      final permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return;
+      final pos = await Geolocator.getCurrentPosition();
+      setState(() {
+        _pickupLat = pos.latitude;
+        _pickupLng = pos.longitude;
+        _pickupCtrl.text = 'Current Location';
+      });
+    } catch (e) {
+      // Keep default if GPS fails
+    }
+  }
+
+  Future<void> _loadFare() async {
+    setState(() => _fareLoading = true);
+    try {
+      if (_destCtrl.text.isNotEmpty) {
+        try {
+          List<geo.Location> locations =
+              await geo.locationFromAddress(_destCtrl.text);
+          if (locations.isNotEmpty) {
+            _dropLat = locations.first.latitude;
+            _dropLng = locations.first.longitude;
+          }
+        } catch (e) {
+          debugPrint('Geocoding drop error: $e');
+        }
+      }
+      if (_pickupCtrl.text.isNotEmpty &&
+          _pickupCtrl.text != 'Current Location') {
+        try {
+          List<geo.Location> locations =
+              await geo.locationFromAddress(_pickupCtrl.text);
+          if (locations.isNotEmpty) {
+            _pickupLat = locations.first.latitude;
+            _pickupLng = locations.first.longitude;
+          }
+        } catch (e) {
+          debugPrint('Geocoding pickup error: $e');
+        }
+      }
+
+      final res = await ApiService.estimateFare(
+        pickupLat: _pickupLat,
+        pickupLng: _pickupLng,
+        dropLat: _dropLat,
+        dropLng: _dropLng,
+        vehicleType: _selectedVehicleType,
+      );
+      if (res['success'] == true) {
+        setState(() {
+          _estimatedFare = (res['data']?['estimated_fare'] ?? 0.0).toDouble();
+          _estimatedDistance = (res['data']?['distance_km'] ?? 0.0).toDouble();
+          _estimatedDuration = (res['data']?['duration_min'] ?? 0).toInt();
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _estimatedFare = 0.0;
+        _estimatedDistance = 0.0;
+        _estimatedDuration = 0;
+      });
+    }
+    setState(() => _fareLoading = false);
+  }
+
+  Future<void> _updateDriverMarker(double lat, double lng) async {
+    if (_mapController == null) return;
+    try {
+      if (_driverSymbol != null) {
+        await _mapController!.removeSymbol(_driverSymbol!);
+      }
+      _driverSymbol = await _mapController!.addSymbol(SymbolOptions(
+        geometry: LatLng(lat, lng),
+        iconImage: 'car-15',
+        iconSize: 2.0,
+        iconColor: '#FF6B00',
+        textField: 'Driver',
+        textOffset: const Offset(0, -1.5),
+        textColor: '#FF6B00',
+        textSize: 12.0,
+      ));
+    } catch (e) {
+      debugPrint('Driver marker update error: $e');
+    }
+  }
+
+  Future<void> _loadActiveTripDetails() async {
+    setState(() => _fareLoading = true);
+    try {
+      final res = await ApiService.getActiveTrip();
+      if (res['success'] == true && res['data']?['active_trip'] != null) {
+        final trip = res['data']['active_trip'];
+        setState(() {
+          _tripId = (trip['id'] as num?)?.toInt() ?? _tripId;
+          _tripStatus = _normalizeTripStatus(trip['status']);
+          _pickupCtrl.text = trip['pickup_address'] ?? '';
+          _pickupLat = (trip['pickup_lat'] as num?)?.toDouble() ?? 22.5726;
+          _pickupLng = (trip['pickup_lng'] as num?)?.toDouble() ?? 88.3639;
+          _dropLat = (trip['drop_lat'] as num?)?.toDouble() ?? 22.5850;
+          _dropLng = (trip['drop_lng'] as num?)?.toDouble() ?? 88.3950;
+          _estimatedFare = (trip['estimated_fare'] as num?)?.toDouble() ?? 0.0;
+          _selectedVehicleType = trip['vehicle_type'] ?? _selectedVehicleType;
+          _otpCode = _readTripOtp(trip);
+
+          if (trip['driver'] != null) {
+            _assignedDriver = trip['driver'];
+            _driverLat = (trip['driver']['current_lat'] as num?)?.toDouble();
+            _driverLng = (trip['driver']['current_lng'] as num?)?.toDouble();
+          }
+
+          final riderId = AuthService.riderId;
+          final token = AuthService.token;
+          if (riderId != null && token != null) {
+            _connectSocket(riderId, token);
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Load active trip details error: $e');
+    }
+    setState(() => _fareLoading = false);
+  }
+
+  void _connectSocket(int riderId, String token) {
+    setState(() => _socketDisconnected = false);
+
+    RiderSocketService.onDisconnect = () {
+      if (mounted) {
+        setState(() {
+          _socketDisconnected = true;
+        });
+      }
+    };
+
+    RiderSocketService.onReconnect = () async {
+      if (mounted) {
+        setState(() {
+          _socketDisconnected = false;
+        });
+      }
+      try {
+        final res = await ApiService.reconnectTrip();
+        if (res['success'] == true && res['data'] != null) {
+          final data = res['data'];
+          final isSearching = data['searching'] == true;
+          final activeTrip = data['active_trip'] as Map<String, dynamic>?;
+
+          if (isSearching) {
+            setState(() {
+              _searching = true;
+              _booked = true;
+            });
+            _startSearchPolling();
+          } else if (activeTrip != null) {
+            final tripId = (activeTrip['id'] as num?)?.toInt();
+            final status = _normalizeTripStatus(activeTrip['status']);
+            final otpCode = _readTripOtp(activeTrip);
+
+            Map<String, dynamic>? driver;
+            double? dLat;
+            double? dLng;
+            if (activeTrip['driver'] != null) {
+              driver = activeTrip['driver'];
+              dLat = (activeTrip['driver']['current_lat'] as num?)?.toDouble();
+              dLng = (activeTrip['driver']['current_lng'] as num?)?.toDouble();
+            }
+
+            setState(() {
+              _tripId = tripId;
+              _booked = true;
+              _searching = false;
+              _step = 'tracking';
+              _tripStatus = status;
+              _otpCode = otpCode;
+              _assignedDriver = driver;
+              _driverLat = dLat;
+              _driverLng = dLng;
+            });
+            _stopSearchPolling();
+            _startTrackingPolling();
+
+            if (dLat != null && dLng != null) {
+              _updateDriverMarker(dLat, dLng);
+            }
+          } else {
+            setState(() {
+              _booked = false;
+              _searching = false;
+              _step = 'input';
+              _tripId = null;
+            });
+          }
+        }
+      } catch (e) {
+        debugPrint('Error during trip reconnect restoration: $e');
+      }
+    };
+
+    RiderSocketService.connect(riderId, token);
+    RiderSocketService.onMessage = (data) {
+      debugPrint('Rider socket message: $data');
+      final type = data["type"];
+      if (type == "kicked") {
+        RiderSocketService.disconnect();
+        AuthService.logout(forced: true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(data["message"] ?? "Logged in on another device"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      if (type == "driver_assigned" ||
+          type == "driver_accepted" ||
+          type == "trip_accepted" ||
+          type == "accepted") {
+        final activeTrip = data["active_trip"] as Map<String, dynamic>?;
+        setState(() {
+          _booked = true;
+          _searching = false;
+          _step = 'tracking';
+          _tripId = (data["trip_id"] as num?)?.toInt() ??
+              (activeTrip?["id"] as num?)?.toInt() ??
+              _tripId;
+          _tripStatus = _normalizeTripStatus(
+              activeTrip?["status"] ?? data["status"] ?? 'driver_assigned');
+          _assignedDriver = activeTrip?["driver"] ??
+              data["driver"] ??
+              {
+                "name": data["driver_name"],
+                "phone": data["driver_phone"],
+                "profile_pic_url": data["profile_pic"],
+                "vehicle_model": data["vehicle_model"],
+                "rc_number": data["rc_number"],
+              };
+          _otpCode = _readTripOtp(data) ?? _readTripOtp(activeTrip);
+          _driverLat = (_assignedDriver?["current_lat"] as num?)?.toDouble();
+          _driverLng = (_assignedDriver?["current_lng"] as num?)?.toDouble();
+        });
+        _stopSearchPolling();
+        _startTrackingPolling();
+      } else if (type == "no_driver_found") {
+        setState(() {
+          _booked = false;
+          _searching = false;
+        });
+        _stopSearchPolling();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("No driver found nearby. Try again.")));
+      } else if (type == "driver_location") {
+        final lat = (data["lat"] as num?)?.toDouble();
+        final lng = (data["lng"] as num?)?.toDouble();
+        if (lat != null && lng != null) {
+          setState(() {
+            _driverLat = lat;
+            _driverLng = lng;
+          });
+          _updateDriverMarker(lat, lng);
+        }
+      } else if (type == "driver_arrived") {
+        setState(() {
+          _tripStatus = 'arrived';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Driver has arrived at pickup location! 📍"),
+            backgroundColor: kOrange));
+      } else if (type == "trip_started") {
+        setState(() {
+          _tripStatus = 'started';
+          _otpCode = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Trip started! Have a safe journey. 🚗"),
+            backgroundColor: Colors.green));
+      } else if (type == "trip_completed") {
+        setState(() {
+          _tripStatus = 'completed';
+          _otpCode = null;
+        });
+        _stopSearchPolling();
+        RiderSocketService.disconnect();
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  TripReceiptScreen(tripId: _tripId!, onClose: widget.onBack),
+            ));
+      } else if (type == "trip_cancelled") {
+        RiderSocketService.disconnect();
+        _stopSearchPolling();
+        setState(() {
+          _booked = false;
+          _searching = false;
+          _step = 'input';
+          _tripId = null;
+          _otpCode = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+                "Trip cancelled by driver: ${data["reason"] ?? 'No reason given'}"),
+            backgroundColor: Colors.red));
+      }
+    };
+  }
+
+  @override
+  void dispose() {
+    _stopSearchPolling();
+    RiderSocketService.onMessage = null;
+    RiderSocketService.onDisconnect = null;
+    RiderSocketService.onReconnect = null;
+    WidgetsBinding.instance.removeObserver(this);
+    _pickupCtrl.dispose();
+    _destCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _cancelCurrentRide({bool closeAfterCancel = false}) async {
+    final tripId = _tripId;
+    try {
+      if (tripId != null) {
+        final res = await ApiService.cancelTrip(tripId, 'Cancelled by rider');
+        if (res['success'] != true) {
+          throw Exception(res['error'] ?? 'Cancel failed');
+        }
+      }
+      if (!mounted) return;
+      RiderSocketService.disconnect();
+      _stopSearchPolling();
+      setState(() {
+        _booked = false;
+        _searching = false;
+        _step = 'input';
+        _tripId = null;
+        _otpCode = null;
+        _assignedDriver = null;
+        _driverLat = null;
+        _driverLng = null;
+        _bonusAmount = 0;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ride request cancelled')),
+      );
+      if (closeAfterCancel) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) widget.onBack();
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to cancel ride')),
+      );
+    }
+  }
+
+  @override
+  @override
+  Widget build(BuildContext context) {
+    Widget body;
+    if (_step == 'tracking') {
+      body = _buildTrackingStep();
+    } else if (_booked) {
+      if (_searching) {
+        body = _buildSearchingState();
+      } else {
+        body = BookingSuccessScreen(
+          service: widget.service,
+          destination: _destCtrl.text,
+          payment: _paymentMethod,
+          onDone: () {
+            setState(() {
+              _step = 'tracking';
+            });
+            _startTrackingPolling();
+          },
+        );
+      }
+    } else if (_step == 'confirm') {
+      body = _buildConfirmStep();
+    } else {
+      body = _buildInputStep();
+    }
+
+    return WillPopScope(
+      onWillPop: () async {
+        final status = _normalizeTripStatus(_tripStatus);
+        if (_step == 'tracking' &&
+            (status == 'accepted' || status == 'arrived' || status == 'started')) {
+          return false;
+        }
+        widget.onBack();
+        return false;
+      },
+      child: body,
+    );
+  }
+
+  Widget _buildSearchingState() {
+    final isAmbulance = widget.service.vehicleType == 'ambulance';
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 40),
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: const BoxDecoration(
+                        color: Color(0xFFFFF3E0), shape: BoxShape.circle),
+                    child: Center(
+                        child: Text(widget.service.icon,
+                            style: const TextStyle(fontSize: 40))),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text('Finding your driver...',
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1A1A2E))),
+                  const SizedBox(height: 8),
+                  Text('Looking for drivers near you',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                  const SizedBox(height: 32),
+                  if (!isAmbulance) ...[
+                    const Text('No one accepting? Add a bonus!',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1A2E))),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.center,
+                      children: [10, 20, 30, 40, 50, 100]
+                          .map((amount) => GestureDetector(
+                                onTap: () async {
+                                  if (_tripId == null) return;
+                                  try {
+                                    await ApiService.addBonus(
+                                        _tripId!, amount.toDouble());
+                                    setState(() => _bonusAmount += amount);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                '+₹$amount bonus added!')));
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            content:
+                                                Text('Failed to add bonus')));
+                                  }
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFF3E0),
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                        color: const Color(0xFFFF6B35),
+                                        width: 1.5),
+                                  ),
+                                  child: Text('+₹$amount',
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color(0xFFFF6B35))),
+                                ),
+                              ))
+                          .toList(),
+                    ),
+                    if (_bonusAmount > 0) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                            color: const Color(0xFFFFF3E0),
+                            borderRadius: BorderRadius.circular(12)),
+                        child: Text('Total Bonus: ₹$_bonusAmount',
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFFFF6B35))),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                  ],
+                  GestureDetector(
+                    onTap: _cancelCurrentRide,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 14),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFFFF3F3),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.red.shade300)),
+                      child: const Text('Cancel Search',
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.red)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_socketDisconnected) _buildReconnectionOverlay(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReconnectionOverlay() {
+    return Positioned(
+      top: 50,
+      left: 16,
+      right: 16,
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(color: Colors.orange.shade100, width: 1.5),
+          ),
+          child: Row(
+            children: [
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(kOrange),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Connection Lost',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    Text(
+                      'Attempting to reconnect every 5s...',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputStep() {
+    return Container(
+      color: kWhite,
+      child: Column(
+        children: [
+          Container(
+            color: kWhite,
+            padding: const EdgeInsets.fromLTRB(20, 52, 20, 16),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    GestureDetector(
+                        onTap: widget.onBack,
+                        child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                                color: kGray,
+                                borderRadius: BorderRadius.circular(12)),
+                            child: const Center(
+                                child: Text('←',
+                                    style: TextStyle(fontSize: 18))))),
+                    const SizedBox(width: 14),
+                    Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                            color: widget.service.color,
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Center(
+                            child: ServiceIconWidget(
+                                icon: widget.service.icon, size: 20))),
+                    const SizedBox(width: 10),
+                    Text(widget.service.name,
+                        style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: kDark)),
+                    if (widget.service.bikeOnly) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                            color: kOrangeLight,
+                            borderRadius: BorderRadius.circular(99),
+                            border:
+                                Border.all(color: kOrange.withOpacity(0.2))),
+                        child: const Text('🏍️ Bike only',
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: kOrange)),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  decoration: BoxDecoration(
+                      color: kOrangeLight,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                          color: kOrange.withOpacity(0.2), width: 1.5)),
+                  child: Row(
+                    children: [
+                      Container(
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                              shape: BoxShape.circle, color: kOrange)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                          child: TextField(
+                              controller: _pickupCtrl,
+                              decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: 'Pickup location'),
+                              style:
+                                  const TextStyle(fontSize: 14, color: kDark))),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                StatefulBuilder(
+                  builder: (_, ss) => Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    decoration: BoxDecoration(
+                        color: kGray,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                            color: const Color(0xFFEEEEEE), width: 1.5)),
+                    child: Row(
+                      children: [
+                        Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                                color: kDark,
+                                borderRadius: BorderRadius.circular(2))),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: _destCtrl,
+                            autofocus: true,
+                            onChanged: (_) => ss(() {}),
+                            decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: widget.service.category == 'delivery'
+                                    ? 'Delivery address...'
+                                    : 'Where to?'),
+                            style: const TextStyle(fontSize: 14, color: kDark),
+                          ),
+                        ),
+                        if (_destCtrl.text.isNotEmpty)
+                          GestureDetector(
+                              onTap: () {
+                                _destCtrl.clear();
+                                ss(() {});
+                              },
+                              child: const Text('✕',
+                                  style:
+                                      TextStyle(color: kMuted, fontSize: 16))),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              children: [
+                const Text('SAVED PLACES',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: kMuted,
+                        letterSpacing: 0.5)),
+                const SizedBox(height: 10),
+                ..._quickDests.map((d) {
+                  final full = '${d.label}, ${d.sub}';
+                  return StatefulBuilder(
+                    builder: (_, ss) => GestureDetector(
+                      onTap: () {
+                        setState(() => _destCtrl.text = full);
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                            color: _destCtrl.text.startsWith(d.label)
+                                ? kOrangeLight
+                                : kGray,
+                            borderRadius: BorderRadius.circular(14)),
+                        child: Row(
+                          children: [
+                            Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                    color: kWhite,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                          color: Colors.black.withOpacity(0.07),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2))
+                                    ]),
+                                child: Center(
+                                    child: Text(d.icon,
+                                        style: const TextStyle(fontSize: 18)))),
+                            const SizedBox(width: 14),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  Text(d.label,
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: kDark)),
+                                  Text(d.sub,
+                                      style: const TextStyle(
+                                          fontSize: 11.5, color: kMuted)),
+                                ])),
+                            if (_destCtrl.text.startsWith(d.label))
+                              const Text('✓',
+                                  style:
+                                      TextStyle(color: kOrange, fontSize: 16)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 36),
+            color: kWhite,
+            child: StatefulBuilder(
+              builder: (_, ss) {
+                final hasText = _destCtrl.text.isNotEmpty;
+                return ElevatedButton(
+                  onPressed: hasText
+                      ? () async {
+                          await _loadFare();
+                          setState(() => _step = 'confirm');
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: hasText
+                        ? widget.service.accent
+                        : const Color(0xFFEEEEEE),
+                    foregroundColor: hasText ? kWhite : kMuted,
+                    disabledBackgroundColor: const Color(0xFFEEEEEE),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    elevation: hasText ? 8 : 0,
+                    shadowColor: widget.service.accent.withOpacity(0.27),
+                  ),
+                  child: SizedBox(
+                      width: double.infinity,
+                      child: Center(
+                          child: Text(
+                              hasText
+                                  ? 'Find ${widget.service.name} →'
+                                  : 'Enter a destination',
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w700)))),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConfirmStep() {
+    return Stack(
+      children: [
+        Container(
+          color: kWhite,
+          child: Column(
+            children: [
+              Expanded(
+                child: Stack(
+                  children: [
+                    MapplsMap(
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(_pickupLat, _pickupLng),
+                        zoom: 13,
+                      ),
+                      onMapCreated: (MapplsMapController controller) async {
+                        await controller.addSymbol(SymbolOptions(
+                          geometry: LatLng(_pickupLat, _pickupLng),
+                          iconImage: 'marker-15',
+                          iconSize: 2.0,
+                          iconColor: '#FF6B00',
+                          textField: 'Pickup',
+                          textOffset: const Offset(0, 1.5),
+                          textColor: '#FF6B00',
+                        ));
+                        await controller.addSymbol(SymbolOptions(
+                          geometry: LatLng(_dropLat, _dropLng),
+                          iconImage: 'marker-15',
+                          iconSize: 2.0,
+                          iconColor: '#1A1A1A',
+                          textField: 'Drop',
+                          textOffset: const Offset(0, 1.5),
+                          textColor: '#1A1A1A',
+                        ));
+                      },
+                      myLocationEnabled: true,
+                    ),
+                    Positioned(
+                      top: 52,
+                      left: 16,
+                      child: GestureDetector(
+                        onTap: widget.onBack,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: kWhite,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: const [
+                              BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 10,
+                                  offset: Offset(0, 2))
+                            ],
+                          ),
+                          child: const Center(
+                              child: Text('←', style: TextStyle(fontSize: 18))),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
+                decoration: const BoxDecoration(
+                    color: kWhite,
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(24)),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 32,
+                          offset: Offset(0, -8))
+                    ]),
+                child: Column(
+                  children: [
+                    Center(
+                        child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                                color: const Color(0xFFDDDDDD),
+                                borderRadius: BorderRadius.circular(99)))),
+                    const SizedBox(height: 18),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                          color: widget.service.color,
+                          borderRadius: BorderRadius.circular(14)),
+                      child: Row(
+                        children: [
+                          Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                  color: kWhite,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                        color: Colors.black.withOpacity(0.07),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2))
+                                  ]),
+                              child: Center(
+                                  child: ServiceIconWidget(
+                                      icon: widget.service.icon, size: 26))),
+                          const SizedBox(width: 12),
+                          Expanded(
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                Text(widget.service.name,
+                                    style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        color: kDark)),
+                                Text(
+                                    '${widget.service.bikeOnly ? '🏍️ Bike rider · ' : ''}~${_estimatedDuration > 0 ? _estimatedDuration : 12} min · ${_estimatedDistance > 0 ? _estimatedDistance.toStringAsFixed(1) : '3.2'} km',
+                                    style: const TextStyle(
+                                        fontSize: 12, color: kMuted)),
+                              ])),
+                          Text('₹${_estimatedFare.toStringAsFixed(0)}',
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: widget.service.accent))
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                          color: kGray,
+                          borderRadius: BorderRadius.circular(14)),
+                      child: Column(
+                        children: [
+                          Row(children: [
+                            Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                    shape: BoxShape.circle, color: kOrange)),
+                            const SizedBox(width: 10),
+                            Expanded(
+                                child: Text(_pickupCtrl.text,
+                                    style: const TextStyle(
+                                        fontSize: 13, color: kDark)))
+                          ]),
+                          const SizedBox(height: 10),
+                          Row(children: [
+                            Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                    color: kDark,
+                                    borderRadius: BorderRadius.circular(2))),
+                            const SizedBox(width: 10),
+                            Expanded(
+                                child: Text(_destCtrl.text,
+                                    style: const TextStyle(
+                                        fontSize: 13, color: kDark)))
+                          ]),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 4),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFFFF3E0),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                              color: const Color(0xFFFF6B35).withOpacity(0.3))),
+                      child: Row(children: [
+                        const Text('🚗', style: TextStyle(fontSize: 18)),
+                        const SizedBox(width: 8),
+                        const Text('Vehicle:',
+                            style: TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w600)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                            child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                          value: _selectedVehicleType,
+                          items: const [
+                            DropdownMenuItem(
+                                value: 'ac_cab', child: Text('AC Cab')),
+                            DropdownMenuItem(
+                                value: 'non_ac_cab', child: Text('Non-AC Cab')),
+                            DropdownMenuItem(
+                                value: 'bike', child: Text('Bike')),
+                            DropdownMenuItem(
+                                value: 'auto', child: Text('Auto')),
+                            DropdownMenuItem(
+                                value: 'toto', child: Text('Toto')),
+                          ],
+                          onChanged: (val) =>
+                              setState(() => _selectedVehicleType = val!),
+                        ))),
+                      ]),
+                    ),
+                    const SizedBox(height: 10),
+                    GestureDetector(
+                      onTap: () => setState(() => _useKCoins = !_useKCoins),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _useKCoins
+                              ? const Color(0xFFFFF3E0)
+                              : const Color(0xFFF5F5F5),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                              color: _useKCoins
+                                  ? const Color(0xFFFF6B35)
+                                  : const Color(0xFFEEEEEE),
+                              width: 1.5),
+                        ),
+                        child: Row(children: [
+                          const Text('🪙', style: TextStyle(fontSize: 22)),
+                          const SizedBox(width: 10),
+                          const Expanded(
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                Text('Use K Coins',
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700)),
+                                Text('100 coins = ₹10 discount',
+                                    style: TextStyle(
+                                        fontSize: 11, color: Colors.grey)),
+                              ])),
+                          Container(
+                            width: 44,
+                            height: 24,
+                            decoration: BoxDecoration(
+                                color: _useKCoins
+                                    ? const Color(0xFFFF6B35)
+                                    : Colors.grey[300],
+                                borderRadius: BorderRadius.circular(12)),
+                            child: AnimatedAlign(
+                              duration: const Duration(milliseconds: 200),
+                              alignment: _useKCoins
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                              child: Container(
+                                  margin: const EdgeInsets.all(3),
+                                  width: 18,
+                                  height: 18,
+                                  decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle)),
+                            ),
+                          ),
+                        ]),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    GestureDetector(
+                      onTap: () => setState(() => _showPaymentModal = true),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                            color: kGray,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                                color: const Color(0xFFEEEEEE), width: 1.5)),
+                        child: Row(
+                          children: [
+                            Text(_paymentMethod.icon,
+                                style: const TextStyle(fontSize: 22)),
+                            const SizedBox(width: 10),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  Text(_paymentMethod.label,
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: kDark)),
+                                  Text(_paymentMethod.sub,
+                                      style: const TextStyle(
+                                          fontSize: 11, color: kMuted)),
+                                ])),
+                            const Text('Change →',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: kOrange,
+                                    fontWeight: FontWeight.w700)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (widget.service.tag == 'Emergency') ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                            color: const Color(0xFFFFF0F0),
+                            borderRadius: BorderRadius.circular(12)),
+                        child: const Row(children: [
+                          Text('🚨', style: TextStyle(fontSize: 14)),
+                          SizedBox(width: 8),
+                          Expanded(
+                              child: Text(
+                                  'Nearest ambulance will be dispatched immediately',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFFE53935),
+                                      fontWeight: FontWeight.w600))),
+                        ]),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final body = {
+                            "pickup_address": _pickupCtrl.text,
+                            "drop_address": _destCtrl.text,
+                            "pickup_lat": _pickupLat,
+                            "pickup_lng": _pickupLng,
+                            "drop_lat": _dropLat,
+                            "drop_lng": _dropLng,
+                            "vehicle_type": _selectedVehicleType,
+                            "service_type":
+                                widget.service.category == 'delivery'
+                                    ? widget.service.name.toLowerCase()
+                                    : 'ride',
+                            "payment_method": _paymentMethod.id,
+                            "use_kcoins": _useKCoins,
+                            "is_ev_request": widget.service.isEV,
+                          };
+                          try {
+                            final result = await ApiService.bookTrip(body);
+                            if (result["success"] == true) {
+                              final bookedTrip =
+                                  result["data"] as Map<String, dynamic>? ??
+                                      const {};
+                              final tripId =
+                                  (bookedTrip["trip_id"] as num?)?.toInt() ??
+                                      (result["trip_id"] as num?)?.toInt();
+                              setState(() {
+                                _booked = true;
+                                _searching = true;
+                                _tripId = tripId;
+                              });
+                              _startSearchPolling();
+                              final riderId = AuthService.riderId;
+                              final token = AuthService.token;
+                              if (riderId != null && token != null) {
+                                _connectSocket(riderId, token);
+                              }
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(result["error"] ??
+                                          "Booking failed")));
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Booking error: $e")));
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: widget.service.accent,
+                            foregroundColor: kWhite,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                            elevation: 8,
+                            shadowColor:
+                                widget.service.accent.withOpacity(0.27)),
+                        child: Text(
+                            _fareLoading
+                                ? 'Getting fare...'
+                                : 'Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹${_estimatedFare.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w700)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (_showPaymentModal)
+          Positioned.fill(
+            child: PaymentModal(
+              selected: _paymentMethod,
+              onSelect: (pm) => setState(() => _paymentMethod = pm),
+              onClose: () => setState(() => _showPaymentModal = false),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildTrackingStep() {
+    final tripStatus = _normalizeTripStatus(_tripStatus);
+    final showOtp = _shouldShowTripOtp;
+    final expectOtp = _shouldExpectTripOtp;
+    final driverName = _assignedDriver?['name'] ?? 'Driver';
+    final driverPhone = _assignedDriver?['phone'] ?? '';
+    final driverPhotoUrl =
+        _assignedDriver?['profile_pic_url']?.toString() ?? '';
+    final driverRating =
+        _assignedDriver?['avg_rating'] ?? _assignedDriver?['rating'] ?? '4.8';
+    final vehicleModel = _assignedDriver?['vehicle_model'] ??
+        _assignedDriver?['vehicle'] ??
+        'Standard Vehicle';
+    final vehicleNo = _assignedDriver?['vehicle_no'] ??
+        _assignedDriver?['rc_number'] ??
+        'T&C Applied';
+
+    Color statusColor = kOrange;
+    String statusTitle = 'Driver Assigned';
+    String statusSubtitle = 'Driver is on their way to pick you up';
+
+    if (tripStatus == 'requested') {
+      statusTitle = 'Searching for Driver';
+      statusSubtitle = 'We are matching you with the nearest driver';
+    } else if (tripStatus == 'driver_assigned' || tripStatus == 'accepted') {
+      statusTitle = 'Trip Accepted';
+      statusSubtitle = 'Your driver accepted the ride and is on the way';
+    }
+
+    if (tripStatus == 'arrived') {
+      statusColor = Colors.green;
+      statusTitle = 'Driver Arrived';
+      statusSubtitle = 'Please meet the driver at your pickup point';
+    } else if (tripStatus == 'started') {
+      statusColor = Colors.blue;
+      statusTitle = 'On Trip';
+      statusSubtitle = 'Heading to your destination';
+    } else if (tripStatus == 'completed') {
+      statusColor = Colors.grey;
+      statusTitle = 'Trip Completed';
+      statusSubtitle = 'Thank you for riding with KRide';
+    }
+
+    return Scaffold(
+      backgroundColor: kWhite,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: MapplsMap(
+              initialCameraPosition: CameraPosition(
+                target: LatLng(_pickupLat, _pickupLng),
+                zoom: 14,
+              ),
+              onMapCreated: (MapplsMapController controller) async {
+                _mapController = controller;
+                try {
+                  await controller.addSymbol(SymbolOptions(
+                    geometry: LatLng(_pickupLat, _pickupLng),
+                    iconImage: 'marker-15',
+                    iconSize: 2.0,
+                    iconColor: '#FF6B00',
+                    textField: 'Pickup',
+                    textOffset: const Offset(0, 1.5),
+                    textColor: '#FF6B00',
+                  ));
+                  await controller.addSymbol(SymbolOptions(
+                    geometry: LatLng(_dropLat, _dropLng),
+                    iconImage: 'marker-15',
+                    iconSize: 2.0,
+                    iconColor: '#1A1A1A',
+                    textField: 'Drop',
+                    textOffset: const Offset(0, 1.5),
+                    textColor: '#1A1A1A',
+                  ));
+                  if (_driverLat != null && _driverLng != null) {
+                    await _updateDriverMarker(_driverLat!, _driverLng!);
+                  }
+                } catch (e) {
+                  debugPrint('Map symbols creation error: $e');
+                }
+              },
+              myLocationEnabled: true,
+            ),
+          ),
+          Positioned(
+            top: 52,
+            left: 16,
+            right: 16,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                if (tripStatus == 'requested')
+                  GestureDetector(
+                    onTap: widget.onBack,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: kWhite,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 10,
+                            offset: Offset(0, 2),
+                          )
+                        ],
+                      ),
+                      child: const Center(
+                          child: Text('←', style: TextStyle(fontSize: 18))),
+                    ),
+                  )
+                else
+                  const SizedBox(width: 40),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 10,
+                        offset: Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  child: Text(
+                    statusTitle,
+                    style: const TextStyle(
+                      color: kWhite,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+              decoration: const BoxDecoration(
+                color: kWhite,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 32,
+                    offset: Offset(0, -8),
+                  )
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDDDDDD),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: statusColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          statusSubtitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: kOrangeLight,
+                        backgroundImage: driverPhotoUrl.isNotEmpty
+                            ? CachedNetworkImageProvider(driverPhotoUrl)
+                            : null,
+                        child: driverPhotoUrl.isEmpty
+                            ? Text(
+                                driverName.isNotEmpty
+                                    ? driverName.substring(0, 1).toUpperCase()
+                                    : 'D',
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  color: kOrange,
+                                ),
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    driverName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: kDark,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFF8E1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.star,
+                                          size: 12, color: Colors.amber),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        driverRating.toString(),
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.amber,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (driverPhone.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                driverPhone,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 4),
+                            Text(
+                              '$vehicleModel • $vehicleNo',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => TripChatScreen(
+                                          tripId: _tripId!,
+                                          driverName: driverName,
+                                          driverPhone: driverPhone,
+                                          driverPhotoUrl: driverPhotoUrl,
+                                          onClose: () => Navigator.pop(context),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: kOrangeLight,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Center(
+                                        child: Text('💬',
+                                            style: TextStyle(fontSize: 20))),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () async {
+                                    if (driverPhone.isNotEmpty) {
+                                      final uri = Uri.parse('tel:$driverPhone');
+                                      if (await canLaunchUrl(uri)) {
+                                        await launchUrl(uri);
+                                      } else {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  'Could not open phone dialer')),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  child: Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE8F5E9),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Center(
+                                        child: Text('📞',
+                                            style: TextStyle(fontSize: 20))),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      if (showOtp)
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: kOrangeLight,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color: kOrange.withOpacity(0.25), width: 1.5),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: const [
+                                    Text('🔐', style: TextStyle(fontSize: 16)),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Share this OTP with driver',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: kOrange,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Center(
+                                  child: Text(
+                                    _otpCode!,
+                                    style: const TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w900,
+                                      color: kOrange,
+                                      letterSpacing: 6,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else if (expectOtp)
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF8E1),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                  color: Colors.amber.shade300, width: 1.5),
+                            ),
+                            child: const Text(
+                              'OTP is loading. Keep this screen open, or reconnect if it does not appear.',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF8A5A00),
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        const Spacer(),
+                      if (showOtp || expectOtp) const SizedBox(width: 12),
+                      GestureDetector(
+                        onTap: () async {
+                          if (_tripId != null) {
+                            try {
+                              await ApiService.raiseSOS(_tripId!);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      '🚨 SOS Alert Raised! Support notified.'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Failed to raise SOS')),
+                              );
+                            }
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF0F0),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                                color: Colors.red.shade300, width: 1.5),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('🆘', style: TextStyle(fontSize: 18)),
+                              SizedBox(width: 6),
+                              Text(
+                                'SOS',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (tripStatus == 'requested' ||
+                      tripStatus == 'driver_assigned' ||
+                      tripStatus == 'accepted' ||
+                      tripStatus == 'arrived') ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Cancel Ride?'),
+                              content: const Text(
+                                  'Are you sure you want to cancel this ride request?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: const Text('No'),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    Navigator.pop(ctx);
+                                    await _cancelCurrentRide(
+                                        closeAfterCancel: true);
+                                  },
+                                  child: const Text(
+                                    'Yes, Cancel',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: const Text(
+                          'Cancel Ride',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          if (_socketDisconnected) _buildReconnectionOverlay(),
+        ],
+      ),
+    );
+  }
+
+  String _getVehicleLabel(String type) {
+    switch (type) {
+      case 'ac_cab':
+        return 'AC Cab';
+      case 'non_ac_cab':
+        return 'Non-AC Cab';
+      case 'bike':
+        return 'Bike';
+      case 'auto':
+        return 'Auto';
+      case 'toto':
+        return 'Toto';
+      default:
+        return 'Ride';
+    }
+  }
+}
+
+// ── Map grid painter ──
+class _MapGridPainter extends CustomPainter {
+  final Color accentColor;
+  const _MapGridPainter({required this.accentColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final gridPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.15)
+      ..strokeWidth = 0.5
+      ..style = PaintingStyle.stroke;
+    for (double x = 0; x < size.width; x += 40)
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+    for (double y = 0; y < size.height; y += 40)
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+
+    final roadPaint = Paint()
+      ..color = const Color(0xFFE8E0D5)
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(
+        Rect.fromLTWH(0, size.height * 0.3, size.width, 16), roadPaint);
+    canvas.drawRect(
+        Rect.fromLTWH(0, size.height * 0.58, size.width, 14), roadPaint);
+    canvas.drawRect(
+        Rect.fromLTWH(size.width * 0.22, 0, 16, size.height), roadPaint);
+    canvas.drawRect(
+        Rect.fromLTWH(size.width * 0.52, 0, 18, size.height), roadPaint);
+
+    final routePaint = Paint()
+      ..color = accentColor.withOpacity(0.8)
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final path = Path()
+      ..moveTo(size.width * 0.35, size.height * 0.3)
+      ..cubicTo(size.width * 0.45, size.height * 0.35, size.width * 0.55,
+          size.height * 0.45, size.width * 0.65, size.height * 0.58);
+    canvas.drawPath(path, routePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MAIN HOME SCREEN
+// ══════════════════════════════════════════════════════════════
+class RiderHomeScreen extends StatefulWidget {
+  const RiderHomeScreen({super.key});
+
+  @override
+  State<RiderHomeScreen> createState() => _RiderHomeScreenState();
+}
+
+class _RiderHomeScreenState extends State<RiderHomeScreen> {
+  String _activeTab = 'home';
+  ({ServiceItem service, String prefilledDest})? _activeScreen;
+  ({String title, List<ServiceItem> items})? _seeAll;
+  int _promoIdx = 0;
+  String _greeting = 'Good morning';
+  String _currentLocation = 'Connaught Place, New Delhi';
+  bool _showLocationModal = false;
+  Timer? _promoTimer;
+  Timer? _activeTripTimer;
+  late PageController _promoPageCtrl;
+  int? _restoredTripId;
+
+  @override
+  void initState() {
+    super.initState();
+    _promoPageCtrl = PageController(viewportFraction: 0.85);
+    final h = DateTime.now().hour;
+    if (h < 12)
+      _greeting = 'Good morning';
+    else if (h < 17)
+      _greeting = 'Good afternoon';
+    else
+      _greeting = 'Good evening';
+
+    _promoTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      setState(() {
+        _promoIdx = (_promoIdx + 1) % promos.length;
+      });
+      if (_promoPageCtrl.hasClients) {
+        _promoPageCtrl.animateToPage(_promoIdx,
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut);
+      }
+    });
+
+    // Refresh profile details (including profile picture URL) from server on startup
+    _refreshProfileDetails();
+
+    _checkActiveTrip();
+    _activeTripTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      _checkActiveTrip();
+    });
+  }
+
+  /// Fetch the latest profile data from the server and persist it locally.
+  /// This ensures the S3 profile picture URL survives app restarts.
+  Future<void> _refreshProfileDetails() async {
+    try {
+      final res = await ApiService.getMe();
+      if (res['success'] == true && res['data'] != null) {
+        final data = res['data'] as Map<String, dynamic>;
+        // Try every known key the backend might use for the profile picture URL
+        final picUrl = (
+          data['profile_picture_url'] ??
+          data['profile_pic_url'] ??
+          data['profile_pic'] ??
+          data['avatar_url'] ??
+          ''
+        ).toString();
+        if (picUrl.isNotEmpty) {
+          await AuthService.updateProfilePic(picUrl);
+        }
+        // Also refresh name/phone in case they changed
+        if (data['full_name'] != null) {
+          await AuthService.saveSession({
+            'access_token': AuthService.token,
+            'role': AuthService.role,
+            'full_name': data['full_name'],
+            'phone': data['phone'] ?? AuthService.phone,
+            'user_id': data['user_id'] ?? AuthService.userId,
+            'wallet_balance': data['wallet_balance'] ?? AuthService.walletBalance,
+            'kcoin_balance': data['kcoin_balance'] ?? AuthService.kcoinBalance,
+            'rider_id': data['rider_id'] ?? AuthService.riderId,
+            'profile_pic': picUrl.isNotEmpty ? picUrl : AuthService.profilePic,
+          });
+        }
+        if (mounted) setState(() {});
+      }
+    } catch (e) {
+      debugPrint('Profile refresh error: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _promoTimer?.cancel();
+    _activeTripTimer?.cancel();
+    _promoPageCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkActiveTrip() async {
+    try {
+      final res = await ApiService.getActiveTrip();
+      if (res['success'] == true && res['data']?['active_trip'] != null) {
+        final trip = res['data']['active_trip'];
+        final serviceItem = services.firstWhere(
+          (s) => s.vehicleType == trip['vehicle_type'] || s.tag == 'Standard',
+          orElse: () => services.first,
+        );
+        final tripId = (trip['id'] as num?)?.toInt();
+        if (mounted && (_activeScreen == null || _restoredTripId != tripId)) {
+          setState(() {
+            _restoredTripId = tripId;
+            _activeScreen = (
+              service: serviceItem,
+              prefilledDest: trip['drop_address'] ?? '',
+            );
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Check active trip error: $e');
+    }
+  }
+
+  final _rideServices = services.where((s) => s.category == 'ride').toList();
+  final _deliveryServices =
+      services.where((s) => s.category == 'delivery').toList();
+  late final _gridRideServices =
+      _rideServices.where((s) => s.id != 10).toList();
+  late final _evRide = services.firstWhere((s) => s.id == 10);
+
+  void _openService(ServiceItem service, {String prefilledDest = ''}) {
+    setState(
+        () => _activeScreen = (service: service, prefilledDest: prefilledDest));
+  }
+
+  void _showNotificationsBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDDDDDD),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Notifications 🔔',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: kDark,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () async {
+                      try {
+                        await ApiService.markAllRead();
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('All marked as read!')),
+                        );
+                      } catch (_) {}
+                    },
+                    child: const Text(
+                      'Mark all as read',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: kOrange,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: FutureBuilder<Map<String, dynamic>>(
+                  future: ApiService.getNotifications(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(color: kOrange),
+                      );
+                    }
+                    final list =
+                        snapshot.data?['data']?['notifications'] as List?;
+                    if (snapshot.hasError || list == null || list.isEmpty) {
+                      return const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('📣', style: TextStyle(fontSize: 40)),
+                            SizedBox(height: 12),
+                            Text(
+                              'No new notifications',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  color: kMuted,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: list.length,
+                      itemBuilder: (context, index) {
+                        final notif = list[index];
+                        final isUnread = notif['is_read'] != true;
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: isUnread ? kOrangeLight : kGray,
+                            borderRadius: BorderRadius.circular(14),
+                            border: isUnread
+                                ? Border.all(
+                                    color: kOrange.withOpacity(0.2), width: 1.5)
+                                : null,
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isUnread ? '🔵' : '⚪',
+                                style: const TextStyle(fontSize: 10),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      notif['title'] ?? 'Notification',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: isUnread
+                                            ? FontWeight.w800
+                                            : FontWeight.w600,
+                                        color: kDark,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      notif['message'] ?? '',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickProfileImage() async {
+    // Show a premium bottom sheet to choose Camera or Gallery
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF1A1A2E),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Update Profile Photo',
+              style: TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Choose how you want to upload your photo',
+              style: TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 13,
+                color: Colors.white.withOpacity(0.55),
+              ),
+            ),
+            const SizedBox(height: 28),
+            Row(
+              children: [
+                // Camera option
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context, ImageSource.camera),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 22),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFF6B35), Color(0xFFFF8C42)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFF6B35).withOpacity(0.35),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: const [
+                          Icon(Icons.camera_alt_rounded,
+                              color: Colors.white, size: 32),
+                          SizedBox(height: 10),
+                          Text(
+                            'Camera',
+                            style: TextStyle(
+                              fontFamily: 'Sora',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Take a new photo',
+                            style: TextStyle(
+                              fontFamily: 'Sora',
+                              fontSize: 11,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Gallery option
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context, ImageSource.gallery),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 22),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border:
+                            Border.all(color: Colors.white.withOpacity(0.15)),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.photo_library_rounded,
+                              color: Colors.white.withOpacity(0.9), size: 32),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Gallery',
+                            style: TextStyle(
+                              fontFamily: 'Sora',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Choose from gallery',
+                            style: TextStyle(
+                              fontFamily: 'Sora',
+                              fontSize: 11,
+                              color: Colors.white.withOpacity(0.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Cancel button
+            GestureDetector(
+              onTap: () => Navigator.pop(context, null),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white54,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return; // User cancelled
+
+    try {
+      final picker = ImagePicker();
+      final pickedFile =
+          await picker.pickImage(source: source, imageQuality: 80);
+      if (pickedFile != null) {
+        // Show high-end loading snackbar
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                      color: Colors.white, strokeWidth: 2),
+                ),
+                const SizedBox(width: 16),
+                Text('Uploading profile picture... 📸',
+                    style: const TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600)),
+              ],
+            ),
+            duration: const Duration(seconds: 4),
+            backgroundColor: kDark.withOpacity(0.9),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+
+        final res =
+            await ApiService.uploadProfilePicture(File(pickedFile.path));
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        if (res['success']) {
+          // Extract the permanent S3 URL — try every key the backend might return
+          final responseData = res['data'] as Map<String, dynamic>? ?? {};
+          final url = (
+            responseData['profile_picture_url'] ??
+            responseData['profile_pic_url'] ??
+            responseData['profile_pic'] ??
+            responseData['avatar_url'] ??
+            responseData['url'] ??
+            ''
+          ).toString();
+          // Persist the S3 URL so it survives app restarts
+          if (url.isNotEmpty) {
+            await AuthService.updateProfilePic(url);
+          }
+          // Re-fetch from server to confirm the saved URL and keep local cache in sync
+          _refreshProfileDetails();
+          setState(() {});
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Profile picture uploaded successfully! 🎉',
+                  style: TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600)),
+              backgroundColor: kOrange,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Upload failed: ${res['error']}',
+                  style: const TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600)),
+              backgroundColor: const Color(0xFFE53935),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to pick image: $e',
+              style: const TextStyle(
+                  fontFamily: 'Sora',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600)),
+          backgroundColor: const Color(0xFFE53935),
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
+  }
+
+  Widget _buildWalletTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('My Wallet',
+              style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1A1A2E))),
+          const SizedBox(height: 20),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                  colors: [Color(0xFFFF6B35), Color(0xFFFF8C42)]),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Wallet Balance',
+                  style: TextStyle(fontSize: 13, color: Colors.white70)),
+              const SizedBox(height: 8),
+              FutureBuilder<Map<String, dynamic>>(
+                future: ApiService.getWalletBalance(),
+                builder: (ctx, snap) {
+                  final bal = snap.data?['data']?['wallet_balance'] ?? 0.0;
+                  return Text('₹${bal.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white));
+                },
+              ),
+            ]),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF3E0),
+              borderRadius: BorderRadius.circular(20),
+              border:
+                  Border.all(color: const Color(0xFFFF6B35).withOpacity(0.3)),
+            ),
+            child: Row(children: [
+              const Text('🪙', style: TextStyle(fontSize: 36)),
+              const SizedBox(width: 16),
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    const Text('K Coins',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1A2E))),
+                    const SizedBox(height: 4),
+                    FutureBuilder<Map<String, dynamic>>(
+                      future: ApiService.getMe(),
+                      builder: (ctx, snap) {
+                        final coins = snap.data?['kcoin_balance'] ??
+                            AuthService.kcoinBalance;
+                        return Text('$coins coins',
+                            style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFFFF6B35)));
+                      },
+                    ),
+                    const SizedBox(height: 4),
+                    const Text('100 coins = ₹10 discount on next ride',
+                        style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  ])),
+            ]),
+          ),
+          const SizedBox(height: 24),
+          const Text('How to earn K Coins?',
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A2E))),
+          const SizedBox(height: 12),
+          _coinTip('🚗', 'Complete a ride', 'Every ₹10 = 1 K Coin'),
+          _coinTip('🎁', 'Special offers', 'Watch for bonus events'),
+        ],
+      ),
+    );
+  }
+
+  Widget _coinTip(String icon, String title, String sub) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+          color: const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(14)),
+      child: Row(children: [
+        Text(icon, style: const TextStyle(fontSize: 24)),
+        const SizedBox(width: 12),
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title,
+              style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A2E))),
+          Text(sub, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _profileOptionTile({
+    required String icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: kGray,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFEEEEEE), width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: kWhite,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2))
+                ],
+              ),
+              child: Center(
+                  child: Text(icon, style: const TextStyle(fontSize: 20))),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: kDark)),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: const TextStyle(fontSize: 12, color: kMuted)),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                color: kMuted, size: 14),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showReferralBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.75,
+          ),
+          child: FutureBuilder<Map<String, dynamic>>(
+            future: ApiService.getMe(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox(
+                  height: 250,
+                  child: Center(
+                    child: CircularProgressIndicator(color: kOrange),
+                  ),
+                );
+              }
+
+              // Extract the referral code safely
+              final data = snapshot.data?['data'];
+              final referralCode = data?['referral_code']?.toString() ??
+                  'KRIDE50'; // standard fallback
+
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Handle bar
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDDDDDD),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Gift Icon/Emoji with pulsing border effect or stylish box
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: kOrangeLight,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: kOrange.withOpacity(0.2), width: 2),
+                      ),
+                      child: const Center(
+                        child: Text('🎁', style: TextStyle(fontSize: 40)),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    const Text(
+                      'Refer a Friend & Earn! 👥',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: kDark,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+
+                    const Text(
+                      'Share your unique referral code with friends. When they register and take their first ride, both of you will receive bonus coins! 🪙',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        color: kMuted,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 28),
+
+                    // Referral Code Box
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 18, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFBFBFB),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFEEEEEE)),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'YOUR REFERRAL CODE',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: kMuted,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Dashed-style look with rounded orange text
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: kOrangeLight,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: kOrange.withOpacity(0.3),
+                                style: BorderStyle.solid,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Text(
+                              referralCode,
+                              style: const TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w900,
+                                color: kOrange,
+                                letterSpacing: 3,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Copy Code Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: referralCode));
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  'Referral code "$referralCode" copied to clipboard! 🎁',
+                                  style: const TextStyle(
+                                      fontFamily: 'Sora',
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600)),
+                              backgroundColor: kOrange,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.copy_rounded,
+                            color: Colors.white, size: 18),
+                        label: const Text(
+                          'Copy Referral Code',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kOrange,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProfileTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTap: _pickProfileImage,
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                              colors: [kOrange, kOrangeDark],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight),
+                          boxShadow: [
+                            BoxShadow(
+                                color: kOrange.withOpacity(0.3),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4))
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: AuthService.profilePic.isNotEmpty
+                              ? (AuthService.profilePic.startsWith('http')
+                                  ? Image.network(
+                                      AuthService.profilePic,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Center(
+                                          child: Text(
+                                              AuthService.name.isNotEmpty
+                                                  ? AuthService.name[0]
+                                                      .toUpperCase()
+                                                  : 'R',
+                                              style: const TextStyle(
+                                                  fontSize: 40,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: kWhite))),
+                                    )
+                                  : Image.file(
+                                      File(AuthService.profilePic),
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Center(
+                                          child: Text(
+                                              AuthService.name.isNotEmpty
+                                                  ? AuthService.name[0]
+                                                      .toUpperCase()
+                                                  : 'R',
+                                              style: const TextStyle(
+                                                  fontSize: 40,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: kWhite))),
+                                    ))
+                              : Center(
+                                  child: Text(
+                                      AuthService.name.isNotEmpty
+                                          ? AuthService.name[0].toUpperCase()
+                                          : 'R',
+                                      style: const TextStyle(
+                                          fontSize: 40,
+                                          fontWeight: FontWeight.w800,
+                                          color: kWhite))),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                            color: kOrange,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2))
+                            ]),
+                        child: const Icon(Icons.camera_alt,
+                            color: Colors.white, size: 16),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(AuthService.name,
+                    style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: kDark)),
+                const SizedBox(height: 4),
+                Text('+91 ${AuthService.phone}',
+                    style: const TextStyle(fontSize: 14, color: kMuted)),
+                const SizedBox(height: 32),
+                _profileOptionTile(
+                  icon: '👥',
+                  title: 'Refer a Friend',
+                  subtitle: 'Get bonus coins on every successful referral',
+                  onTap: _showReferralBottomSheet,
+                ),
+                _profileOptionTile(
+                  icon: '💬',
+                  title: 'Support & Help',
+                  subtitle: 'Connect with support or browse FAQs',
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.white,
+                      shape: const RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(20))),
+                      builder: (_) => Container(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                        constraints: BoxConstraints(
+                            maxHeight:
+                                MediaQuery.of(context).size.height * 0.75),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                  width: 40,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                      color: const Color(0xFFDDDDDD),
+                                      borderRadius: BorderRadius.circular(99))),
+                              const SizedBox(height: 20),
+                              const Text('Contact Support 💬',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w800,
+                                      color: kDark)),
+                              const SizedBox(height: 12),
+                              const Text(
+                                  'Need assistance with your ride or delivery?',
+                                  style: TextStyle(fontSize: 14, color: kMuted),
+                                  textAlign: TextAlign.center),
+                              const SizedBox(height: 24),
+                              _profileOptionTile(
+                                icon: '📞',
+                                title: 'Call Support Helpline',
+                                subtitle: 'Instant phone support (24/7)',
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Calling Helpline: +91 1800-KRIDE 📞')));
+                                },
+                              ),
+                              _profileOptionTile(
+                                icon: '🟢',
+                                title: 'Chat on WhatsApp',
+                                subtitle: 'Get support via WhatsApp chat',
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Opening WhatsApp Support Chat 🟢')));
+                                },
+                              ),
+                              _profileOptionTile(
+                                icon: '✉️',
+                                title: 'Email support',
+                                subtitle: 'support@kride.app',
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Opening email compose ✉️')));
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      await AuthService.logout();
+                      if (!mounted) return;
+                      Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const RoleSelectionScreen()),
+                          (r) => false);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFF0F0),
+                      foregroundColor: const Color(0xFFE53935),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
+                    ),
+                    child: const Text('Log Out',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async {
+        if (_activeTab != 'home') {
+          setState(() => _activeTab = 'home');
+          return false;
+        }
+        return false;
+      },
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.dark,
+        child: Scaffold(
+          backgroundColor: kWhite,
+          body: Stack(
+            children: [
+              if (_activeTab == 'home')
+                SafeArea(
+                  child: Column(
+                    children: [
+                      Container(
+                        color: kWhite,
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text('$_greeting 👋',
+                                          style: const TextStyle(
+                                              fontSize: 13,
+                                              color: kMuted,
+                                              fontWeight: FontWeight.w500)),
+                                      RichText(
+                                          text: TextSpan(
+                                        text:
+                                            '${AuthService.name.split(' ').first} ',
+                                        style: const TextStyle(
+                                            fontSize: 22,
+                                            fontWeight: FontWeight.w800,
+                                            color: kDark,
+                                            fontFamily: 'Sora'),
+                                        children: [
+                                          TextSpan(
+                                              text: AuthService.name
+                                                          .split(' ')
+                                                          .length >
+                                                      1
+                                                  ? AuthService.name
+                                                      .split(' ')
+                                                      .sublist(1)
+                                                      .join(' ')
+                                                  : '',
+                                              style: const TextStyle(
+                                                  color: kOrange))
+                                        ],
+                                      )),
+                                    ]),
+                                Row(children: [
+                                  GestureDetector(
+                                    onTap: _showNotificationsBottomSheet,
+                                    child: Stack(children: [
+                                      Container(
+                                          width: 42,
+                                          height: 42,
+                                          decoration: BoxDecoration(
+                                              color: kGray,
+                                              borderRadius:
+                                                  BorderRadius.circular(14)),
+                                          child: const Center(
+                                              child: Text('🔔',
+                                                  style: TextStyle(
+                                                      fontSize: 18)))),
+                                      Positioned(
+                                          top: 8,
+                                          right: 9,
+                                          child: Container(
+                                              width: 8,
+                                              height: 8,
+                                              decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: kOrange,
+                                                  border: Border.all(
+                                                      color: kWhite,
+                                                      width: 2)))),
+                                    ]),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  GestureDetector(
+                                    onTap: () =>
+                                        setState(() => _activeTab = 'profile'),
+                                    child: Container(
+                                      width: 42,
+                                      height: 42,
+                                      decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(14),
+                                          gradient: const LinearGradient(
+                                              colors: [kOrange, kOrangeDark],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight)),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(14),
+                                        child: AuthService.profilePic.isNotEmpty
+                                            ? (AuthService.profilePic
+                                                    .startsWith('http')
+                                                ? Image.network(
+                                                    AuthService.profilePic,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (_, __, ___) => Center(
+                                                        child: Text(
+                                                            AuthService.name
+                                                                    .isNotEmpty
+                                                                ? AuthService
+                                                                    .name[0]
+                                                                    .toUpperCase()
+                                                                : 'U',
+                                                            style: const TextStyle(
+                                                                color: kWhite,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w800,
+                                                                fontSize: 16))),
+                                                  )
+                                                : Image.file(
+                                                    File(
+                                                        AuthService.profilePic),
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (_, __, ___) => Center(
+                                                        child: Text(
+                                                            AuthService.name
+                                                                    .isNotEmpty
+                                                                ? AuthService
+                                                                    .name[0]
+                                                                    .toUpperCase()
+                                                                : 'U',
+                                                            style: const TextStyle(
+                                                                color: kWhite,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w800,
+                                                                fontSize: 16))),
+                                                  ))
+                                            : Center(
+                                                child: Text(
+                                                    AuthService.name.isNotEmpty
+                                                        ? AuthService.name[0]
+                                                            .toUpperCase()
+                                                        : 'U',
+                                                    style: const TextStyle(
+                                                        color: kWhite,
+                                                        fontWeight:
+                                                            FontWeight.w800,
+                                                        fontSize: 16))),
+                                      ),
+                                    ),
+                                  ),
+                                ]),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: ListView(
+                          padding: const EdgeInsets.only(bottom: 80),
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                              child: GestureDetector(
+                                onTap: () => _openService(_rideServices[0]),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 14),
+                                  decoration: BoxDecoration(
+                                      color: kGray,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                            color: Colors.black12,
+                                            blurRadius: 12,
+                                            offset: Offset(0, 2))
+                                      ]),
+                                  child: const Row(children: [
+                                    Text('🔍', style: TextStyle(fontSize: 18)),
+                                    SizedBox(width: 12),
+                                    Text('Where do you want to go?',
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            color: kMuted,
+                                            fontWeight: FontWeight.w500)),
+                                  ]),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Text('🚗 Ride',
+                                              style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: kDark)),
+                                          GestureDetector(
+                                              onTap: () => setState(() =>
+                                                  _seeAll = (
+                                                    title: 'Ride',
+                                                    items: _rideServices
+                                                  )),
+                                              child: const Text('See all →',
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: kOrange,
+                                                      fontWeight:
+                                                          FontWeight.w600))),
+                                        ]),
+                                    const SizedBox(height: 16),
+                                    // ── EV Ride Banner Block ──
+                                    GestureDetector(
+                                      onTap: () => _openService(_evRide),
+                                      child: Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16, vertical: 16),
+                                        margin:
+                                            const EdgeInsets.only(bottom: 16),
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              Color(0xFFE8F5E9),
+                                              Color(0xFFC8E6C9)
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                          border: Border.all(
+                                              color: const Color(0xFF81C784)
+                                                  .withOpacity(0.5),
+                                              width: 1.5),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF2E7D32)
+                                                  .withOpacity(0.08),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 4),
+                                            )
+                                          ],
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 48,
+                                              height: 48,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color:
+                                                        const Color(0xFF2E7D32)
+                                                            .withOpacity(0.1),
+                                                    blurRadius: 6,
+                                                    offset: const Offset(0, 2),
+                                                  )
+                                                ],
+                                              ),
+                                              child: const Center(
+                                                child: Text('⚡',
+                                                    style: TextStyle(
+                                                        fontSize: 24)),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 14),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      const Text(
+                                                        'EV Ride',
+                                                        style: TextStyle(
+                                                          fontSize: 15,
+                                                          fontWeight:
+                                                              FontWeight.w800,
+                                                          color:
+                                                              Color(0xFF1B5E20),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                                horizontal: 6,
+                                                                vertical: 2),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: const Color(
+                                                              0xFF2E7D32),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(99),
+                                                        ),
+                                                        child: const Text(
+                                                          'Eco',
+                                                          style: TextStyle(
+                                                            fontSize: 8,
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                            color: Colors.white,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  const Text(
+                                                    'one step closer to the better world',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      color: Color(0xFF388E3C),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const Icon(
+                                                Icons.arrow_forward_ios_rounded,
+                                                color: Color(0xFF2E7D32),
+                                                size: 16),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    GridView.count(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      crossAxisCount: 3,
+                                      crossAxisSpacing: 16,
+                                      mainAxisSpacing: 16,
+                                      childAspectRatio: 0.9,
+                                      children: _gridRideServices
+                                          .map((s) => ServiceCard(
+                                              service: s,
+                                              onTap: () => _openService(s)))
+                                          .toList(),
+                                    ),
+                                  ]),
+                            ),
+                            Container(height: 8, color: kGray),
+                            const SizedBox(height: 20),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Text('📦 Delivery',
+                                              style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: kDark)),
+                                          GestureDetector(
+                                              onTap: () => setState(() =>
+                                                  _seeAll = (
+                                                    title: 'Delivery',
+                                                    items: _deliveryServices
+                                                  )),
+                                              child: const Text('See all →',
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: kOrange,
+                                                      fontWeight:
+                                                          FontWeight.w600))),
+                                        ]),
+                                    const SizedBox(height: 16),
+                                    GridView.count(
+                                      shrinkWrap: true,
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      crossAxisCount: 3,
+                                      crossAxisSpacing: 16,
+                                      mainAxisSpacing: 16,
+                                      childAspectRatio: 0.9,
+                                      children: _deliveryServices
+                                          .map((s) => ServiceCard(
+                                              service: s,
+                                              onTap: () => _openService(s)))
+                                          .toList(),
+                                    ),
+                                    const SizedBox(height: 14),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 14, vertical: 10),
+                                      decoration: BoxDecoration(
+                                          color: kOrangeLight,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          border: Border.all(
+                                              color:
+                                                  kOrange.withOpacity(0.13))),
+                                      child: const Row(children: [
+                                        Text('🏍️',
+                                            style: TextStyle(fontSize: 14)),
+                                        SizedBox(width: 8),
+                                        Expanded(
+                                            child: Text.rich(TextSpan(
+                                                text:
+                                                    'All delivery services fulfilled by ',
+                                                style: TextStyle(
+                                                    fontSize: 11.5,
+                                                    color: kOrange,
+                                                    fontWeight:
+                                                        FontWeight.w600),
+                                                children: [
+                                              TextSpan(
+                                                  text: 'bike riders only',
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w800))
+                                            ]))),
+                                      ]),
+                                    ),
+                                  ]),
+                            ),
+                            Container(height: 8, color: kGray),
+                            const SizedBox(height: 20),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(0, 0, 0, 24),
+                              child: Column(children: [
+                                const Padding(
+                                    padding: EdgeInsets.fromLTRB(20, 0, 20, 14),
+                                    child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Text('🎁 Offers for you',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w800,
+                                                color: kDark)))),
+                                SizedBox(
+                                  height: 100,
+                                  child: PageView.builder(
+                                    controller: _promoPageCtrl,
+                                    onPageChanged: (i) =>
+                                        setState(() => _promoIdx = i),
+                                    itemCount: promos.length,
+                                    itemBuilder: (_, i) => Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 12),
+                                        child: PromoCard(promo: promos[i])),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(
+                                        promos.length,
+                                        (i) => GestureDetector(
+                                              onTap: () {
+                                                setState(() => _promoIdx = i);
+                                                _promoPageCtrl.animateToPage(i,
+                                                    duration: const Duration(
+                                                        milliseconds: 300),
+                                                    curve: Curves.easeInOut);
+                                              },
+                                              child: AnimatedContainer(
+                                                  duration: const Duration(
+                                                      milliseconds: 300),
+                                                  margin: const EdgeInsets
+                                                      .symmetric(horizontal: 3),
+                                                  width:
+                                                      _promoIdx == i ? 20 : 6,
+                                                  height: 6,
+                                                  decoration: BoxDecoration(
+                                                      color: _promoIdx == i
+                                                          ? kOrange
+                                                          : const Color(
+                                                              0xFFDDDDDD),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              99))),
+                                            ))),
+                              ]),
+                            ),
+                            Container(height: 8, color: kGray),
+                            const SizedBox(height: 20),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('🕓 Recent places',
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w800,
+                                            color: kDark)),
+                                    const SizedBox(height: 14),
+                                    ...recentPlaces.map((place) => _RecentPlaceTile(
+                                        place: place,
+                                        onTap: () => _openService(
+                                            _rideServices[0],
+                                            prefilledDest:
+                                                '${place.label}, ${place.sub}'))),
+                                  ]),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else if (_activeTab == 'profile')
+                SafeArea(child: _buildProfileTab())
+              else if (_activeTab == 'wallet')
+                SafeArea(child: _buildWalletTab())
+              else if (_activeTab == 'activity')
+                _RiderActivityTab(),
+
+              // Bottom Nav
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  decoration: const BoxDecoration(
+                      color: kWhite,
+                      border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 20,
+                            offset: Offset(0, -4))
+                      ]),
+                  padding: EdgeInsets.only(
+                      top: 10,
+                      bottom: MediaQuery.of(context).padding.bottom + 10),
+                  child: Row(
+                    children: [
+                      for (final tab in [
+                        ('home', '🏠', 'Home'),
+                        ('activity', '📋', 'Activity'),
+                        ('wallet', '💰', 'Wallet'),
+                        ('profile', '👤', 'Profile')
+                      ])
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _activeTab = tab.$1),
+                            child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 200),
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                          color: _activeTab == tab.$1
+                                              ? kOrangeLight
+                                              : Colors.transparent,
+                                          borderRadius:
+                                              BorderRadius.circular(14)),
+                                      child: Center(
+                                          child: Text(tab.$2,
+                                              style: const TextStyle(
+                                                  fontSize: 20)))),
+                                  const SizedBox(height: 4),
+                                  Text(tab.$3,
+                                      style: TextStyle(
+                                          fontSize: 10.5,
+                                          fontWeight: _activeTab == tab.$1
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                          color: _activeTab == tab.$1
+                                              ? kOrange
+                                              : kMuted)),
+                                ]),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Modals & Screens
+              if (_showLocationModal)
+                Positioned.fill(
+                    child: LocationModal(
+                        current: _currentLocation,
+                        onSelect: (loc) => setState(() {
+                              _currentLocation = loc;
+                              _showLocationModal = false;
+                            }),
+                        onClose: () =>
+                            setState(() => _showLocationModal = false))),
+
+              if (_seeAll != null)
+                Positioned.fill(
+                    child: SeeAllModal(
+                        title: _seeAll!.title,
+                        items: _seeAll!.items,
+                        onSelect: _openService,
+                        onClose: () => setState(() => _seeAll = null))),
+
+              if (_activeScreen != null)
+                Positioned.fill(
+                    child: WhereToScreen(
+                  service: _activeScreen!.service,
+                  prefilledDest: _activeScreen!.prefilledDest,
+                  activeTripId: _restoredTripId,
+                  onBack: () {
+                    setState(() {
+                      _activeScreen = null;
+                      _restoredTripId = null;
+                    });
+                    _checkActiveTrip();
+                  },
+                )),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RIDER ACTIVITY TAB
+// ══════════════════════════════════════════════════════════════
+class _RiderActivityTab extends StatefulWidget {
+  const _RiderActivityTab();
+
+  @override
+  State<_RiderActivityTab> createState() => _RiderActivityTabState();
+}
+
+class _RiderActivityTabState extends State<_RiderActivityTab> {
+  List<Map<String, dynamic>> _trips = [];
+  bool _loading = true;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    setState(() {
+      _loading = true;
+      _hasError = false;
+    });
+    try {
+      final res = await ApiService.getRiderHistory(limit: 50);
+      if (res['success'] == true) {
+        final data = res['data'];
+        final tripsList = (data['trips'] ?? data['results'] ?? data ?? []) as List;
+        setState(() {
+          _trips = tripsList.map((t) => Map<String, dynamic>.from(t)).toList();
+          _loading = false;
+        });
+      } else {
+        setState(() {
+          _hasError = true;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _hasError = true;
+        _loading = false;
+      });
+    }
+  }
+
+  Color _statusColor(String? status) {
+    if (status == 'completed') return const Color(0xFF2E7D32);
+    if (status == 'cancelled') return const Color(0xFFD32F2F);
+    return kMuted;
+  }
+
+  Widget _badge(String? status) {
+    final color = _statusColor(status);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8)),
+      child: Text(
+        (status ?? '').replaceAll('_', ' ').toUpperCase(),
+        style: TextStyle(
+            fontSize: 10, color: color, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+
+  Widget _tripCard(Map<String, dynamic> trip) {
+    final fare = trip['actual_fare'] ?? trip['estimated_fare'] ?? 0;
+    final dist = trip['distance_km'] ?? '';
+    final code = trip['trip_code'] ?? '';
+    final pickup = trip['pickup_address'] ?? '';
+    final drop = trip['drop_address'] ?? '';
+    final status = (trip['status'] ?? '').toString();
+    final rawDate = trip['created_at'] ?? trip['updated_at'] ?? '';
+    String dateLabel = '';
+    if (rawDate.isNotEmpty) {
+      try {
+        final dt = DateTime.parse(rawDate).toLocal();
+        dateLabel =
+            '${dt.day}/${dt.month}/${dt.year}  ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+      } catch (_) {}
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+          color: kWhite,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 3))
+          ]),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Text('#$code',
+              style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: kMuted)),
+          _badge(status),
+        ]),
+        if (dateLabel.isNotEmpty) ...[
+          const SizedBox(height: 2),
+          Text(dateLabel,
+              style: const TextStyle(fontSize: 11, color: kMuted)),
+        ],
+        const SizedBox(height: 8),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+              width: 8,
+              height: 8,
+              margin: const EdgeInsets.only(top: 4),
+              decoration: const BoxDecoration(
+                  shape: BoxShape.circle, color: Color(0xFF2E7D32))),
+          const SizedBox(width: 8),
+          Expanded(
+              child: Text(pickup,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, color: kDark))),
+        ]),
+        const SizedBox(height: 4),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+              width: 8,
+              height: 8,
+              margin: const EdgeInsets.only(top: 4),
+              decoration: BoxDecoration(
+                  color: kOrange,
+                  borderRadius: BorderRadius.circular(2))),
+          const SizedBox(width: 8),
+          Expanded(
+              child: Text(drop,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, color: kMuted))),
+        ]),
+        const SizedBox(height: 10),
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Text('₹$fare',
+              style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: kOrange)),
+          if (dist.toString().isNotEmpty)
+            Text('$dist km',
+                style: const TextStyle(fontSize: 12, color: kMuted)),
+        ]),
+      ]),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Column(children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('My Activity',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: kDark)),
+              if (!_loading)
+                GestureDetector(
+                  onTap: _loadHistory,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                        color: kOrangeLight,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.refresh_rounded,
+                        color: kOrange, size: 18),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: _loading
+              ? const Center(
+                  child: CircularProgressIndicator(color: kOrange))
+              : _hasError
+                  ? Center(
+                      child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                          const Text('Could not load trips',
+                              style: TextStyle(color: kMuted, fontSize: 15)),
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: _loadHistory,
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: kOrange,
+                                foregroundColor: kWhite),
+                            child: const Text('Retry'),
+                          )
+                        ]))
+                  : _trips.isEmpty
+                      ? const Center(
+                          child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                              Text('🚗', style: TextStyle(fontSize: 40)),
+                              SizedBox(height: 12),
+                              Text('No trips yet',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: kDark)),
+                              SizedBox(height: 4),
+                              Text('Your ride history will appear here',
+                                  style: TextStyle(
+                                      fontSize: 13, color: kMuted)),
+                            ]))
+                      : ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                          itemCount: _trips.length,
+                          itemBuilder: (_, i) => _tripCard(_trips[i]),
+                        ),
+        ),
+      ]),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RECENT PLACE TILE
+// ══════════════════════════════════════════════════════════════
+class _RecentPlaceTile extends StatefulWidget {
+  final PlaceItem place;
+  final VoidCallback onTap;
+  const _RecentPlaceTile({required this.place, required this.onTap});
+
+  @override
+  State<_RecentPlaceTile> createState() => _RecentPlaceTileState();
+}
+
+class _RecentPlaceTileState extends State<_RecentPlaceTile> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      onTapDown: (_) => setState(() => _hovered = true),
+      onTapUp: (_) => setState(() => _hovered = false),
+      onTapCancel: () => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+            color: _hovered ? kOrangeLight : kGray,
+            borderRadius: BorderRadius.circular(14)),
+        child: Row(
+          children: [
+            Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                    color: kWhite,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black.withOpacity(0.07),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2))
+                    ]),
+                child: Center(
+                    child: Text(widget.place.icon,
+                        style: const TextStyle(fontSize: 18)))),
+            const SizedBox(width: 14),
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(widget.place.label,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: kDark)),
+                  Text(widget.place.sub,
+                      style: const TextStyle(fontSize: 11.5, color: kMuted)),
+                ])),
+            const Text('›', style: TextStyle(color: kMuted, fontSize: 18)),
+          ],
+        ),
+      ),
+    );
+  }
+}

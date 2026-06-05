@@ -43,3 +43,7 @@ app.*.map.json
 *.dex
 **/android/app/build/
 **/android/.gradle/
+
+# Temporary / local-only directories
+temp_backend/
+scratch/

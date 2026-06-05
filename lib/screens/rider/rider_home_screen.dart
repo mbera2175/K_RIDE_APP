@@ -10,6 +10,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/auth_service.dart';
 import '../../services/api_service.dart';
 import '../../services/rider_socket_service.dart';
+import '../../services/place_search_service.dart';
+import '../../services/map_service.dart';
 import '../auth/role_selection_screen.dart';
 import 'package:geocoding/geocoding.dart' as geo;
 import 'package:url_launcher/url_launcher.dart';
@@ -2180,6 +2182,12 @@ class _WhereToScreenState extends State<WhereToScreen>
   MapplsMapController? _mapController;
   Symbol? _driverSymbol;
 
+  List<MapplsPlaceSuggestion> _suggestions = [];
+  bool _suggestionsLoading = false;
+  Timer? _debounceTimer;
+  final FocusNode _pickupFocus = FocusNode();
+  final FocusNode _destFocus = FocusNode();
+
   final _quickDests = const [
     PlaceItem(icon: '🏠', label: 'Home', sub: 'Sector 15, Noida'),
     PlaceItem(icon: '💼', label: 'Office', sub: 'Cyber City, Gurugram'),
@@ -2234,6 +2242,28 @@ class _WhereToScreenState extends State<WhereToScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _destCtrl = TextEditingController(text: widget.prefilledDest);
+    
+    _destCtrl.addListener(_onSearchTextChanged);
+    _pickupCtrl.addListener(_onSearchTextChanged);
+    
+    _pickupFocus.addListener(() {
+      if (!_pickupFocus.hasFocus) {
+        Future.delayed(const Duration(milliseconds: 200), () {
+          if (mounted && !_pickupFocus.hasFocus && !_destFocus.hasFocus) {
+            setState(() => _suggestions = []);
+          }
+        });
+      }
+    });
+    _destFocus.addListener(() {
+      if (!_destFocus.hasFocus) {
+        Future.delayed(const Duration(milliseconds: 200), () {
+          if (mounted && !_pickupFocus.hasFocus && !_destFocus.hasFocus) {
+            setState(() => _suggestions = []);
+          }
+        });
+      }
+    });
     final initialVehicle = widget.service.vehicleType;
     _selectedVehicleType = ['ac_cab', 'non_ac_cab', 'bike', 'auto', 'toto']
             .contains(initialVehicle)
@@ -2316,7 +2346,8 @@ class _WhereToScreenState extends State<WhereToScreen>
           });
 
           if (dLat != null && dLng != null) {
-            _updateDriverMarker(dLat, dLng);
+            _updateDriverMarkerAnimated(dLat, dLng);
+            _drawRiderTripRoute();
           }
           _searchPollTimer?.cancel();
         }
@@ -2359,7 +2390,8 @@ class _WhereToScreenState extends State<WhereToScreen>
                 }
               });
               if (dLat != null && dLng != null) {
-                _updateDriverMarker(dLat, dLng);
+                _updateDriverMarkerAnimated(dLat, dLng);
+                _drawRiderTripRoute();
               }
             }
           }
@@ -2413,10 +2445,242 @@ class _WhereToScreenState extends State<WhereToScreen>
       setState(() {
         _pickupLat = pos.latitude;
         _pickupLng = pos.longitude;
-        _pickupCtrl.text = 'Current Location';
       });
+      try {
+        final placemarks = await geo.placemarkFromCoordinates(pos.latitude, pos.longitude);
+        if (placemarks.isNotEmpty) {
+          final pm = placemarks.first;
+          final String name = pm.name ?? '';
+          final String subLocality = pm.subLocality ?? '';
+          final String locality = pm.locality ?? '';
+          final String street = pm.street ?? '';
+          
+          String address = "";
+          if (street.isNotEmpty && !street.contains("+") && !street.contains("Unnamed")) {
+            address += "$street, ";
+          } else if (name.isNotEmpty && !name.contains("+") && !name.contains("Unnamed")) {
+            address += "$name, ";
+          }
+          if (subLocality.isNotEmpty) address += "$subLocality, ";
+          if (locality.isNotEmpty) address += locality;
+          
+          if (address.isEmpty) {
+            address = pm.subAdministrativeArea ?? pm.administrativeArea ?? "Current Location";
+          }
+          
+          setState(() {
+            _pickupCtrl.text = address.trim().endsWith(",") 
+                ? address.trim().substring(0, address.trim().length - 1) 
+                : address.trim();
+          });
+        } else {
+          setState(() {
+            _pickupCtrl.text = 'Current Location';
+          });
+        }
+      } catch (_) {
+        setState(() {
+          _pickupCtrl.text = 'Current Location';
+        });
+      }
     } catch (e) {
       // Keep default if GPS fails
+    }
+  }
+
+  Timer? _driverAnimTimer;
+  double? _lastDriverLat;
+  double? _lastDriverLng;
+
+  void _onSearchTextChanged() {
+    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 400), () async {
+      if (!mounted) return;
+      String query = "";
+      if (_pickupFocus.hasFocus) {
+        query = _pickupCtrl.text.trim();
+      } else if (_destFocus.hasFocus) {
+        query = _destCtrl.text.trim();
+      }
+      
+      if (query.length >= 2) {
+        setState(() => _suggestionsLoading = true);
+        final suggestions = await MapplsPlaceService.autocomplete(
+          query,
+          nearLat: _pickupLat,
+          nearLng: _pickupLng,
+        );
+        if (mounted) {
+          setState(() {
+            _suggestions = suggestions;
+            _suggestionsLoading = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _suggestions = [];
+            _suggestionsLoading = false;
+          });
+        }
+      }
+    });
+  }
+
+  Future<void> _selectSuggestion(MapplsPlaceSuggestion suggestion) async {
+    FocusScope.of(context).unfocus();
+    
+    final isPickup = _pickupFocus.hasFocus;
+    
+    if (isPickup) {
+      _pickupCtrl.text = suggestion.placeName;
+      if (suggestion.latitude != null && suggestion.longitude != null) {
+        _pickupLat = suggestion.latitude!;
+        _pickupLng = suggestion.longitude!;
+      } else {
+        setState(() => _fareLoading = true);
+        final details = await MapplsPlaceService.placeDetail(suggestion.eLoc);
+        if (details != null && details.latitude != null) {
+          _pickupLat = details.latitude!;
+          _pickupLng = details.longitude!;
+        }
+        setState(() => _fareLoading = false);
+      }
+    } else {
+      _destCtrl.text = suggestion.placeName;
+      if (suggestion.latitude != null && suggestion.longitude != null) {
+        _dropLat = suggestion.latitude!;
+        _dropLng = suggestion.longitude!;
+      } else {
+        setState(() => _fareLoading = true);
+        final details = await MapplsPlaceService.placeDetail(suggestion.eLoc);
+        if (details != null && details.latitude != null) {
+          _dropLat = details.latitude!;
+          _dropLng = details.longitude!;
+        }
+        setState(() => _fareLoading = false);
+      }
+    }
+    
+    setState(() {
+      _suggestions = [];
+    });
+    
+    if (_destCtrl.text.isNotEmpty && _pickupCtrl.text.isNotEmpty) {
+      await _loadFare();
+      setState(() => _step = 'confirm');
+    }
+  }
+
+  Future<void> _updateDriverMarkerAnimated(double newLat, double newLng) async {
+    if (_mapController == null) return;
+    
+    final prevLat = _lastDriverLat ?? _driverLat ?? newLat;
+    final prevLng = _lastDriverLng ?? _driverLng ?? newLng;
+    
+    _lastDriverLat = newLat;
+    _lastDriverLng = newLng;
+    
+    final distance = Geolocator.distanceBetween(prevLat, prevLng, newLat, newLng);
+    if (distance == 0 || distance > 2000) {
+      await _updateDriverSymbol(newLat, newLng);
+      return;
+    }
+    
+    int step = 0;
+    const int totalSteps = 40;
+    _driverAnimTimer?.cancel();
+    _driverAnimTimer = Timer.periodic(const Duration(milliseconds: 50), (timer) async {
+      if (!mounted || _mapController == null) {
+        timer.cancel();
+        return;
+      }
+      step++;
+      final double fraction = step / totalSteps;
+      final double lat = prevLat + (newLat - prevLat) * fraction;
+      final double lng = prevLng + (newLng - prevLng) * fraction;
+      
+      await _updateDriverSymbol(lat, lng);
+      
+      if (step >= totalSteps) {
+        timer.cancel();
+      }
+    });
+  }
+
+  Future<void> _updateDriverSymbol(double lat, double lng) async {
+    try {
+      if (_driverSymbol != null) {
+        await _mapController!.updateSymbol(_driverSymbol!, SymbolOptions(
+          geometry: LatLng(lat, lng),
+        ));
+      } else {
+        _driverSymbol = await _mapController!.addSymbol(SymbolOptions(
+          geometry: LatLng(lat, lng),
+          iconImage: 'car-15',
+          iconSize: 2.0,
+          iconColor: '#FF6B00',
+          textField: 'Driver',
+          textOffset: const Offset(0, -1.5),
+          textColor: '#FF6B00',
+          textSize: 12.0,
+        ));
+      }
+    } catch (_) {
+      try {
+        _driverSymbol = await _mapController!.addSymbol(SymbolOptions(
+          geometry: LatLng(lat, lng),
+          iconImage: 'car-15',
+          iconSize: 2.0,
+          iconColor: '#FF6B00',
+          textField: 'Driver',
+          textOffset: const Offset(0, -1.5),
+          textColor: '#FF6B00',
+          textSize: 12.0,
+        ));
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _drawRiderTripRoute() async {
+    if (_mapController == null) return;
+    
+    LatLng? source;
+    LatLng? destination;
+    
+    final status = _normalizeTripStatus(_tripStatus);
+    
+    if (status == 'accepted' || status == 'driver_assigned' || status == 'arrived') {
+      if (_driverLat != null && _driverLng != null) {
+        source = LatLng(_driverLat!, _driverLng!);
+        destination = LatLng(_pickupLat, _pickupLng);
+      } else {
+        source = LatLng(_pickupLat, _pickupLng);
+        destination = LatLng(_dropLat, _dropLng);
+      }
+    } else if (status == 'started') {
+      if (_driverLat != null && _driverLng != null) {
+        source = LatLng(_driverLat!, _driverLng!);
+      } else {
+        source = LatLng(_pickupLat, _pickupLng);
+      }
+      destination = LatLng(_dropLat, _dropLng);
+    } else {
+      source = LatLng(_pickupLat, _pickupLng);
+      destination = LatLng(_dropLat, _dropLng);
+    }
+    
+    if (source != null && destination != null) {
+      final points = await MapService.getRoute(source, destination);
+      if (points.isNotEmpty && mounted) {
+        _mapController!.clearLines();
+        await _mapController!.addLine(LineOptions(
+          geometry: points,
+          lineColor: status == 'started' ? "#00C853" : "#FF6B00",
+          lineWidth: 5.0,
+          lineOpacity: 0.8,
+        ));
+      }
     }
   }
 
@@ -2590,7 +2854,8 @@ class _WhereToScreenState extends State<WhereToScreen>
             _startTrackingPolling();
 
             if (dLat != null && dLng != null) {
-              _updateDriverMarker(dLat, dLng);
+              _updateDriverMarkerAnimated(dLat, dLng);
+              _drawRiderTripRoute();
             }
           } else {
             setState(() {
@@ -2666,7 +2931,8 @@ class _WhereToScreenState extends State<WhereToScreen>
             _driverLat = lat;
             _driverLng = lng;
           });
-          _updateDriverMarker(lat, lng);
+          _updateDriverMarkerAnimated(lat, lng);
+          _drawRiderTripRoute();
         }
       } else if (type == "driver_arrived") {
         setState(() {
@@ -2723,6 +2989,10 @@ class _WhereToScreenState extends State<WhereToScreen>
     WidgetsBinding.instance.removeObserver(this);
     _pickupCtrl.dispose();
     _destCtrl.dispose();
+    _pickupFocus.dispose();
+    _destFocus.dispose();
+    _debounceTimer?.cancel();
+    _driverAnimTimer?.cancel();
     super.dispose();
   }
 
@@ -3070,6 +3340,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                       Expanded(
                           child: TextField(
                               controller: _pickupCtrl,
+                              focusNode: _pickupFocus,
                               decoration: const InputDecoration(
                                   border: InputBorder.none,
                                   hintText: 'Pickup location'),
@@ -3100,6 +3371,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                         Expanded(
                           child: TextField(
                             controller: _destCtrl,
+                            focusNode: _destFocus,
                             autofocus: true,
                             onChanged: (_) => ss(() {}),
                             decoration: InputDecoration(
@@ -3127,76 +3399,119 @@ class _WhereToScreenState extends State<WhereToScreen>
             ),
           ),
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              children: [
-                const Text('SAVED PLACES',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: kMuted,
-                        letterSpacing: 0.5)),
-                const SizedBox(height: 10),
-                ..._quickDests.map((d) {
-                  final full = '${d.label}, ${d.sub}';
-                  return StatefulBuilder(
-                    builder: (_, ss) => GestureDetector(
-                      onTap: () {
-                        setState(() => _destCtrl.text = full);
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 6),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 12),
-                        decoration: BoxDecoration(
-                            color: _destCtrl.text.startsWith(d.label)
-                                ? kOrangeLight
-                                : kGray,
-                            borderRadius: BorderRadius.circular(14)),
-                        child: Row(
-                          children: [
-                            Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                    color: kWhite,
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                          color: Colors.black.withOpacity(0.07),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2))
-                                    ]),
-                                child: Center(
-                                    child: Text(d.icon,
-                                        style: const TextStyle(fontSize: 18)))),
-                            const SizedBox(width: 14),
-                            Expanded(
-                                child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+            child: _suggestionsLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: kOrange),
+                  )
+                : _suggestions.isNotEmpty
+                    ? ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                        itemCount: _suggestions.length,
+                        itemBuilder: (context, index) {
+                          final suggestion = _suggestions[index];
+                          return ListTile(
+                            leading: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: kGray,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.location_on_rounded,
+                                color: kOrange,
+                                size: 20,
+                              ),
+                            ),
+                            title: Text(
+                              suggestion.placeName,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: kDark,
+                              ),
+                            ),
+                            subtitle: Text(
+                              suggestion.placeAddress,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: kMuted,
+                              ),
+                            ),
+                            onTap: () => _selectSuggestion(suggestion),
+                          );
+                        },
+                      )
+                    : ListView(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                        children: [
+                          const Text('SAVED PLACES',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: kMuted,
+                                  letterSpacing: 0.5)),
+                          const SizedBox(height: 10),
+                          ..._quickDests.map((d) {
+                            final full = '${d.label}, ${d.sub}';
+                            return StatefulBuilder(
+                              builder: (_, ss) => GestureDetector(
+                                onTap: () {
+                                  setState(() => _destCtrl.text = full);
+                                },
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 12),
+                                  decoration: BoxDecoration(
+                                      color: _destCtrl.text.startsWith(d.label)
+                                          ? kOrangeLight
+                                          : kGray,
+                                      borderRadius: BorderRadius.circular(14)),
+                                  child: Row(
                                     children: [
-                                  Text(d.label,
-                                      style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w700,
-                                          color: kDark)),
-                                  Text(d.sub,
-                                      style: const TextStyle(
-                                          fontSize: 11.5, color: kMuted)),
-                                ])),
-                            if (_destCtrl.text.startsWith(d.label))
-                              const Text('✓',
-                                  style:
-                                      TextStyle(color: kOrange, fontSize: 16)),
-                          ],
-                        ),
+                                      Container(
+                                          width: 40,
+                                          height: 40,
+                                          decoration: BoxDecoration(
+                                              color: kWhite,
+                                              borderRadius: BorderRadius.circular(12),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                    color: Colors.black.withOpacity(0.07),
+                                                    blurRadius: 8,
+                                                    offset: const Offset(0, 2))
+                                              ]),
+                                          child: Center(
+                                              child: Text(d.icon,
+                                                  style: const TextStyle(fontSize: 18)))),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                          child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                            Text(d.label,
+                                                style: const TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: kDark)),
+                                            Text(d.sub,
+                                                style: const TextStyle(
+                                                    fontSize: 11.5, color: kMuted)),
+                                          ])),
+                                      if (_destCtrl.text.startsWith(d.label))
+                                        const Text('✓',
+                                            style:
+                                                TextStyle(color: kOrange, fontSize: 16)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ],
                       ),
-                    ),
-                  );
-                }),
-              ],
-            ),
           ),
           Container(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 36),
@@ -3257,24 +3572,28 @@ class _WhereToScreenState extends State<WhereToScreen>
                         zoom: 13,
                       ),
                       onMapCreated: (MapplsMapController controller) async {
-                        await controller.addSymbol(SymbolOptions(
-                          geometry: LatLng(_pickupLat, _pickupLng),
-                          iconImage: 'marker-15',
-                          iconSize: 2.0,
-                          iconColor: '#FF6B00',
-                          textField: 'Pickup',
-                          textOffset: const Offset(0, 1.5),
-                          textColor: '#FF6B00',
-                        ));
-                        await controller.addSymbol(SymbolOptions(
-                          geometry: LatLng(_dropLat, _dropLng),
-                          iconImage: 'marker-15',
-                          iconSize: 2.0,
-                          iconColor: '#1A1A1A',
-                          textField: 'Drop',
-                          textOffset: const Offset(0, 1.5),
-                          textColor: '#1A1A1A',
-                        ));
+                        _mapController = controller;
+                        try {
+                          await controller.addSymbol(SymbolOptions(
+                            geometry: LatLng(_pickupLat, _pickupLng),
+                            iconImage: 'marker-15',
+                            iconSize: 2.0,
+                            iconColor: '#FF6B00',
+                            textField: 'Pickup',
+                            textOffset: const Offset(0, 1.5),
+                            textColor: '#FF6B00',
+                          ));
+                          await controller.addSymbol(SymbolOptions(
+                            geometry: LatLng(_dropLat, _dropLng),
+                            iconImage: 'marker-15',
+                            iconSize: 2.0,
+                            iconColor: '#1A1A1A',
+                            textField: 'Drop',
+                            textOffset: const Offset(0, 1.5),
+                            textColor: '#1A1A1A',
+                          ));
+                          await _drawRiderTripRoute();
+                        } catch (_) {}
                       },
                       myLocationEnabled: true,
                     ),
@@ -3726,8 +4045,9 @@ class _WhereToScreenState extends State<WhereToScreen>
                     textColor: '#1A1A1A',
                   ));
                   if (_driverLat != null && _driverLng != null) {
-                    await _updateDriverMarker(_driverLat!, _driverLng!);
+                    await _updateDriverMarkerAnimated(_driverLat!, _driverLng!);
                   }
+                  await _drawRiderTripRoute();
                 } catch (e) {
                   debugPrint('Map symbols creation error: $e');
                 }

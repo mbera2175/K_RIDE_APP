@@ -1011,12 +1011,14 @@ class ActiveTripPanel extends StatelessWidget {
   final Function(String) onAction;
   final VoidCallback onCall;
   final VoidCallback onChat;
+  final Function(double, double) onNavigate;
   const ActiveTripPanel(
       {super.key,
       required this.trip,
       required this.onAction,
       required this.onCall,
-      required this.onChat});
+      required this.onChat,
+      required this.onNavigate});
 
   static const _steps = [
     ('accepted', 'Head to Pickup', 'arrived', "I've Arrived", kInfo, '🚗'),
@@ -1175,6 +1177,26 @@ class ActiveTripPanel extends StatelessWidget {
                   ),
                   Row(
                     children: [
+                      _CircleBtn(
+                          icon: '🧭',
+                          bg: kOrange.withOpacity(0.15),
+                          border: kOrange.withOpacity(0.27),
+                          onTap: () {
+                            final status = _normalizeTripStatus(trip.status);
+                            double? lat;
+                            double? lng;
+                            if (status == 'started') {
+                              lat = trip.dropLat;
+                              lng = trip.dropLng;
+                            } else {
+                              lat = trip.pickupLat;
+                              lng = trip.pickupLng;
+                            }
+                            if (lat != null && lng != null) {
+                              onNavigate(lat, lng);
+                            }
+                          }),
+                      const SizedBox(width: 8),
                       _CircleBtn(
                           icon: '📞',
                           bg: kSuccess.withOpacity(0.15),
@@ -2418,8 +2440,18 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       ).listen((pos) async {
         _currentLat = pos.latitude;
         _currentLng = pos.longitude;
-        if (_isOnline)
+        if (mounted) {
+          setState(() {});
+        }
+        if (_mapController != null) {
+          _mapController!.animateCamera(CameraUpdate.newLatLng(LatLng(_currentLat, _currentLng)));
+        }
+        if (_isOnline) {
           await ApiService.updateLocation(_currentLat, _currentLng);
+        }
+        if (_activeTrip != null) {
+          _drawTripRoute();
+        }
       });
     } catch (_) {}
   }
@@ -2614,6 +2646,28 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _openNavigation(double lat, double lng) async {
+    final googleMapsUrl = Uri.parse("google.navigation:q=$lat,$lng&mode=d");
+    final appleMapsUrl = Uri.parse("http://maps.apple.com/?daddr=$lat,$lng");
+    
+    try {
+      if (await canLaunchUrl(googleMapsUrl)) {
+        await launchUrl(googleMapsUrl);
+      } else if (await canLaunchUrl(appleMapsUrl)) {
+        await launchUrl(appleMapsUrl);
+      } else {
+        final webUrl = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving");
+        if (await canLaunchUrl(webUrl)) {
+          await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+        } else {
+          _showSnack('Could not open maps application', isError: true);
+        }
+      }
+    } catch (e) {
+      _showSnack('Error launching navigation: $e', isError: true);
+    }
   }
 
   Future<String?> _askTripOtp() async {
@@ -3409,6 +3463,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             onAction: _handleTripAction,
             onCall: _callRider,
             onChat: _openRiderChat,
+            onNavigate: _openNavigation,
           ),
         if (_incomingTrip != null && _activeTrip == null)
           Positioned.fill(

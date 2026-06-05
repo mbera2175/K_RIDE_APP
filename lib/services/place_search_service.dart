@@ -10,6 +10,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import '../utils/constants.dart';
 
 // ── Model ────────────────────────────────────────────────────
 class MapplsPlaceSuggestion {
@@ -38,10 +39,8 @@ class MapplsPlaceSuggestion {
 // ── Service ──────────────────────────────────────────────────
 class MapplsPlaceService {
   // ── Credentials (same as AndroidManifest / main.dart) ────
-  static const _clientId =
-      '96dHZVzsAutf7JmkOzGCFwHsVMopiBc3omOm6Nz9I61Oj27HCVNsH44gi4vQBl9ZxAk3l9rrauxdqOYwUmUkOlCz7RrIFlKN';
-  static const _clientSecret =
-      'lrFxI-iSEg8FAEuoX9z0UYKFbEDDr2gtxSFnMaxGyAmNBp8A__5GQ8yGbmpIL3g5qYPFCzw-0wb_u9xpbjl1i8lZ49AasxwH3PCiRF2PpuY=';
+  static const _clientId = AppConstants.mapplsAtlasClientId;
+  static const _clientSecret = AppConstants.mapplsAtlasClientSecret;
 
   // ── Token cache ──────────────────────────────────────────
   static String? _accessToken;

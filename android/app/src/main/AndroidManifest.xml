@@ -50,16 +50,16 @@
         <!-- ── Mappls Map Credentials ── -->
         <meta-data
             android:name="com.mappls.sdk.REST_API_KEY"
-            android:value="c59951af1ef53a9e6cc8fb8a7080d5d8" />
+            android:value="${MAPPLS_REST_API_KEY}" />
         <meta-data
             android:name="com.mappls.sdk.MAP_SDK_KEY"
-            android:value="c59951af1ef53a9e6cc8fb8a7080d5d8" />
+            android:value="${MAPPLS_MAP_SDK_KEY}" />
         <meta-data
             android:name="com.mappls.sdk.ATLAS_CLIENT_ID"
-            android:value="96dHZVzsAutf7JmkOzGCFwHsVMopiBc3omOm6Nz9I61Oj27HCVNsH44gi4vQBl9ZxAk3l9rrauxdqOYwUmUkOlCz7RrIFlKN" />
+            android:value="${MAPPLS_ATLAS_CLIENT_ID}" />
         <meta-data
             android:name="com.mappls.sdk.ATLAS_CLIENT_SECRET"
-            android:value="lrFxI-iSEg8FAEuoX9z0UYKFbEDDr2gtxSFnMaxGyAmNBp8A__5GQ8yGbmpIL3g5qYPFCzw-0wb_u9xpbjl1i8lZ49AasxwH3PCiRF2PpuY=" />
+            android:value="${MAPPLS_ATLAS_CLIENT_SECRET}" />
         
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"

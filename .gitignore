@@ -35,3 +35,11 @@ app.*.symbols
 
 # Obfuscation related
 app.*.map.json
+
+# Gradle and Android build outputs
+.gradle/
+*.apk
+*.ap_
+*.dex
+**/android/app/build/
+**/android/.gradle/

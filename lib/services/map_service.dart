@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:mappls_gl/mappls_gl.dart';
+import '../utils/constants.dart';
 
 class MapService {
-  static const String _restApiKey = "c59951af1ef53a9e6cc8fb8a7080d5d8";
+  static const String _restApiKey = AppConstants.mapplsRestAPIKey;
 
   /// Fetches route between source and destination and returns a list of points
   static Future<List<LatLng>> getRoute(LatLng source, LatLng destination) async {

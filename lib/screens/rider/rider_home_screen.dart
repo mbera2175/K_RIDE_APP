@@ -6851,7 +6851,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                       style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
                   label: const Icon(Icons.arrow_forward_rounded, size: 16, color: Colors.white),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: kOrange,
+                    backgroundColor: kGreenText,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24),
@@ -7000,34 +7000,28 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                           case 'wallet':
                             return 2;
                           case 'profile':
-                            return 4;
+                            return 3;
                           default:
                             return 0;
                         }
                       })(),
                       onTap: (index) {
-                        if (index == 3) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Messages feature coming soon!')),
-                          );
-                        } else {
-                          setState(() {
-                            switch (index) {
-                              case 0:
-                                _activeTab = 'home';
-                                break;
-                              case 1:
-                                _activeTab = 'activity';
-                                break;
-                              case 2:
-                                _activeTab = 'wallet';
-                                break;
-                              case 4:
-                                _activeTab = 'profile';
-                                break;
-                            }
-                          });
-                        }
+                        setState(() {
+                          switch (index) {
+                            case 0:
+                              _activeTab = 'home';
+                              break;
+                            case 1:
+                              _activeTab = 'activity';
+                              break;
+                            case 2:
+                              _activeTab = 'wallet';
+                              break;
+                            case 3:
+                              _activeTab = 'profile';
+                              break;
+                          }
+                        });
                       },
                     ),
                   ),
@@ -7432,11 +7426,10 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = [
+    final items = const [
       _NavItem(icon: Icons.home_rounded, label: 'Home'),
       _NavItem(icon: Icons.directions_car_rounded, label: 'Rides'),
       _NavItem(icon: Icons.account_balance_wallet_outlined, label: 'Wallet'),
-      _NavItem(icon: Icons.chat_bubble_outline_rounded, label: 'Messages'),
       _NavItem(icon: Icons.person_outline_rounded, label: 'Profile'),
     ];
 

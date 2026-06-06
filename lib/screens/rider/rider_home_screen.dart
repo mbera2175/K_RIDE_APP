@@ -24,6 +24,14 @@ const kWhite = Color(0xFFFFFFFF);
 const kGray = Color(0xFFF6F6F6);
 const kDark = Color(0xFF1A1A1A);
 const kMuted = Color(0xFF9E9E9E);
+const kOrangeBg = Color(0xFFFFF0E6);
+const kGreenBg = Color(0xFFF0F7EE);
+const kPinkBg = Color(0xFFFFF0F0);
+const kEvBg = Color(0xFFF2FAF2);
+const kGreenText = Color(0xFF2E7D32);
+const kGreenArrow = Color(0xFF4CAF50);
+const kPinkArrow = Color(0xFFFF8A80);
+const kBorder = Color(0xFFEEEEEE);
 
 // ── Data models ──
 class ServiceItem {
@@ -6292,6 +6300,606 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     );
   }
 
+  Widget _buildNewTopBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          GestureDetector(
+            onTap: () {
+              setState(() => _activeTab = 'profile');
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _menuLine(width: 22),
+                const SizedBox(height: 5),
+                _menuLine(width: 16),
+              ],
+            ),
+          ),
+          Row(
+            children: [
+              _buildNotificationBell(),
+              const SizedBox(width: 12),
+              _buildUserAvatar(),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _menuLine({required double width}) => Container(
+        width: width,
+        height: 2.5,
+        decoration: BoxDecoration(
+          color: Colors.black87,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      );
+
+  Widget _buildNotificationBell() {
+    return GestureDetector(
+      onTap: _showNotificationsBottomSheet,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          const Icon(Icons.notifications_outlined, size: 28, color: Colors.black87),
+          Positioned(
+            top: 1,
+            right: 1,
+            child: Container(
+              width: 9,
+              height: 9,
+              decoration: const BoxDecoration(
+                color: kOrange,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserAvatar() {
+    return GestureDetector(
+      onTap: () => setState(() => _activeTab = 'profile'),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: kOrange.withValues(alpha: 0.3), width: 2),
+          color: const Color(0xFFFFD9B0),
+        ),
+        child: ClipOval(
+          child: AuthService.profilePic.isNotEmpty
+              ? (AuthService.profilePic.startsWith('http')
+                  ? Image.network(
+                      AuthService.profilePic,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 26, color: Color(0xFFBF6020)),
+                    )
+                  : Image.file(
+                      File(AuthService.profilePic),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 26, color: Color(0xFFBF6020)),
+                    ))
+              : const Icon(Icons.person, size: 26, color: Color(0xFFBF6020)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNewHeroBanner() {
+    return SizedBox(
+      height: 150,
+      child: Stack(
+        children: [
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: MediaQuery.of(context).size.width * 0.55,
+            child: CustomPaint(painter: _SkylinePainter()),
+          ),
+          Positioned(
+            right: 16,
+            bottom: 8,
+            child: _buildCarIllustration(),
+          ),
+          Positioned(
+            right: 20,
+            top: 8,
+            child: const Icon(Icons.location_on_rounded, color: kOrange, size: 52),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 0, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      '$_greeting, ',
+                      style: const TextStyle(fontSize: 15, color: Colors.black54),
+                    ),
+                    const Text('👋', style: TextStyle(fontSize: 15)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Where to today?',
+                  style: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black87,
+                    height: 1.2,
+                    fontFamily: 'Sora',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCarIllustration() {
+    return Container(
+      width: 140,
+      height: 70,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Text(
+        '🚗',
+        style: TextStyle(fontSize: 56),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget _buildNewLocationCard() {
+    return GestureDetector(
+      onTap: () => _openService(_rideServices[0]),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.09),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 13,
+                  height: 13,
+                  decoration: const BoxDecoration(
+                    color: kOrange,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Current location',
+                    style: TextStyle(fontSize: 14.5, color: Colors.black87, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                const Icon(Icons.my_location_rounded, color: kOrange, size: 19),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 6),
+              child: Row(
+                children: [
+                  Column(
+                    children: List.generate(
+                      3,
+                      (i) => Container(
+                        width: 2,
+                        height: 3,
+                        margin: const EdgeInsets.symmetric(vertical: 1.5),
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(child: Divider(color: Colors.grey.shade200, height: 18)),
+                ],
+              ),
+            ),
+            Row(
+              children: [
+                Container(
+                  width: 13,
+                  height: 13,
+                  decoration: BoxDecoration(
+                    color: kOrange,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Where to?',
+                    style: TextStyle(fontSize: 14.5, color: Colors.black38),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNewRideCategoryRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildRideCategoryCard(
+              label: 'Car & Bike',
+              bgColor: kOrangeBg,
+              arrowColor: kOrange,
+              vehicleEmojis: '🚗  🏍️',
+              onTap: () {
+                final items = _rideServices.where((s) => [1, 2, 3].contains(s.id)).toList();
+                setState(() => _seeAll = (title: 'Car & Bike', items: items));
+              },
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _buildRideCategoryCard(
+              label: 'Auto & Toto',
+              bgColor: kGreenBg,
+              arrowColor: kGreenArrow,
+              vehicleEmojis: '🛺  🛺',
+              onTap: () {
+                final items = _rideServices.where((s) => [4, 5].contains(s.id)).toList();
+                setState(() => _seeAll = (title: 'Auto & Toto', items: items));
+              },
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _buildRideCategoryCard(
+              label: 'Ambulance',
+              bgColor: kPinkBg,
+              arrowColor: kPinkArrow,
+              vehicleEmojis: '🚑',
+              onTap: () {
+                final service = services.firstWhere((s) => s.id == 6);
+                _openService(service);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRideCategoryCard({
+    required String label,
+    required Color bgColor,
+    required Color arrowColor,
+    required String vehicleEmojis,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 135,
+        padding: const EdgeInsets.fromLTRB(10, 12, 10, 10),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Center(
+              child: Text(
+                vehicleEmojis,
+                style: const TextStyle(fontSize: 26),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                Container(
+                  width: 26,
+                  height: 26,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.arrow_forward_rounded, size: 14, color: arrowColor),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNewServicesRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(child: _buildServiceCard(emoji: '📦', label: 'Parcel', onTap: () => _openService(services.firstWhere((s) => s.id == 8)))),
+          const SizedBox(width: 10),
+          Expanded(child: _buildServiceCard(emoji: '💊', label: 'Medicine', onTap: () => _openService(services.firstWhere((s) => s.id == 9)))),
+          const SizedBox(width: 10),
+          Expanded(child: _buildServiceCard(emoji: '🍔', label: 'Food', onTap: () => _openService(services.firstWhere((s) => s.id == 7)))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServiceCard({required String emoji, required String label, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: kBorder),
+        ),
+        child: Row(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 26)),
+            const SizedBox(width: 7),
+            Flexible(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNewOtherOptionsRow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildOtherOptionCard(
+              icon: Icons.calendar_month_outlined,
+              badgeIcon: Icons.access_time_rounded,
+              label: 'Schedule\nRide',
+              iconColor: kOrange,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Schedule Ride feature coming soon!')),
+                );
+              },
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _buildOtherOptionCard(
+              icon: Icons.route_rounded,
+              label: 'Intercity',
+              iconColor: kOrange,
+              useLocationPin: true,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Intercity rides coming soon!')),
+                );
+              },
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _buildOtherOptionCard(
+              icon: Icons.business_outlined,
+              label: 'Corporate',
+              iconColor: Colors.grey,
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Corporate profile feature coming soon!')),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOtherOptionCard({
+    required IconData icon,
+    IconData? badgeIcon,
+    required String label,
+    required Color iconColor,
+    bool useLocationPin = false,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: kBorder),
+        ),
+        child: Column(
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(icon, color: iconColor, size: 32),
+                if (badgeIcon != null)
+                  Positioned(
+                    bottom: -2,
+                    right: -6,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: const BoxDecoration(
+                        color: kOrange,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(badgeIcon, size: 10, color: Colors.white),
+                    ),
+                  ),
+                if (useLocationPin)
+                  Positioned(
+                    top: -2,
+                    right: -4,
+                    child: const Icon(Icons.location_on, color: kOrange, size: 14),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+                height: 1.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNewEVBanner() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: kEvBg,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: const [
+                    Flexible(
+                      child: Text(
+                        'Dedicated EV Section',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: kGreenText,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(Icons.bolt_rounded, color: kGreenText, size: 18),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'One step closer to\na better world 🌿',
+                  style: TextStyle(fontSize: 12.5, color: Colors.black54, height: 1.4),
+                ),
+                const SizedBox(height: 14),
+                ElevatedButton.icon(
+                  onPressed: () => _openService(services.firstWhere((s) => s.id == 10)),
+                  icon: const Text('Explore EV',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+                  label: const Icon(Icons.arrow_forward_rounded, size: 16, color: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kOrange,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 90,
+                    height: 90,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFDCF0DC),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const Positioned.fill(
+                    child: Center(
+                      child: Text('🚗⚡', style: TextStyle(fontSize: 30)),
+                    ),
+                  ),
+                  const Positioned(
+                    top: -4,
+                    right: -4,
+                    child: Text('🍃', style: TextStyle(fontSize: 14)),
+                  ),
+                  const Positioned(
+                    top: 4,
+                    right: -14,
+                    child: Text('🍃', style: TextStyle(fontSize: 10)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -6311,498 +6919,50 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
             children: [
               if (_activeTab == 'home')
                 SafeArea(
-                  child: Column(
-                    children: [
-                      Container(
-                        color: kWhite,
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text('$_greeting 👋',
-                                          style: const TextStyle(
-                                              fontSize: 13,
-                                              color: kMuted,
-                                              fontWeight: FontWeight.w500)),
-                                      RichText(
-                                          text: TextSpan(
-                                        text:
-                                            '${AuthService.name.split(' ').first} ',
-                                        style: const TextStyle(
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.w800,
-                                            color: kDark,
-                                            fontFamily: 'Sora'),
-                                        children: [
-                                          TextSpan(
-                                              text: AuthService.name
-                                                          .split(' ')
-                                                          .length >
-                                                      1
-                                                  ? AuthService.name
-                                                      .split(' ')
-                                                      .sublist(1)
-                                                      .join(' ')
-                                                  : '',
-                                              style: const TextStyle(
-                                                  color: kOrange))
-                                        ],
-                                      )),
-                                    ]),
-                                Row(children: [
-                                  GestureDetector(
-                                    onTap: _showNotificationsBottomSheet,
-                                    child: Stack(children: [
-                                      Container(
-                                          width: 42,
-                                          height: 42,
-                                          decoration: BoxDecoration(
-                                              color: kGray,
-                                              borderRadius:
-                                                  BorderRadius.circular(14)),
-                                          child: const Center(
-                                              child: Text('🔔',
-                                                  style: TextStyle(
-                                                      fontSize: 18)))),
-                                      Positioned(
-                                          top: 8,
-                                          right: 9,
-                                          child: Container(
-                                              width: 8,
-                                              height: 8,
-                                              decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: kOrange,
-                                                  border: Border.all(
-                                                      color: kWhite,
-                                                      width: 2)))),
-                                    ]),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  GestureDetector(
-                                    onTap: () =>
-                                        setState(() => _activeTab = 'profile'),
-                                    child: Container(
-                                      width: 42,
-                                      height: 42,
-                                      decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(14),
-                                          gradient: const LinearGradient(
-                                              colors: [kOrange, kOrangeDark],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight)),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(14),
-                                        child: AuthService.profilePic.isNotEmpty
-                                            ? (AuthService.profilePic
-                                                    .startsWith('http')
-                                                ? Image.network(
-                                                    AuthService.profilePic,
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder: (_, __, ___) => Center(
-                                                        child: Text(
-                                                            AuthService.name
-                                                                    .isNotEmpty
-                                                                ? AuthService
-                                                                    .name[0]
-                                                                    .toUpperCase()
-                                                                : 'U',
-                                                            style: const TextStyle(
-                                                                color: kWhite,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w800,
-                                                                fontSize: 16))),
-                                                  )
-                                                : Image.file(
-                                                    File(
-                                                        AuthService.profilePic),
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder: (_, __, ___) => Center(
-                                                        child: Text(
-                                                            AuthService.name
-                                                                    .isNotEmpty
-                                                                ? AuthService
-                                                                    .name[0]
-                                                                    .toUpperCase()
-                                                                : 'U',
-                                                            style: const TextStyle(
-                                                                color: kWhite,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w800,
-                                                                fontSize: 16))),
-                                                  ))
-                                            : Center(
-                                                child: Text(
-                                                    AuthService.name.isNotEmpty
-                                                        ? AuthService.name[0]
-                                                            .toUpperCase()
-                                                        : 'U',
-                                                    style: const TextStyle(
-                                                        color: kWhite,
-                                                        fontWeight:
-                                                            FontWeight.w800,
-                                                        fontSize: 16))),
-                                      ),
-                                    ),
-                                  ),
-                                ]),
-                              ],
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildNewTopBar(),
+                        _buildNewHeroBanner(),
+                        const SizedBox(height: 14),
+                        _buildNewLocationCard(),
+                        const SizedBox(height: 18),
+                        _buildNewRideCategoryRow(),
+                        const SizedBox(height: 22),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'Our Services',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.black87,
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        child: ListView(
-                          padding: const EdgeInsets.only(bottom: 80),
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                              child: GestureDetector(
-                                onTap: () => _openService(_rideServices[0]),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 14),
-                                  decoration: BoxDecoration(
-                                      color: kGray,
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: const [
-                                        BoxShadow(
-                                            color: Colors.black12,
-                                            blurRadius: 12,
-                                            offset: Offset(0, 2))
-                                      ]),
-                                  child: const Row(children: [
-                                    Text('🔍', style: TextStyle(fontSize: 18)),
-                                    SizedBox(width: 12),
-                                    Text('Where do you want to go?',
-                                        style: TextStyle(
-                                            fontSize: 14,
-                                            color: kMuted,
-                                            fontWeight: FontWeight.w500)),
-                                  ]),
-                                ),
-                              ),
+                        const SizedBox(height: 12),
+                        _buildNewServicesRow(),
+                        const SizedBox(height: 22),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'Other Options',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.black87,
                             ),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          const Text('🚗 Ride',
-                                              style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: kDark)),
-                                          GestureDetector(
-                                              onTap: () => setState(() =>
-                                                  _seeAll = (
-                                                    title: 'Ride',
-                                                    items: _rideServices
-                                                  )),
-                                              child: const Text('See all →',
-                                                  style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: kOrange,
-                                                      fontWeight:
-                                                          FontWeight.w600))),
-                                        ]),
-                                    const SizedBox(height: 16),
-                                    // ── EV Ride Banner Block ──
-                                    GestureDetector(
-                                      onTap: () => _openService(_evRide),
-                                      child: Container(
-                                        width: double.infinity,
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 16, vertical: 16),
-                                        margin:
-                                            const EdgeInsets.only(bottom: 16),
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              Color(0xFFE8F5E9),
-                                              Color(0xFFC8E6C9)
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                          border: Border.all(
-                                              color: const Color(0xFF81C784)
-                                                  .withOpacity(0.5),
-                                              width: 1.5),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: const Color(0xFF2E7D32)
-                                                  .withOpacity(0.08),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 4),
-                                            )
-                                          ],
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              width: 48,
-                                              height: 48,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color:
-                                                        const Color(0xFF2E7D32)
-                                                            .withOpacity(0.1),
-                                                    blurRadius: 6,
-                                                    offset: const Offset(0, 2),
-                                                  )
-                                                ],
-                                              ),
-                                              child: const Center(
-                                                child: Text('⚡',
-                                                    style: TextStyle(
-                                                        fontSize: 24)),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 14),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Row(
-                                                    children: [
-                                                      const Text(
-                                                        'EV Ride',
-                                                        style: TextStyle(
-                                                          fontSize: 15,
-                                                          fontWeight:
-                                                              FontWeight.w800,
-                                                          color:
-                                                              Color(0xFF1B5E20),
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 8),
-                                                      Container(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .symmetric(
-                                                                horizontal: 6,
-                                                                vertical: 2),
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color: const Color(
-                                                              0xFF2E7D32),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(99),
-                                                        ),
-                                                        child: const Text(
-                                                          'Eco',
-                                                          style: TextStyle(
-                                                            fontSize: 8,
-                                                            fontWeight:
-                                                                FontWeight.w700,
-                                                            color: Colors.white,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  const Text(
-                                                    'one step closer to the better world',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color: Color(0xFF388E3C),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            const Icon(
-                                                Icons.arrow_forward_ios_rounded,
-                                                color: Color(0xFF2E7D32),
-                                                size: 16),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    GridView.count(
-                                      shrinkWrap: true,
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      crossAxisCount: 3,
-                                      crossAxisSpacing: 16,
-                                      mainAxisSpacing: 16,
-                                      childAspectRatio: 0.9,
-                                      children: _gridRideServices
-                                          .map((s) => ServiceCard(
-                                              service: s,
-                                              onTap: () => _openService(s)))
-                                          .toList(),
-                                    ),
-                                  ]),
-                            ),
-                            Container(height: 8, color: kGray),
-                            const SizedBox(height: 20),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          const Text('📦 Delivery',
-                                              style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: kDark)),
-                                          GestureDetector(
-                                              onTap: () => setState(() =>
-                                                  _seeAll = (
-                                                    title: 'Delivery',
-                                                    items: _deliveryServices
-                                                  )),
-                                              child: const Text('See all →',
-                                                  style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: kOrange,
-                                                      fontWeight:
-                                                          FontWeight.w600))),
-                                        ]),
-                                    const SizedBox(height: 16),
-                                    GridView.count(
-                                      shrinkWrap: true,
-                                      physics:
-                                          const NeverScrollableScrollPhysics(),
-                                      crossAxisCount: 3,
-                                      crossAxisSpacing: 16,
-                                      mainAxisSpacing: 16,
-                                      childAspectRatio: 0.9,
-                                      children: _deliveryServices
-                                          .map((s) => ServiceCard(
-                                              service: s,
-                                              onTap: () => _openService(s)))
-                                          .toList(),
-                                    ),
-                                    const SizedBox(height: 14),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 14, vertical: 10),
-                                      decoration: BoxDecoration(
-                                          color: kOrangeLight,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          border: Border.all(
-                                              color:
-                                                  kOrange.withOpacity(0.13))),
-                                      child: const Row(children: [
-                                        Text('🏍️',
-                                            style: TextStyle(fontSize: 14)),
-                                        SizedBox(width: 8),
-                                        Expanded(
-                                            child: Text.rich(TextSpan(
-                                                text:
-                                                    'All delivery services fulfilled by ',
-                                                style: TextStyle(
-                                                    fontSize: 11.5,
-                                                    color: kOrange,
-                                                    fontWeight:
-                                                        FontWeight.w600),
-                                                children: [
-                                              TextSpan(
-                                                  text: 'bike riders only',
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w800))
-                                            ]))),
-                                      ]),
-                                    ),
-                                  ]),
-                            ),
-                            Container(height: 8, color: kGray),
-                            const SizedBox(height: 20),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(0, 0, 0, 24),
-                              child: Column(children: [
-                                const Padding(
-                                    padding: EdgeInsets.fromLTRB(20, 0, 20, 14),
-                                    child: Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Text('🎁 Offers for you',
-                                            style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w800,
-                                                color: kDark)))),
-                                SizedBox(
-                                  height: 100,
-                                  child: PageView.builder(
-                                    controller: _promoPageCtrl,
-                                    onPageChanged: (i) =>
-                                        setState(() => _promoIdx = i),
-                                    itemCount: promos.length,
-                                    itemBuilder: (_, i) => Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 12),
-                                        child: PromoCard(promo: promos[i])),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: List.generate(
-                                        promos.length,
-                                        (i) => GestureDetector(
-                                              onTap: () {
-                                                setState(() => _promoIdx = i);
-                                                _promoPageCtrl.animateToPage(i,
-                                                    duration: const Duration(
-                                                        milliseconds: 300),
-                                                    curve: Curves.easeInOut);
-                                              },
-                                              child: AnimatedContainer(
-                                                  duration: const Duration(
-                                                      milliseconds: 300),
-                                                  margin: const EdgeInsets
-                                                      .symmetric(horizontal: 3),
-                                                  width:
-                                                      _promoIdx == i ? 20 : 6,
-                                                  height: 6,
-                                                  decoration: BoxDecoration(
-                                                      color: _promoIdx == i
-                                                          ? kOrange
-                                                          : const Color(
-                                                              0xFFDDDDDD),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              99))),
-                                            ))),
-                              ]),
-                            ),
-
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 12),
+                        _buildNewOtherOptionsRow(),
+                        const SizedBox(height: 22),
+                        _buildNewEVBanner(),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
                   ),
                 )
               else if (_activeTab == 'profile')
@@ -6819,60 +6979,57 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 right: 0,
                 child: Container(
                   decoration: const BoxDecoration(
-                      color: kWhite,
-                      border: Border(top: BorderSide(color: Color(0xFFF0F0F0))),
-                      boxShadow: [
-                        BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 20,
-                            offset: Offset(0, -4))
-                      ]),
-                  padding: EdgeInsets.only(
-                      top: 10,
-                      bottom: MediaQuery.of(context).padding.bottom + 10),
-                  child: Row(
-                    children: [
-                      for (final tab in [
-                        ('home', '🏠', 'Home'),
-                        ('activity', '📋', 'Activity'),
-                        ('wallet', '💰', 'Wallet'),
-                        ('profile', '👤', 'Profile')
-                      ])
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _activeTab = tab.$1),
-                            child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  AnimatedContainer(
-                                      duration:
-                                          const Duration(milliseconds: 200),
-                                      width: 40,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                          color: _activeTab == tab.$1
-                                              ? kOrangeLight
-                                              : Colors.transparent,
-                                          borderRadius:
-                                              BorderRadius.circular(14)),
-                                      child: Center(
-                                          child: Text(tab.$2,
-                                              style: const TextStyle(
-                                                  fontSize: 20)))),
-                                  const SizedBox(height: 4),
-                                  Text(tab.$3,
-                                      style: TextStyle(
-                                          fontSize: 10.5,
-                                          fontWeight: _activeTab == tab.$1
-                                              ? FontWeight.w700
-                                              : FontWeight.w500,
-                                          color: _activeTab == tab.$1
-                                              ? kOrange
-                                              : kMuted)),
-                                ]),
-                          ),
-                        ),
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 10,
+                        offset: Offset(0, -2),
+                      )
                     ],
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: _BottomNav(
+                      currentIndex: (() {
+                        switch (_activeTab) {
+                          case 'home':
+                            return 0;
+                          case 'activity':
+                            return 1;
+                          case 'wallet':
+                            return 2;
+                          case 'profile':
+                            return 4;
+                          default:
+                            return 0;
+                        }
+                      })(),
+                      onTap: (index) {
+                        if (index == 3) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Messages feature coming soon!')),
+                          );
+                        } else {
+                          setState(() {
+                            switch (index) {
+                              case 0:
+                                _activeTab = 'home';
+                                break;
+                              case 1:
+                                _activeTab = 'activity';
+                                break;
+                              case 2:
+                                _activeTab = 'wallet';
+                                break;
+                              case 4:
+                                _activeTab = 'profile';
+                                break;
+                            }
+                          });
+                        }
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -7220,4 +7377,99 @@ class _RecentPlaceTileState extends State<_RecentPlaceTile> {
       ),
     );
   }
+}
+
+class _SkylinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size s) {
+    final bg = Paint()
+      ..color = const Color(0xFFFFDDC8).withOpacity(0.35)
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..moveTo(0, s.height)
+      ..lineTo(0, s.height * 0.55)
+      ..lineTo(s.width * 0.07, s.height * 0.55)
+      ..lineTo(s.width * 0.07, s.height * 0.35)
+      ..lineTo(s.width * 0.13, s.height * 0.35)
+      ..lineTo(s.width * 0.13, s.height * 0.45)
+      ..lineTo(s.width * 0.22, s.height * 0.45)
+      ..lineTo(s.width * 0.22, s.height * 0.2)
+      ..lineTo(s.width * 0.30, s.height * 0.2)
+      ..lineTo(s.width * 0.30, s.height * 0.38)
+      ..lineTo(s.width * 0.38, s.height * 0.38)
+      ..lineTo(s.width * 0.38, s.height * 0.12)
+      ..lineTo(s.width * 0.47, s.height * 0.12)
+      ..lineTo(s.width * 0.47, s.height * 0.28)
+      ..lineTo(s.width * 0.56, s.height * 0.28)
+      ..lineTo(s.width * 0.56, s.height * 0.08)
+      ..lineTo(s.width * 0.65, s.height * 0.08)
+      ..lineTo(s.width * 0.65, s.height * 0.22)
+      ..lineTo(s.width * 0.75, s.height * 0.22)
+      ..lineTo(s.width * 0.75, s.height * 0.35)
+      ..lineTo(s.width * 0.85, s.height * 0.35)
+      ..lineTo(s.width * 0.85, s.height * 0.18)
+      ..lineTo(s.width * 0.93, s.height * 0.18)
+      ..lineTo(s.width * 0.93, s.height * 0.30)
+      ..lineTo(s.width, s.height * 0.30)
+      ..lineTo(s.width, s.height)
+      ..close();
+
+    canvas.drawPath(path, bg);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter o) => false;
+}
+
+// BOTTOM NAVIGATION BAR
+// ─────────────────────────────────────────────────────────────
+class _BottomNav extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+
+  const _BottomNav({required this.currentIndex, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      _NavItem(icon: Icons.home_rounded, label: 'Home'),
+      _NavItem(icon: Icons.directions_car_rounded, label: 'Rides'),
+      _NavItem(icon: Icons.account_balance_wallet_outlined, label: 'Wallet'),
+      _NavItem(icon: Icons.chat_bubble_outline_rounded, label: 'Messages'),
+      _NavItem(icon: Icons.person_outline_rounded, label: 'Profile'),
+    ];
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
+      ),
+      child: BottomNavigationBar(
+        currentIndex: currentIndex,
+        onTap: onTap,
+        backgroundColor: Colors.white,
+        selectedItemColor: kOrange,
+        unselectedItemColor: Colors.grey.shade500,
+        selectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: const TextStyle(fontSize: 11),
+        type: BottomNavigationBarType.fixed,
+        elevation: 0,
+        items: items
+            .map(
+              (n) => BottomNavigationBarItem(
+                icon: Icon(n.icon, size: 24),
+                label: n.label,
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _NavItem {
+  final IconData icon;
+  final String label;
+  const _NavItem({required this.icon, required this.label});
 }

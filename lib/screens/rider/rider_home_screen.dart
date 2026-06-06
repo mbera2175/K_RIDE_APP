@@ -3696,13 +3696,33 @@ class _WhereToScreenState extends State<WhereToScreen>
                             width: 36,
                             height: 36,
                             decoration: BoxDecoration(
-                                color: kGray,
-                                borderRadius: BorderRadius.circular(10)),
+                                color: kOrangeLight,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: kOrange.withValues(alpha: 0.2))),
                             child: const Center(
-                                child: Text('←',
-                                    style: TextStyle(fontSize: 16))))),
+                                child: Icon(
+                                  Icons.arrow_back_rounded,
+                                  color: kOrange,
+                                  size: 22,
+                                )))),
                     const SizedBox(width: 12),
-                    if (!widget.genericMode) ...[
+                    if (widget.genericMode) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: kOrangeLight,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: kOrange.withValues(alpha: 0.2)),
+                        ),
+                        child: const Text(
+                          'BOOK YOUR RIDE',
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: kOrange),
+                        ),
+                      ),
+                    ] else ...[
                       Container(
                           width: 32,
                           height: 32,
@@ -3713,13 +3733,12 @@ class _WhereToScreenState extends State<WhereToScreen>
                               child: ServiceIconWidget(
                                   icon: widget.service.icon, size: 18))),
                       const SizedBox(width: 8),
+                      Text(widget.service.name,
+                          style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: kDark)),
                     ],
-                    Text(
-                        widget.genericMode ? 'BOOK YOUR RIDE' : widget.service.name,
-                        style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: kDark)),
                     if (widget.service.bikeOnly) ...[
                       const SizedBox(width: 8),
                       Container(

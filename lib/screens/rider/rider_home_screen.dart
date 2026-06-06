@@ -3538,9 +3538,7 @@ class _WhereToScreenState extends State<WhereToScreen>
 
   Widget _buildInputStep() {
     final bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
-    final double topPadding = isKeyboardOpen
-        ? MediaQuery.of(context).padding.top + 8
-        : 52;
+    final double topPadding = MediaQuery.of(context).padding.top + 8;
 
     return Container(
       color: kWhite,
@@ -3548,7 +3546,7 @@ class _WhereToScreenState extends State<WhereToScreen>
         children: [
           Container(
             color: kWhite,
-            padding: EdgeInsets.fromLTRB(20, topPadding, 20, 16),
+            padding: EdgeInsets.fromLTRB(20, topPadding, 20, 10),
             child: Column(
               children: [
                 Row(
@@ -3556,28 +3554,28 @@ class _WhereToScreenState extends State<WhereToScreen>
                     GestureDetector(
                         onTap: widget.onBack,
                         child: Container(
-                            width: 40,
-                            height: 40,
+                            width: 36,
+                            height: 36,
                             decoration: BoxDecoration(
                                 color: kGray,
-                                borderRadius: BorderRadius.circular(12)),
+                                borderRadius: BorderRadius.circular(10)),
                             child: const Center(
                                 child: Text('←',
-                                    style: TextStyle(fontSize: 18))))),
-                    const SizedBox(width: 14),
+                                    style: TextStyle(fontSize: 16))))),
+                    const SizedBox(width: 12),
                     Container(
-                        width: 36,
-                        height: 36,
+                        width: 32,
+                        height: 32,
                         decoration: BoxDecoration(
                             color: widget.service.color,
-                            borderRadius: BorderRadius.circular(10)),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: ServiceIconWidget(
-                                icon: widget.service.icon, size: 20))),
-                    const SizedBox(width: 10),
+                                icon: widget.service.icon, size: 18))),
+                    const SizedBox(width: 8),
                     Text(widget.service.name,
                         style: const TextStyle(
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.w800,
                             color: kDark)),
                     if (widget.service.bikeOnly) ...[
@@ -3589,64 +3587,66 @@ class _WhereToScreenState extends State<WhereToScreen>
                             color: kOrangeLight,
                             borderRadius: BorderRadius.circular(99),
                             border:
-                                Border.all(color: kOrange.withOpacity(0.2))),
+                                Border.all(color: kOrange.withValues(alpha: 0.2))),
                         child: const Text('🏍️ Bike only',
                             style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 9,
                                 fontWeight: FontWeight.w700,
                                 color: kOrange)),
                       ),
                     ],
                   ],
                 ),
-                SizedBox(height: isKeyboardOpen ? 12 : 20),
+                SizedBox(height: isKeyboardOpen ? 10 : 16),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                   decoration: BoxDecoration(
                       color: kOrangeLight,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: kOrange.withOpacity(0.2), width: 1.5)),
+                          color: kOrange.withValues(alpha: 0.2), width: 1.2)),
                   child: Row(
                     children: [
                       Container(
-                          width: 10,
-                          height: 10,
+                          width: 8,
+                          height: 8,
                           decoration: const BoxDecoration(
                               shape: BoxShape.circle, color: kOrange)),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Expanded(
                           child: TextField(
                               controller: _pickupCtrl,
                               focusNode: _pickupFocus,
                               decoration: const InputDecoration(
                                   border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(vertical: 6),
                                   hintText: 'Pickup location'),
                               style:
-                                  const TextStyle(fontSize: 14, color: kDark))),
+                                  const TextStyle(fontSize: 13, color: kDark))),
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 StatefulBuilder(
                   builder: (_, ss) => Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                     decoration: BoxDecoration(
                         color: kGray,
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color: const Color(0xFFEEEEEE), width: 1.5)),
+                            color: const Color(0xFFEEEEEE), width: 1.2)),
                     child: Row(
                       children: [
                         Container(
-                            width: 10,
-                            height: 10,
+                            width: 8,
+                            height: 8,
                             decoration: BoxDecoration(
                                 color: kDark,
-                                borderRadius: BorderRadius.circular(2))),
-                        const SizedBox(width: 12),
+                                borderRadius: BorderRadius.circular(1.5))),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: TextField(
                             controller: _destCtrl,
@@ -3655,10 +3655,12 @@ class _WhereToScreenState extends State<WhereToScreen>
                             onChanged: (_) => ss(() {}),
                             decoration: InputDecoration(
                                 border: InputBorder.none,
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(vertical: 6),
                                 hintText: widget.service.category == 'delivery'
                                     ? 'Delivery address...'
                                     : 'Where to?'),
-                            style: const TextStyle(fontSize: 14, color: kDark),
+                            style: const TextStyle(fontSize: 13, color: kDark),
                           ),
                         ),
                         if (_destCtrl.text.isNotEmpty)
@@ -3669,7 +3671,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                               },
                               child: const Text('✕',
                                   style:
-                                      TextStyle(color: kMuted, fontSize: 16))),
+                                      TextStyle(color: kMuted, fontSize: 14))),
                       ],
                     ),
                   ),
@@ -6125,6 +6127,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark,
         child: Scaffold(
+          resizeToAvoidBottomInset: true,
           backgroundColor: kWhite,
           body: Stack(
             children: [

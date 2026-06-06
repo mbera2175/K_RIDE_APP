@@ -2,6 +2,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:mappls_gl/mappls_gl.dart';
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -2767,21 +2768,36 @@ class _WhereToScreenState extends State<WhereToScreen>
     }
   }
 
+  double _calculateBearing(double lat1, double lng1, double lat2, double lng2) {
+    final dLng = (lng2 - lng1) * (pi / 180.0);
+    final rLat1 = lat1 * (pi / 180.0);
+    final rLat2 = lat2 * (pi / 180.0);
+
+    final y = sin(dLng) * cos(rLat2);
+    final x = cos(rLat1) * sin(rLat2) - sin(rLat1) * cos(rLat2) * cos(dLng);
+
+    final angle = atan2(y, x) * (180.0 / pi);
+    return (angle + 360.0) % 360.0;
+  }
+
   Future<void> _updateDriverMarkerAnimated(double newLat, double newLng) async {
     if (_mapController == null) return;
-    
+
     final prevLat = _lastDriverLat ?? _driverLat ?? newLat;
     final prevLng = _lastDriverLng ?? _driverLng ?? newLng;
-    
+
     _lastDriverLat = newLat;
     _lastDriverLng = newLng;
-    
+
+    final bearing = _calculateBearing(prevLat, prevLng, newLat, newLng);
+
     final distance = Geolocator.distanceBetween(prevLat, prevLng, newLat, newLng);
     if (distance == 0 || distance > 2000) {
-      await _updateDriverSymbol(newLat, newLng);
+      await _updateDriverSymbol(newLat, newLng, bearing);
+      _mapController?.animateCamera(CameraUpdate.newLatLng(LatLng(newLat, newLng)));
       return;
     }
-    
+
     int step = 0;
     const int totalSteps = 40;
     _driverAnimTimer?.cancel();
@@ -2794,31 +2810,37 @@ class _WhereToScreenState extends State<WhereToScreen>
       final double fraction = step / totalSteps;
       final double lat = prevLat + (newLat - prevLat) * fraction;
       final double lng = prevLng + (newLng - prevLng) * fraction;
-      
-      await _updateDriverSymbol(lat, lng);
-      
+
+      await _updateDriverSymbol(lat, lng, bearing);
+
+      if (step % 5 == 0) {
+        _mapController?.animateCamera(CameraUpdate.newLatLng(LatLng(lat, lng)));
+      }
+
       if (step >= totalSteps) {
         timer.cancel();
       }
     });
   }
 
-  Future<void> _updateDriverSymbol(double lat, double lng) async {
+  Future<void> _updateDriverSymbol(double lat, double lng, [double? bearing]) async {
     try {
       if (_driverSymbol != null) {
         await _mapController!.updateSymbol(_driverSymbol!, SymbolOptions(
           geometry: LatLng(lat, lng),
+          iconRotate: bearing,
         ));
       } else {
         _driverSymbol = await _mapController!.addSymbol(SymbolOptions(
           geometry: LatLng(lat, lng),
           iconImage: 'car-15',
-          iconSize: 2.0,
+          iconSize: 2.5,
           iconColor: '#FF6B00',
           textField: 'Driver',
           textOffset: const Offset(0, -1.5),
           textColor: '#FF6B00',
           textSize: 12.0,
+          iconRotate: bearing,
         ));
       }
     } catch (_) {
@@ -2826,12 +2848,13 @@ class _WhereToScreenState extends State<WhereToScreen>
         _driverSymbol = await _mapController!.addSymbol(SymbolOptions(
           geometry: LatLng(lat, lng),
           iconImage: 'car-15',
-          iconSize: 2.0,
+          iconSize: 2.5,
           iconColor: '#FF6B00',
           textField: 'Driver',
           textOffset: const Offset(0, -1.5),
           textColor: '#FF6B00',
           textSize: 12.0,
+          iconRotate: bearing,
         ));
       } catch (_) {}
     }
@@ -4650,6 +4673,19 @@ class _WhereToScreenState extends State<WhereToScreen>
       statusSubtitle = 'Thank you for riding with KRide';
     }
 
+    // Dynamic distance & ETA calculation
+    String? distanceStr;
+    String? durationStr;
+    if (_driverLat != null && _driverLng != null) {
+      final double targetLat = (tripStatus == 'started') ? _dropLat : _pickupLat;
+      final double targetLng = (tripStatus == 'started') ? _dropLng : _pickupLng;
+      final double distMeters = Geolocator.distanceBetween(_driverLat!, _driverLng!, targetLat, targetLng);
+      final double distKm = distMeters / 1000.0;
+      distanceStr = "${distKm.toStringAsFixed(1)} km";
+      final int minutes = (distKm * 2.0).round() + 1;
+      durationStr = "$minutes min";
+    }
+
     return Scaffold(
       backgroundColor: kWhite,
       body: Stack(
@@ -4682,6 +4718,9 @@ class _WhereToScreenState extends State<WhereToScreen>
                     textColor: '#1A1A1A',
                   ));
                   if (_driverLat != null && _driverLng != null) {
+                    final prevLat = _lastDriverLat ?? _driverLat!;
+                    final prevLng = _lastDriverLng ?? _driverLng!;
+                    final bearing = _calculateBearing(prevLat, prevLng, _driverLat!, _driverLng!);
                     await _updateDriverMarkerAnimated(_driverLat!, _driverLng!);
                   }
                   await _drawRiderTripRoute();
@@ -4734,7 +4773,7 @@ class _WhereToScreenState extends State<WhereToScreen>
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
               decoration: const BoxDecoration(
                 color: kWhite,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black12,
@@ -4781,25 +4820,67 @@ class _WhereToScreenState extends State<WhereToScreen>
                       ),
                     ],
                   ),
+
+                  // Real-time Distance & ETA banner
+                  if (distanceStr != null && durationStr != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: kOrangeBg,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: kOrange.withOpacity(0.15)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.directions_car_rounded, color: kOrange, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              tripStatus == 'started'
+                                  ? 'Heading to destination: $distanceStr remaining ($durationStr)'
+                                  : 'Driver is $distanceStr away. Arriving in $durationStr',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: kOrange,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: 16),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      CircleAvatar(
-                        radius: 28,
-                        backgroundColor: kOrangeLight,
-                        backgroundImage: driverPhotoUrl.isNotEmpty
-                            ? CachedNetworkImageProvider(driverPhotoUrl)
-                            : null,
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: kOrangeLight,
+                          border: Border.all(color: kOrange.withOpacity(0.1), width: 1.5),
+                          image: driverPhotoUrl.isNotEmpty
+                              ? DecorationImage(
+                                  image: CachedNetworkImageProvider(driverPhotoUrl),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
                         child: driverPhotoUrl.isEmpty
-                            ? Text(
-                                driverName.isNotEmpty
-                                    ? driverName.substring(0, 1).toUpperCase()
-                                    : 'D',
-                                style: const TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  color: kOrange,
+                            ? Center(
+                                child: Text(
+                                  driverName.isNotEmpty
+                                      ? driverName.substring(0, 1).toUpperCase()
+                                      : 'D',
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w800,
+                                    color: kOrange,
+                                  ),
                                 ),
                               )
                             : null,
@@ -4826,22 +4907,24 @@ class _WhereToScreenState extends State<WhereToScreen>
                                 const SizedBox(width: 6),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 2),
+                                      horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFFFF8E1),
                                     borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: const Color(0xFFFFD54F).withOpacity(0.5), width: 0.8),
                                   ),
                                   child: Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(Icons.star,
-                                          size: 12, color: Colors.amber),
+                                      const Icon(Icons.star_rounded,
+                                          size: 13, color: Color(0xFFFFB300)),
                                       const SizedBox(width: 2),
                                       Text(
                                         driverRating.toString(),
                                         style: const TextStyle(
-                                          fontSize: 10,
+                                          fontSize: 11,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.amber,
+                                          color: Color(0xFFFF8F00),
                                         ),
                                       ),
                                     ],
@@ -4850,7 +4933,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                               ],
                             ),
                             if (driverPhone.isNotEmpty) ...[
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 3),
                               Text(
                                 driverPhone,
                                 style: TextStyle(
@@ -4860,7 +4943,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                                 ),
                               ),
                             ],
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 3),
                             Text(
                               '$vehicleModel • $vehicleNo',
                               maxLines: 1,
@@ -4870,113 +4953,116 @@ class _WhereToScreenState extends State<WhereToScreen>
                                 color: Colors.grey[600],
                               ),
                             ),
-                            const SizedBox(height: 10),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => TripChatScreen(
-                                          tripId: _tripId!,
-                                          driverName: driverName,
-                                          driverPhone: driverPhone,
-                                          driverPhotoUrl: driverPhotoUrl,
-                                          onClose: () => Navigator.pop(context),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      color: kOrangeLight,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Center(
-                                        child: Text('💬',
-                                            style: TextStyle(fontSize: 20))),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                GestureDetector(
-                                  onTap: () async {
-                                    if (driverPhone.isNotEmpty) {
-                                      final uri = Uri.parse('tel:$driverPhone');
-                                      if (await canLaunchUrl(uri)) {
-                                        await launchUrl(uri);
-                                      } else {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  'Could not open phone dialer')),
-                                        );
-                                      }
-                                    }
-                                  },
-                                  child: Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFE8F5E9),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Center(
-                                        child: Text('📞',
-                                            style: TextStyle(fontSize: 20))),
-                                  ),
-                                ),
-                              ],
-                            ),
                           ],
                         ),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => TripChatScreen(
+                                    tripId: _tripId!,
+                                    driverName: driverName,
+                                    driverPhone: driverPhone,
+                                    driverPhotoUrl: driverPhotoUrl,
+                                    onClose: () => Navigator.pop(context),
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: kOrangeLight,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: kOrange.withOpacity(0.15), width: 1),
+                              ),
+                              child: const Icon(
+                                Icons.chat_bubble_outline_rounded,
+                                color: kOrange,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: () async {
+                              if (driverPhone.isNotEmpty) {
+                                final uri = Uri.parse('tel:$driverPhone');
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(uri);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Could not open phone dialer')),
+                                  );
+                                }
+                              }
+                            },
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE8F5E9),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.green.withOpacity(0.15), width: 1),
+                              ),
+                              child: const Icon(
+                                Icons.phone_enabled_rounded,
+                                color: Colors.green,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       if (showOtp)
                         Expanded(
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 14),
+                                horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
                               color: kOrangeLight,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                  color: kOrange.withOpacity(0.25), width: 1.5),
+                                  color: kOrange.withOpacity(0.25), width: 1.2),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: const [
-                                    Text('🔐', style: TextStyle(fontSize: 16)),
+                                    Icon(Icons.lock_outline_rounded, size: 14, color: kOrange),
                                     SizedBox(width: 6),
                                     Text(
-                                      'Share this OTP with driver',
+                                      'OTP for Driver',
                                       style: TextStyle(
-                                        fontSize: 12,
+                                        fontSize: 11,
                                         fontWeight: FontWeight.w700,
                                         color: kOrange,
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 4),
                                 Center(
                                   child: Text(
                                     _otpCode!,
                                     style: const TextStyle(
-                                      fontSize: 28,
+                                      fontSize: 24,
                                       fontWeight: FontWeight.w900,
                                       color: kOrange,
-                                      letterSpacing: 6,
+                                      letterSpacing: 4,
                                     ),
                                   ),
                                 ),
@@ -4993,13 +5079,13 @@ class _WhereToScreenState extends State<WhereToScreen>
                               color: const Color(0xFFFFF8E1),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                  color: Colors.amber.shade300, width: 1.5),
+                                  color: Colors.amber.shade300, width: 1.2),
                             ),
                             child: const Text(
-                              'OTP is loading. Keep this screen open, or reconnect if it does not appear.',
+                              'OTP is loading. Keep this screen open.',
                               style: TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
                                 color: Color(0xFF8A5A00),
                               ),
                             ),
@@ -5030,24 +5116,33 @@ class _WhereToScreenState extends State<WhereToScreen>
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
+                              horizontal: 18, vertical: 14),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFF0F0),
+                            gradient: const LinearGradient(
+                              colors: [Colors.red, Color(0xFFD32F2F)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                                color: Colors.red.shade300, width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.red.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              )
+                            ],
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('🆘', style: TextStyle(fontSize: 18)),
+                            children: const [
+                              Icon(Icons.emergency_share_rounded, color: kWhite, size: 16),
                               SizedBox(width: 6),
                               Text(
-                                'SOS',
+                                'SOS HELP',
                                 style: TextStyle(
-                                  color: Colors.red,
+                                  color: kWhite,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                                  fontSize: 13,
                                 ),
                               ),
                             ],
@@ -5063,7 +5158,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
-                      child: TextButton(
+                      child: OutlinedButton(
                         onPressed: () {
                           showDialog(
                             context: context,
@@ -5091,13 +5186,16 @@ class _WhereToScreenState extends State<WhereToScreen>
                             ),
                           );
                         },
-                        style: TextButton.styleFrom(
+                        style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.red,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          side: BorderSide(color: Colors.red.withOpacity(0.25), width: 1.2),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                         child: const Text(
                           'Cancel Ride',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                         ),
                       ),
                     ),

@@ -509,8 +509,49 @@ class ServiceIconWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (icon == 'auto') return AutoIcon(size: size);
-    if (icon == 'toto') return TotoIcon(size: size);
+    final cleanIcon = icon.trim().toLowerCase();
+    
+    if (cleanIcon == '🚖' || cleanIcon == '🚕' || cleanIcon == 'ac_cab' || cleanIcon == 'non_ac_cab') {
+      return Image.asset(
+        'assets/images/car.png',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+      );
+    }
+    if (cleanIcon == '🏍️' || cleanIcon == 'bike') {
+      return Image.asset(
+        'assets/images/bike.png',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+      );
+    }
+    if (cleanIcon == '🛺' || cleanIcon == 'auto') {
+      return Image.asset(
+        'assets/images/auto.png',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+      );
+    }
+    if (cleanIcon == '🛵' || cleanIcon == 'toto') {
+      return Image.asset(
+        'assets/images/toto.png',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+      );
+    }
+    if (cleanIcon == '🚑' || cleanIcon == 'ambulance') {
+      return Image.asset(
+        'assets/images/ambulance.png',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+      );
+    }
+
     return Text(icon,
         style: TextStyle(
             fontSize: size,
@@ -604,9 +645,10 @@ class _ServiceCardState extends State<ServiceCard> {
             Text(
               widget.service.name,
               style: const TextStyle(
-                  fontSize: 11.5, fontWeight: FontWeight.w600, color: kDark),
+                  fontSize: 11.0, fontWeight: FontWeight.w600, color: kDark),
               textAlign: TextAlign.center,
-              maxLines: 2,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -7088,13 +7130,9 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     return Container(
       width: 140,
       height: 70,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Text(
-        '🚗',
-        style: TextStyle(fontSize: 56),
-        textAlign: TextAlign.center,
+      child: Image.asset(
+        'assets/images/car_hero.png',
+        fit: BoxFit.contain,
       ),
     );
   }

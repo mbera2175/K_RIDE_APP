@@ -3321,23 +3321,44 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                           Icons.remove,
                           Icons.my_location
                         ])
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: kWhite.withOpacity(0.95),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: kGray2),
-                              boxShadow: const [
-                                BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 8,
-                                    offset: Offset(0, 2))
-                              ],
+                          GestureDetector(
+                            onTap: () {
+                              if (_mapController == null) return;
+                              if (icon == Icons.add) {
+                                _mapController!.animateCamera(CameraUpdate.zoomIn());
+                              } else if (icon == Icons.remove) {
+                                _mapController!.animateCamera(CameraUpdate.zoomOut());
+                              } else if (icon == Icons.my_location) {
+                                if (_currentLat != 0 && _currentLng != 0) {
+                                  _mapController!.animateCamera(
+                                    CameraUpdate.newCameraPosition(
+                                      CameraPosition(
+                                        target: LatLng(_currentLat, _currentLng),
+                                        zoom: 15.0,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: kWhite.withOpacity(0.95),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: kGray2),
+                                boxShadow: const [
+                                  BoxShadow(
+                                      color: Colors.black12,
+                                      blurRadius: 8,
+                                      offset: Offset(0, 2))
+                                ],
+                              ),
+                              child: Center(
+                                  child: Icon(icon, size: 20, color: kDark)),
                             ),
-                            child: Center(
-                                child: Icon(icon, size: 20, color: kDark)),
                           ),
                       ],
                     ),

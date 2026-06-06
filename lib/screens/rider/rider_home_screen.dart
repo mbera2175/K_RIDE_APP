@@ -3837,6 +3837,50 @@ class _WhereToScreenState extends State<WhereToScreen>
                     ),
                   ),
                 ),
+                if (widget.service.category == 'ride') ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 4),
+                    decoration: BoxDecoration(
+                        color: const Color(0xFFFFF3E0),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                            color: const Color(0xFFFF6B35).withOpacity(0.3))),
+                    child: Row(children: [
+                      const Text('🚗', style: TextStyle(fontSize: 18)),
+                      const SizedBox(width: 8),
+                      const Text('Vehicle:',
+                          style: TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w600)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                          child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                        value: _selectedVehicleType,
+                        items: const [
+                          DropdownMenuItem(
+                              value: 'ac_cab', child: Text('AC Cab')),
+                          DropdownMenuItem(
+                              value: 'non_ac_cab', child: Text('Non-AC Cab')),
+                          DropdownMenuItem(
+                              value: 'bike', child: Text('Bike')),
+                          DropdownMenuItem(
+                              value: 'auto', child: Text('Auto')),
+                          DropdownMenuItem(
+                              value: 'toto', child: Text('Toto')),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() => _selectedVehicleType = val);
+                            _loadFare();
+                            _loadNearbyDriversOnMap();
+                          }
+                        },
+                      ))),
+                    ]),
+                  ),
+                ],
                 if (!isKeyboardOpen) ...[
                   const SizedBox(height: 12),
                   Row(
@@ -4342,48 +4386,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                         ],
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 4),
-                      decoration: BoxDecoration(
-                          color: const Color(0xFFFFF3E0),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                              color: const Color(0xFFFF6B35).withOpacity(0.3))),
-                      child: Row(children: [
-                        const Text('🚗', style: TextStyle(fontSize: 18)),
-                        const SizedBox(width: 8),
-                        const Text('Vehicle:',
-                            style: TextStyle(
-                                fontSize: 13, fontWeight: FontWeight.w600)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                            child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                          value: _selectedVehicleType,
-                          items: const [
-                            DropdownMenuItem(
-                                value: 'ac_cab', child: Text('AC Cab')),
-                            DropdownMenuItem(
-                                value: 'non_ac_cab', child: Text('Non-AC Cab')),
-                            DropdownMenuItem(
-                                value: 'bike', child: Text('Bike')),
-                            DropdownMenuItem(
-                                value: 'auto', child: Text('Auto')),
-                            DropdownMenuItem(
-                                value: 'toto', child: Text('Toto')),
-                          ],
-                          onChanged: (val) {
-                            if (val != null) {
-                              setState(() => _selectedVehicleType = val);
-                              _loadFare();
-                              _loadNearbyDriversOnMap();
-                            }
-                          },
-                        ))),
-                      ]),
-                    ),
+
                     const SizedBox(height: 10),
                     GestureDetector(
                       onTap: () => setState(() => _useKCoins = !_useKCoins),

@@ -4281,7 +4281,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                 ),
               ),
               Container(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
                 decoration: const BoxDecoration(
                     color: kWhite,
                     borderRadius:
@@ -4301,21 +4301,21 @@ class _WhereToScreenState extends State<WhereToScreen>
                             decoration: BoxDecoration(
                                 color: const Color(0xFFDDDDDD),
                                 borderRadius: BorderRadius.circular(99)))),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                           color: widget.service.color,
-                          borderRadius: BorderRadius.circular(14)),
+                          borderRadius: BorderRadius.circular(10)),
                       child: Row(
                         children: [
                           Container(
-                              width: 44,
-                              height: 44,
+                              width: 36,
+                              height: 36,
                               decoration: BoxDecoration(
                                   color: kWhite,
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(10),
                                   boxShadow: [
                                     BoxShadow(
                                         color: Colors.black.withOpacity(0.07),
@@ -4324,37 +4324,37 @@ class _WhereToScreenState extends State<WhereToScreen>
                                   ]),
                               child: Center(
                                   child: ServiceIconWidget(
-                                      icon: widget.service.icon, size: 26))),
-                          const SizedBox(width: 12),
+                                      icon: widget.service.icon, size: 20))),
+                          const SizedBox(width: 10),
                           Expanded(
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                 Text(widget.service.name,
                                     style: const TextStyle(
-                                        fontSize: 15,
+                                        fontSize: 13.5,
                                         fontWeight: FontWeight.w700,
                                         color: kDark)),
                                 Text(
                                     '${widget.service.bikeOnly ? '🏍️ Bike rider · ' : ''}~${_estimatedDuration > 0 ? _estimatedDuration : 12} min · ${_estimatedDistance > 0 ? _estimatedDistance.toStringAsFixed(1) : '3.2'} km',
                                     style: const TextStyle(
-                                        fontSize: 12, color: kMuted)),
+                                        fontSize: 10.5, color: kMuted)),
                               ])),
                           Text('₹${_estimatedFare.toStringAsFixed(0)}',
                               style: TextStyle(
-                                  fontSize: 20,
+                                  fontSize: 17,
                                   fontWeight: FontWeight.w800,
                                   color: widget.service.accent))
                         ],
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 12),
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                           color: kGray,
-                          borderRadius: BorderRadius.circular(14)),
+                          borderRadius: BorderRadius.circular(10)),
                       child: Column(
                         children: [
                           Row(children: [
@@ -4367,9 +4367,9 @@ class _WhereToScreenState extends State<WhereToScreen>
                             Expanded(
                                 child: Text(_pickupCtrl.text,
                                     style: const TextStyle(
-                                        fontSize: 13, color: kDark)))
+                                        fontSize: 11.5, color: kDark)))
                           ]),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 4),
                           Row(children: [
                             Container(
                                 width: 8,
@@ -4381,23 +4381,23 @@ class _WhereToScreenState extends State<WhereToScreen>
                             Expanded(
                                 child: Text(_destCtrl.text,
                                     style: const TextStyle(
-                                        fontSize: 13, color: kDark)))
+                                        fontSize: 11.5, color: kDark)))
                           ]),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     GestureDetector(
                       onTap: () => setState(() => _useKCoins = !_useKCoins),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 8),
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: _useKCoins
                               ? const Color(0xFFFFF3E0)
                               : const Color(0xFFF5F5F5),
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                               color: _useKCoins
                                   ? const Color(0xFFFF6B35)
@@ -4405,61 +4405,61 @@ class _WhereToScreenState extends State<WhereToScreen>
                               width: 1.5),
                         ),
                         child: Row(children: [
-                          const Text('🪙', style: TextStyle(fontSize: 22)),
-                          const SizedBox(width: 10),
+                          const Text('🪙', style: TextStyle(fontSize: 18)),
+                          const SizedBox(width: 8),
                           const Expanded(
                               child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                 Text('Use K Coins',
                                     style: TextStyle(
-                                        fontSize: 13,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.w700)),
                                 Text('100 coins = ₹10 discount',
                                     style: TextStyle(
-                                        fontSize: 11, color: Colors.grey)),
+                                        fontSize: 9.5, color: Colors.grey)),
                               ])),
                           Container(
-                            width: 44,
-                            height: 24,
+                            width: 36,
+                            height: 20,
                             decoration: BoxDecoration(
                                 color: _useKCoins
                                     ? const Color(0xFFFF6B35)
                                     : Colors.grey[300],
-                                borderRadius: BorderRadius.circular(12)),
+                                borderRadius: BorderRadius.circular(10)),
                             child: AnimatedAlign(
-                              duration: const Duration(milliseconds: 200),
-                              alignment: _useKCoins
-                                  ? Alignment.centerRight
-                                  : Alignment.centerLeft,
-                              child: Container(
-                                  margin: const EdgeInsets.all(3),
-                                  width: 18,
-                                  height: 18,
-                                  decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle)),
+                                duration: const Duration(milliseconds: 200),
+                                alignment: _useKCoins
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                                child: Container(
+                                    margin: const EdgeInsets.all(2),
+                                    width: 14,
+                                    height: 14,
+                                    decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle)),
                             ),
                           ),
                         ]),
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     GestureDetector(
                       onTap: () => setState(() => _showPaymentModal = true),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 8),
+                            horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                             color: kGray,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                                 color: const Color(0xFFEEEEEE), width: 1.5)),
                         child: Row(
                           children: [
                             Text(_paymentMethod.icon,
-                                style: const TextStyle(fontSize: 22)),
-                            const SizedBox(width: 10),
+                                style: const TextStyle(fontSize: 16)),
+                            const SizedBox(width: 6),
                             Expanded(
                                 child: Column(
                                     crossAxisAlignment:
@@ -4467,16 +4467,16 @@ class _WhereToScreenState extends State<WhereToScreen>
                                     children: [
                                   Text(_paymentMethod.label,
                                       style: const TextStyle(
-                                          fontSize: 14,
+                                          fontSize: 11,
                                           fontWeight: FontWeight.w700,
                                           color: kDark)),
                                   Text(_paymentMethod.sub,
                                       style: const TextStyle(
-                                          fontSize: 11, color: kMuted)),
+                                          fontSize: 9, color: kMuted)),
                                 ])),
                             const Text('Change →',
                                 style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 10,
                                     color: kOrange,
                                     fontWeight: FontWeight.w700)),
                           ],
@@ -4484,27 +4484,27 @@ class _WhereToScreenState extends State<WhereToScreen>
                       ),
                     ),
                     if (widget.service.tag == 'Emergency') ...[
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
+                            horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                             color: const Color(0xFFFFF0F0),
-                            borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(10)),
                         child: const Row(children: [
-                          Text('🚨', style: TextStyle(fontSize: 14)),
-                          SizedBox(width: 8),
+                          Text('🚨', style: TextStyle(fontSize: 11)),
+                          SizedBox(width: 4),
                           Expanded(
                               child: Text(
                                   'Nearest ambulance will be dispatched immediately',
                                   style: TextStyle(
-                                      fontSize: 12,
+                                      fontSize: 10,
                                       color: Color(0xFFE53935),
                                       fontWeight: FontWeight.w600))),
                         ]),
                       ),
                     ],
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(

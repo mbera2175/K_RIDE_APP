@@ -3761,7 +3761,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                   )
                 : _suggestions.isNotEmpty
                     ? ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                         itemCount: _suggestions.length,
                         itemBuilder: (context, index) {
                           final suggestion = _suggestions[index];
@@ -3781,75 +3781,94 @@ class _WhereToScreenState extends State<WhereToScreen>
                             distanceStr = "${(8.0 + index * 1.2).toStringAsFixed(1)} km";
                           }
 
-                          return ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                            leading: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFFF2F4F7),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.location_on_rounded,
-                                    color: Color(0xFF475467),
-                                    size: 18,
-                                  ),
-                                ),
-                                if (distanceStr != null) ...[
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    distanceStr,
-                                    style: const TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF667085),
+                          return GestureDetector(
+                            onTap: () => _selectSuggestion(suggestion),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 5),
+                              decoration: const BoxDecoration(
+                                border: Border(bottom: BorderSide(color: Color(0xFFF2F4F7), width: 1)),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 38,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.location_on_rounded,
+                                          color: Color(0xFF667085),
+                                          size: 16,
+                                        ),
+                                        if (distanceStr != null) ...[
+                                          const SizedBox(height: 1),
+                                          Text(
+                                            distanceStr,
+                                            style: const TextStyle(
+                                              fontSize: 8.0,
+                                              fontWeight: FontWeight.w500,
+                                              color: Color(0xFF667085),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          suggestion.placeName,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
+                                            color: kDark,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        if (suggestion.placeAddress.isNotEmpty) ...[
+                                          const SizedBox(height: 1),
+                                          Text(
+                                            suggestion.placeAddress,
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              color: kMuted,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Icon(
+                                    Icons.favorite_border_rounded,
+                                    color: Color(0xFF98A2B3),
+                                    size: 15,
+                                  ),
+                                  const SizedBox(width: 4),
                                 ],
-                              ],
-                            ),
-                            title: Text(
-                              suggestion.placeName,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: kDark,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
-                            subtitle: Text(
-                              suggestion.placeAddress,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: kMuted,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            trailing: const Icon(
-                              Icons.favorite_border_rounded,
-                              color: Color(0xFF98A2B3),
-                              size: 20,
-                            ),
-                            onTap: () => _selectSuggestion(suggestion),
                           );
                         },
                       )
                     : ListView(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                        padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
                         children: [
                           const Text('SAVED PLACES',
                               style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: kMuted,
                                   letterSpacing: 0.5)),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 6),
                           ..._quickDests.map((d) {
                             final full = '${d.label}, ${d.sub}';
                             return StatefulBuilder(
@@ -3861,32 +3880,32 @@ class _WhereToScreenState extends State<WhereToScreen>
                                   setState(() => _step = 'confirm');
                                 },
                                 child: Container(
-                                  margin: const EdgeInsets.only(bottom: 6),
+                                  margin: const EdgeInsets.only(bottom: 4),
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 14, vertical: 12),
+                                      horizontal: 12, vertical: 5),
                                   decoration: BoxDecoration(
                                       color: _destCtrl.text.startsWith(d.label)
                                           ? kOrangeLight
                                           : kGray,
-                                      borderRadius: BorderRadius.circular(14)),
+                                      borderRadius: BorderRadius.circular(10)),
                                   child: Row(
                                     children: [
                                       Container(
-                                          width: 40,
-                                          height: 40,
+                                          width: 34,
+                                          height: 34,
                                           decoration: BoxDecoration(
                                               color: kWhite,
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius: BorderRadius.circular(10),
                                               boxShadow: [
                                                 BoxShadow(
-                                                    color: Colors.black.withOpacity(0.07),
-                                                    blurRadius: 8,
-                                                    offset: const Offset(0, 2))
+                                                    color: Colors.black.withOpacity(0.05),
+                                                    blurRadius: 6,
+                                                    offset: const Offset(0, 1.5))
                                               ]),
                                           child: Center(
                                               child: Text(d.icon,
-                                                  style: const TextStyle(fontSize: 18)))),
-                                      const SizedBox(width: 14),
+                                                  style: const TextStyle(fontSize: 15)))),
+                                      const SizedBox(width: 10),
                                       Expanded(
                                           child: Column(
                                               crossAxisAlignment:
@@ -3894,17 +3913,17 @@ class _WhereToScreenState extends State<WhereToScreen>
                                               children: [
                                             Text(d.label,
                                                 style: const TextStyle(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w500,
                                                     color: kDark)),
                                             Text(d.sub,
                                                 style: const TextStyle(
-                                                    fontSize: 11.5, color: kMuted)),
+                                                    fontSize: 11, color: kMuted)),
                                           ])),
                                       if (_destCtrl.text.startsWith(d.label))
                                         const Text('✓',
                                             style:
-                                                TextStyle(color: kOrange, fontSize: 16)),
+                                                TextStyle(color: kOrange, fontSize: 14)),
                                     ],
                                   ),
                                 ),

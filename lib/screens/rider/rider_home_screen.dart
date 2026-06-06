@@ -6559,8 +6559,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 const SizedBox(width: 12),
                 const Expanded(
                   child: Text(
-                    'BOOK YOUR RIDE',
-                    style: TextStyle(fontSize: 14.5, color: Colors.black87, fontWeight: FontWeight.w700),
+                    'Where to?',
+                    style: TextStyle(fontSize: 14.5, color: Colors.black87, fontWeight: FontWeight.w500),
                   ),
                 ),
               ],

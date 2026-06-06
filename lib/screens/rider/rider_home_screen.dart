@@ -4301,10 +4301,10 @@ class _WhereToScreenState extends State<WhereToScreen>
                             decoration: BoxDecoration(
                                 color: const Color(0xFFDDDDDD),
                                 borderRadius: BorderRadius.circular(99)))),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 10),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 12),
+                          horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                           color: widget.service.color,
                           borderRadius: BorderRadius.circular(14)),
@@ -4348,7 +4348,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                         ],
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 12),
@@ -4387,12 +4387,12 @@ class _WhereToScreenState extends State<WhereToScreen>
                       ),
                     ),
 
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 6),
                     GestureDetector(
                       onTap: () => setState(() => _useKCoins = !_useKCoins),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 12),
+                            horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
                           color: _useKCoins
                               ? const Color(0xFFFFF3E0)
@@ -4444,12 +4444,12 @@ class _WhereToScreenState extends State<WhereToScreen>
                         ]),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 6),
                     GestureDetector(
                       onTap: () => setState(() => _showPaymentModal = true),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 12),
+                            horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
                             color: kGray,
                             borderRadius: BorderRadius.circular(14),
@@ -4504,7 +4504,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                         ]),
                       ),
                     ],
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(

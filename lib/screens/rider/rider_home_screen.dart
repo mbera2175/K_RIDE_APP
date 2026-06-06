@@ -2234,6 +2234,11 @@ class _WhereToScreenState extends State<WhereToScreen>
   int _estimatedDuration = 0;
   bool _fareLoading = false;
 
+  List<dynamic> _activePromos = [];
+  String? _appliedPromoCode;
+  double _promoDiscount = 0.0;
+  bool _isManualPromoApplied = false;
+
   // Active Tracking state
   String _tripStatus = 'requested';
   Map<String, dynamic>? _assignedDriver;
@@ -2299,9 +2304,444 @@ class _WhereToScreenState extends State<WhereToScreen>
   bool get _shouldShowTripOtp =>
       _shouldExpectTripOtp && _otpCode != null && _otpCode!.trim().isNotEmpty;
 
+  Future<void> _loadActivePromos() async {
+    try {
+      final res = await ApiService.getActivePromos();
+      if (res['success'] == true && res['promos'] != null) {
+        setState(() {
+          _activePromos = res['promos'] as List<dynamic>;
+        });
+        _applyBestAutoPromo();
+      }
+    } catch (e) {
+      debugPrint('Error loading active promos: $e');
+    }
+  }
+
+  void _revalidateAppliedPromo() {
+    if (!_isManualPromoApplied || _appliedPromoCode == null) {
+      _applyBestAutoPromo();
+      return;
+    }
+    
+    final match = _activePromos.firstWhere(
+      (p) => (p['code'] as String).toUpperCase() == _appliedPromoCode!.toUpperCase(),
+      orElse: () => null,
+    );
+    
+    if (match == null) {
+      setState(() {
+        _appliedPromoCode = null;
+        _promoDiscount = 0.0;
+        _isManualPromoApplied = false;
+      });
+      _applyBestAutoPromo();
+      return;
+    }
+    
+    final minFare = (match['min_fare'] as num?)?.toDouble() ?? 0.0;
+    final vType = match['vehicle_type'] as String?;
+    
+    if (_estimatedFare < minFare || 
+        (vType != null && vType != 'All' && vType.toLowerCase() != _selectedVehicleType.toLowerCase())) {
+      setState(() {
+        _appliedPromoCode = null;
+        _promoDiscount = 0.0;
+        _isManualPromoApplied = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Promo code $_appliedPromoCode is no longer applicable.'))
+      );
+      _applyBestAutoPromo();
+    } else {
+      double disc = 0.0;
+      final val = (match['discount_value'] as num?)?.toDouble() ?? 0.0;
+      if (match['discount_type'] == 'flat') {
+        disc = val;
+      } else if (match['discount_type'] == 'percentage') {
+        disc = _estimatedFare * val / 100.0;
+      }
+      setState(() {
+        _promoDiscount = disc;
+      });
+    }
+  }
+
+  void _applyBestAutoPromo() {
+    if (_isManualPromoApplied) return;
+    
+    double bestDiscount = 0.0;
+    String? bestCode;
+    
+    for (var p in _activePromos) {
+      if (p['is_auto_apply'] != true) continue;
+      
+      // Check min fare
+      final minFare = (p['min_fare'] as num?)?.toDouble() ?? 0.0;
+      if (_estimatedFare < minFare) continue;
+      
+      // Check vehicle type
+      final vType = p['vehicle_type'] as String?;
+      if (vType != null && vType != 'All' && vType.toLowerCase() != _selectedVehicleType.toLowerCase()) {
+        continue;
+      }
+      
+      // Calculate discount
+      double disc = 0.0;
+      final val = (p['discount_value'] as num?)?.toDouble() ?? 0.0;
+      if (p['discount_type'] == 'flat') {
+        disc = val;
+      } else if (p['discount_type'] == 'percentage') {
+        disc = _estimatedFare * val / 100.0;
+      }
+      
+      if (disc > bestDiscount) {
+        bestDiscount = disc;
+        bestCode = p['code'] as String?;
+      }
+    }
+    
+    setState(() {
+      _appliedPromoCode = bestCode;
+      _promoDiscount = bestDiscount;
+    });
+  }
+
+  void _applyManualPromo(String code) {
+    final searchCode = code.trim().toUpperCase();
+    if (searchCode.isEmpty) {
+      setState(() {
+        _appliedPromoCode = null;
+        _promoDiscount = 0.0;
+        _isManualPromoApplied = false;
+      });
+      _applyBestAutoPromo(); // fallback to auto apply
+      return;
+    }
+    
+    // Find the promo in the active promos list
+    final match = _activePromos.firstWhere(
+      (p) => (p['code'] as String).toUpperCase() == searchCode,
+      orElse: () => null,
+    );
+    
+    if (match == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid or inactive promo code.'))
+      );
+      return;
+    }
+    
+    // Check constraints
+    final minFare = (match['min_fare'] as num?)?.toDouble() ?? 0.0;
+    if (_estimatedFare < minFare) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Minimum fare of ₹${minFare.toStringAsFixed(0)} required for this promo.'))
+      );
+      return;
+    }
+    
+    final vType = match['vehicle_type'] as String?;
+    if (vType != null && vType != 'All' && vType.toLowerCase() != _selectedVehicleType.toLowerCase()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('This promo is only valid for $vType vehicles.'))
+      );
+      return;
+    }
+    
+    // Calculate discount
+    double disc = 0.0;
+    final val = (match['discount_value'] as num?)?.toDouble() ?? 0.0;
+    if (match['discount_type'] == 'flat') {
+      disc = val;
+    } else if (match['discount_type'] == 'percentage') {
+      disc = _estimatedFare * val / 100.0;
+    }
+    
+    setState(() {
+      _appliedPromoCode = match['code'] as String?;
+      _promoDiscount = disc;
+      _isManualPromoApplied = true;
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Promo code applied successfully!'))
+    );
+  }
+
+  void _showPromoCodeModal() {
+    final textCtrl = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                left: 16,
+                right: 16,
+                top: 20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Apply Promo Code',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: kDark,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: textCtrl,
+                          textCapitalization: TextCapitalization.characters,
+                          decoration: InputDecoration(
+                            hintText: 'Enter Coupon Code',
+                            hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Colors.grey),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: kOrange),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: () {
+                          final code = textCtrl.text.trim().toUpperCase();
+                          if (code.isNotEmpty) {
+                            _applyManualPromo(code);
+                            Navigator.pop(ctx);
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kOrange,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        child: const Text('Apply', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                  if (_appliedPromoCode != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5E9),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFF81C784)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Applied: $_appliedPromoCode (-₹${_promoDiscount.toStringAsFixed(2)})',
+                              style: const TextStyle(
+                                color: Color(0xFF2E7D32),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _appliedPromoCode = null;
+                                _promoDiscount = 0.0;
+                                _isManualPromoApplied = false;
+                              });
+                              _applyBestAutoPromo();
+                              setModalState(() {});
+                              Navigator.pop(ctx);
+                            },
+                            child: const Text(
+                              'Remove',
+                              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Available Offers',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: kDark,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  if (_activePromos.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: Text(
+                          'No coupon codes available at the moment.',
+                          style: TextStyle(color: Colors.grey, fontSize: 13),
+                        ),
+                      ),
+                    )
+                  else
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.of(context).size.height * 0.4,
+                      ),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: _activePromos.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final promo = _activePromos[index];
+                          final code = promo['code'] as String? ?? '';
+                          final desc = promo['description'] as String? ?? '';
+                          final disp = promo['discount_display'] as String? ?? '';
+                          final minFare = (promo['min_fare'] as num?)?.toDouble() ?? 0.0;
+                          final isApplicable = _estimatedFare >= minFare;
+                          final isCurrent = _appliedPromoCode == code;
+
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isCurrent ? const Color(0xFFFFF3E0) : kGray,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: isCurrent ? kOrange : const Color(0xFFEEEEEE),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: kOrange.withOpacity(0.1),
+                                              border: Border.all(color: kOrange),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              code,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: kOrange,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Save $disp',
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                              color: kDark,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        desc,
+                                        style: const TextStyle(fontSize: 11, color: kMuted),
+                                      ),
+                                      if (minFare > 0) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Min Fare: ₹${minFare.toStringAsFixed(0)}',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: isApplicable ? kMuted : Colors.red,
+                                            fontWeight: isApplicable ? FontWeight.normal : FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                ElevatedButton(
+                                  onPressed: isApplicable
+                                      ? () {
+                                          _applyManualPromo(code);
+                                          Navigator.pop(ctx);
+                                        }
+                                      : null,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: isCurrent ? Colors.green : kDark,
+                                    disabledBackgroundColor: Colors.grey[300],
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  ),
+                                  child: Text(
+                                    isCurrent ? 'Applied' : 'Apply',
+                                    style: TextStyle(
+                                      color: isApplicable ? Colors.white : Colors.grey[600],
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+    _loadActivePromos();
     WidgetsBinding.instance.addObserver(this);
     _destCtrl = TextEditingController(text: widget.prefilledDest);
     
@@ -3004,6 +3444,7 @@ class _WhereToScreenState extends State<WhereToScreen>
           _estimatedDistance = (res['data']?['distance_km'] ?? 0.0).toDouble();
           _estimatedDuration = (res['data']?['duration_min'] ?? 0).toInt();
         });
+        _revalidateAppliedPromo();
       }
     } catch (e) {
       setState(() {
@@ -3362,6 +3803,9 @@ class _WhereToScreenState extends State<WhereToScreen>
         _driverLat = null;
         _driverLng = null;
         _bonusAmount = 0;
+        _appliedPromoCode = null;
+        _promoDiscount = 0.0;
+        _isManualPromoApplied = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Ride request cancelled')),
@@ -4379,11 +4823,26 @@ class _WhereToScreenState extends State<WhereToScreen>
                                     style: const TextStyle(
                                         fontSize: 10.5, color: kMuted)),
                               ])),
-                          Text('₹${_estimatedFare.toStringAsFixed(0)}',
-                              style: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w800,
-                                  color: widget.service.accent))
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              if (_promoDiscount > 0) ...[
+                                Text('₹${_estimatedFare.toStringAsFixed(0)}',
+                                    style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey,
+                                        decoration: TextDecoration.lineThrough)),
+                                const SizedBox(width: 4),
+                              ],
+                              Text('₹${(_estimatedFare - _promoDiscount).toStringAsFixed(0)}',
+                                  style: TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800,
+                                      color: widget.service.accent)),
+                            ],
+                          )
                         ],
                       ),
                     ),
@@ -4485,6 +4944,60 @@ class _WhereToScreenState extends State<WhereToScreen>
                     ),
                     const SizedBox(height: 4),
                     GestureDetector(
+                      onTap: _showPromoCodeModal,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                            color: kGray,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: const Color(0xFFEEEEEE), width: 1.5)),
+                        child: Row(
+                          children: [
+                            const Text('🎟️',
+                                style: TextStyle(fontSize: 16)),
+                            const SizedBox(width: 6),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  Text(
+                                      _appliedPromoCode != null
+                                          ? 'Promo Applied: $_appliedPromoCode'
+                                          : 'Apply Coupon',
+                                      style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          color: kDark)),
+                                  Text(
+                                      _appliedPromoCode != null && _promoDiscount > 0
+                                          ? 'Saved ₹${_promoDiscount.toStringAsFixed(2)} on this ride'
+                                          : 'Get discounts on your fare',
+                                      style: TextStyle(
+                                          fontSize: 9,
+                                          color: _appliedPromoCode != null
+                                              ? const Color(0xFF4CAF50)
+                                              : kMuted,
+                                          fontWeight: _appliedPromoCode != null
+                                              ? FontWeight.w600
+                                              : FontWeight.normal)),
+                                ])),
+                            Text(
+                                _appliedPromoCode != null ? 'Remove' : 'Apply →',
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    color: _appliedPromoCode != null
+                                        ? Colors.red[700]
+                                        : kOrange,
+                                    fontWeight: FontWeight.w700)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    GestureDetector(
                       onTap: () => setState(() => _showPaymentModal = true),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -4563,6 +5076,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                             "payment_method": _paymentMethod.id,
                             "use_kcoins": _useKCoins,
                             "is_ev_request": widget.service.isEV,
+                            "promo_code": _appliedPromoCode,
                           };
                           try {
                             final result = await ApiService.bookTrip(body);
@@ -4607,7 +5121,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                         child: Text(
                             _fareLoading
                                 ? 'Getting fare...'
-                                : 'Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹${_estimatedFare.toStringAsFixed(0)}',
+                                : 'Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹${(_estimatedFare - _promoDiscount).toStringAsFixed(0)}',
                             style: const TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.w700)),
                       ),

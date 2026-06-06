@@ -65,6 +65,11 @@ class TripData {
   final String message;
   String status; // requested | accepted | arrived | started
 
+  final String? promoCode;
+  final double promoDiscount;
+  final double kcoinDiscount;
+  final double actualFare;
+
   TripData({
     required this.id,
     required this.tripCode,
@@ -90,6 +95,10 @@ class TripData {
     required this.isNonAcRequest,
     required this.message,
     required this.status,
+    this.promoCode,
+    required this.promoDiscount,
+    required this.kcoinDiscount,
+    required this.actualFare,
   });
 
   TripData copyWith({
@@ -122,6 +131,10 @@ class TripData {
         isNonAcRequest: isNonAcRequest,
         message: message,
         status: status ?? this.status,
+        promoCode: promoCode,
+        promoDiscount: promoDiscount,
+        kcoinDiscount: kcoinDiscount,
+        actualFare: actualFare,
       );
 }
 
@@ -356,6 +369,15 @@ TripData _mapToTripData(dynamic raw) {
     status: _normalizeTripStatus(
         _firstValue(data, const ['status', 'trip_status', 'booking_status']),
         fallback: 'requested'),
+    promoCode: _asText(_firstValue(data, const ['promo_code', 'coupon_code'])),
+    promoDiscount: _asDouble(_firstValue(data, const ['promo_discount', 'discount'])),
+    kcoinDiscount: _asDouble(_firstValue(data, const ['kcoin_discount', 'coins_discount'])),
+    actualFare: _asDouble(
+      _firstValue(data, const ['actual_fare', 'rider_payable', 'net_fare']),
+      fallback: (fare.toDouble() -
+          _asDouble(_firstValue(data, const ['promo_discount', 'discount'])) -
+          _asDouble(_firstValue(data, const ['kcoin_discount', 'coins_discount']))),
+    ),
   );
 }
 
@@ -2794,9 +2816,14 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
   }
 
   Future<bool> _confirmCashCollected(TripData trip) async {
-    final amount = trip.totalFare > 0 ? trip.totalFare : trip.fare.toDouble();
-    final amountLabel =
-        amount % 1 == 0 ? amount.toStringAsFixed(0) : amount.toStringAsFixed(2);
+    final riderPayable = trip.actualFare;
+    final promoDiscount = trip.promoDiscount;
+    final kcoinDiscount = trip.kcoinDiscount;
+    final companySettlement = promoDiscount + kcoinDiscount;
+    final driverEarnings = trip.driverEarnings.toDouble();
+    final bonusAmount = trip.bonusAmount;
+    final totalDriverSettlement = driverEarnings + bonusAmount;
+
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -2808,31 +2835,85 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Collect cash from the rider before closing this trip.',
-                style: GoogleFonts.sora(fontSize: 13, color: kMuted)),
+            Text('Please collect cash from the rider and verify details below:',
+                style: GoogleFonts.sora(fontSize: 12, color: kMuted)),
             const SizedBox(height: 14),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               decoration: BoxDecoration(
                 color: kOrangeLight,
                 borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: kOrange.withOpacity(0.3)),
               ),
-              child: Text('₹$amountLabel',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.sora(
-                      fontSize: 30,
-                      color: kOrange,
-                      fontWeight: FontWeight.w900)),
+              child: Column(
+                children: [
+                  Text('COLLECT FROM RIDER',
+                      style: GoogleFonts.sora(
+                          fontSize: 10,
+                          color: kOrangeDark,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1)),
+                  const SizedBox(height: 4),
+                  Text('₹${riderPayable.toStringAsFixed(0)}',
+                      style: GoogleFonts.sora(
+                          fontSize: 32,
+                          color: kOrange,
+                          fontWeight: FontWeight.w900)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 8),
+            _buildDialogBreakdownRow('Estimated Base Fare', '₹${trip.totalFare.toStringAsFixed(0)}'),
+            if (promoDiscount > 0)
+              _buildDialogBreakdownRow(
+                'Coupon Discount (${trip.promoCode ?? "Applied"})', 
+                '-₹${promoDiscount.toStringAsFixed(0)}',
+                valueColor: Colors.green[700],
+              ),
+            if (kcoinDiscount > 0)
+              _buildDialogBreakdownRow(
+                'K Coin Discount', 
+                '-₹${kcoinDiscount.toStringAsFixed(0)}',
+                valueColor: Colors.green[700],
+              ),
+            if (companySettlement > 0) ...[
+              const SizedBox(height: 4),
+              _buildDialogBreakdownRow(
+                'Company Pays Driver', 
+                '+₹${companySettlement.toStringAsFixed(0)}',
+                valueColor: kOrangeDark,
+                isBold: true,
+              ),
+            ],
+            if (bonusAmount > 0)
+              _buildDialogBreakdownRow('Trip Bonus added', '+₹${bonusAmount.toStringAsFixed(0)}', valueColor: Colors.green[700]),
+            const SizedBox(height: 8),
+            const Divider(),
+            const SizedBox(height: 8),
+            _buildDialogBreakdownRow(
+              'Your Total Earnings', 
+              '₹${totalDriverSettlement.toStringAsFixed(0)}',
+              isBold: true,
+              fontSize: 14,
+              valueColor: kDark,
             ),
           ],
         ),
         actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text('Cancel', style: GoogleFonts.sora(color: kMuted, fontWeight: FontWeight.bold)),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: kSuccess,
               foregroundColor: kWhite,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             child: Text('Cash Collected',
                 style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
@@ -2841,6 +2922,19 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       ),
     );
     return confirmed == true;
+  }
+
+  Widget _buildDialogBreakdownRow(String label, String value, {Color? valueColor, bool isBold = false, double fontSize = 12}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: GoogleFonts.sora(fontSize: fontSize, color: isBold ? kDark : kMuted, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          Text(value, style: GoogleFonts.sora(fontSize: fontSize, color: valueColor ?? kDark, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+        ],
+      ),
+    );
   }
 
   Future<void> _askDriverReview(TripData trip) async {

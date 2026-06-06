@@ -6466,7 +6466,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
 
   Widget _buildNewLocationCard() {
     return GestureDetector(
-      onTap: () => _openService(_rideServices[0]),
+      onTap: () => _openService(_rideServices[1]),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

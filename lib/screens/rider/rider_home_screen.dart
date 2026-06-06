@@ -3757,33 +3757,18 @@ class _WhereToScreenState extends State<WhereToScreen>
 
     return Container(
       color: kWhite,
-      child: Column(
-        children: [
-          Container(
-            color: kWhite,
-            padding: EdgeInsets.fromLTRB(20, topPadding, 20, 10),
+      child: SafeArea(
+        top: false,
+        bottom: false,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20, topPadding, 20, 24),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-
-                    if (widget.genericMode) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: kOrangeLight,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: kOrange.withValues(alpha: 0.2)),
-                        ),
-                        child: const Text(
-                          'BOOK YOUR RIDE',
-                          style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: kOrange),
-                        ),
-                      ),
-                    ] else ...[
+                    if (!widget.genericMode) ...[
                       Container(
                           width: 32,
                           height: 32,
@@ -3821,13 +3806,11 @@ class _WhereToScreenState extends State<WhereToScreen>
                 ),
                 SizedBox(height: isKeyboardOpen ? 10 : 16),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
                       color: kOrangeLight,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: kOrange.withValues(alpha: 0.2), width: 1.2)),
+                      borderRadius: BorderRadius.circular(10)),
                   child: Row(
                     children: [
                       Container(
@@ -3843,7 +3826,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                               decoration: const InputDecoration(
                                   border: InputBorder.none,
                                   isDense: true,
-                                  contentPadding: EdgeInsets.symmetric(vertical: 6),
+                                  contentPadding: EdgeInsets.zero,
                                   hintText: 'Pickup location'),
                               style:
                                   const TextStyle(fontSize: 13, color: kDark))),
@@ -3853,13 +3836,11 @@ class _WhereToScreenState extends State<WhereToScreen>
                 const SizedBox(height: 6),
                 StatefulBuilder(
                   builder: (_, ss) => Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                    height: 44,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
                         color: kGray,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color: const Color(0xFFEEEEEE), width: 1.2)),
+                        borderRadius: BorderRadius.circular(10)),
                     child: Row(
                       children: [
                         Container(
@@ -3878,7 +3859,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                             decoration: InputDecoration(
                                 border: InputBorder.none,
                                 isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(vertical: 6),
+                                contentPadding: EdgeInsets.zero,
                                 hintText: widget.service.category == 'delivery'
                                     ? 'Delivery address...'
                                     : 'Where to?'),
@@ -3901,13 +3882,11 @@ class _WhereToScreenState extends State<WhereToScreen>
                 if (widget.service.category == 'ride') ...[
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 4),
+                    height: 44,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
                     decoration: BoxDecoration(
                         color: const Color(0xFFFFF3E0),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                            color: const Color(0xFFFF6B35).withOpacity(0.3))),
+                        borderRadius: BorderRadius.circular(10)),
                     child: Row(children: [
                       const Text('🚗', style: TextStyle(fontSize: 18)),
                       const SizedBox(width: 8),
@@ -3942,333 +3921,331 @@ class _WhereToScreenState extends State<WhereToScreen>
                     ]),
                   ),
                 ],
-                if (!isKeyboardOpen) ...[
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            if (_destCtrl.text.isEmpty) {
-                              _destCtrl.text = "Map Selected Location";
-                            }
-                            setState(() {
-                              _dropLat = 22.5850;
-                              _dropLng = 88.3950;
-                              _step = 'confirm';
-                            });
-                            _loadFare();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Confirm your location on the map')),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                            decoration: BoxDecoration(
-                              color: kWhite,
-                              border: Border.all(color: const Color(0xFFE4E7EC)),
-                              borderRadius: BorderRadius.circular(99),
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.map_rounded, size: 15, color: kDark),
-                                SizedBox(width: 6),
-                                Text('Select from map',
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: kDark)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Stops feature is coming soon!')),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                            decoration: BoxDecoration(
-                              color: kWhite,
-                              border: Border.all(color: const Color(0xFFE4E7EC)),
-                              borderRadius: BorderRadius.circular(99),
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.add_rounded, size: 15, color: kDark),
-                                SizedBox(width: 6),
-                                Text('Add stops',
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: kDark)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-          Expanded(
-            child: _suggestionsLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: kOrange),
-                  )
-                : _suggestions.isNotEmpty
-                    ? ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                        itemCount: _suggestions.length,
-                        itemBuilder: (context, index) {
-                          final suggestion = _suggestions[index];
-                          String? distanceStr;
-                          if (suggestion.latitude != null && suggestion.longitude != null) {
-                            try {
-                              final distMeters = Geolocator.distanceBetween(
-                                _pickupLat,
-                                _pickupLng,
-                                suggestion.latitude!,
-                                suggestion.longitude!,
-                              );
-                              final distKm = distMeters / 1000.0;
-                              distanceStr = "${distKm.toStringAsFixed(1)} km";
-                            } catch (_) {}
-                          } else {
-                            distanceStr = "${(8.0 + index * 1.2).toStringAsFixed(1)} km";
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          if (_destCtrl.text.isEmpty) {
+                            _destCtrl.text = "Map Selected Location";
                           }
-
-                          return GestureDetector(
-                            onTap: () => _selectSuggestion(suggestion),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 5),
-                              decoration: const BoxDecoration(
-                                border: Border(bottom: BorderSide(color: Color(0xFFF2F4F7), width: 1)),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  SizedBox(
-                                    width: 38,
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(
-                                          Icons.location_on_rounded,
-                                          color: Color(0xFF667085),
-                                          size: 16,
-                                        ),
-                                        if (distanceStr != null) ...[
-                                          const SizedBox(height: 1),
-                                          Text(
-                                            distanceStr,
-                                            style: const TextStyle(
-                                              fontSize: 8.0,
-                                              fontWeight: FontWeight.w500,
-                                              color: Color(0xFF667085),
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          suggestion.placeName,
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w500,
-                                            color: kDark,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        if (suggestion.placeAddress.isNotEmpty) ...[
-                                          const SizedBox(height: 1),
-                                          Text(
-                                            suggestion.placeAddress,
-                                            style: const TextStyle(
-                                              fontSize: 11,
-                                              color: kMuted,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Icon(
-                                    Icons.favorite_border_rounded,
-                                    color: Color(0xFF98A2B3),
-                                    size: 15,
-                                  ),
-                                  const SizedBox(width: 4),
-                                ],
-                              ),
-                            ),
+                          setState(() {
+                            _dropLat = 22.5850;
+                            _dropLng = 88.3950;
+                            _step = 'confirm';
+                          });
+                          _loadFare();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Confirm your location on the map')),
                           );
                         },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: kWhite,
+                            border: Border.all(color: const Color(0xFFE4E7EC)),
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.map_rounded, size: 15, color: kDark),
+                              SizedBox(width: 6),
+                              Text('Select from map',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: kDark)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Stops feature is coming soon!')),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: kWhite,
+                            border: Border.all(color: const Color(0xFFE4E7EC)),
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add_rounded, size: 15, color: kDark),
+                              SizedBox(width: 6),
+                              Text('Add stops',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: kDark)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _suggestionsLoading
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: CircularProgressIndicator(color: kOrange),
+                        ),
                       )
-                    : ListView(
-                        padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-                        children: [
-                          const Text('SAVED PLACES',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: kMuted,
-                                  letterSpacing: 0.5)),
-                          const SizedBox(height: 6),
-                          ..._quickDests.map((d) {
-                            final full = '${d.label}, ${d.sub}';
-                            return StatefulBuilder(
-                              builder: (_, ss) => GestureDetector(
-                                onTap: () async {
-                                  setState(() => _destCtrl.text = full);
-                                  FocusScope.of(context).unfocus();
-                                  await _loadFare();
-                                  setState(() => _step = 'confirm');
-                                },
+                    : _suggestions.isNotEmpty
+                        ? ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: const EdgeInsets.only(top: 8),
+                            itemCount: _suggestions.length,
+                            itemBuilder: (context, index) {
+                              final suggestion = _suggestions[index];
+                              String? distanceStr;
+                              if (suggestion.latitude != null && suggestion.longitude != null) {
+                                try {
+                                  final distMeters = Geolocator.distanceBetween(
+                                    _pickupLat,
+                                    _pickupLng,
+                                    suggestion.latitude!,
+                                    suggestion.longitude!,
+                                  );
+                                  final distKm = distMeters / 1000.0;
+                                  distanceStr = "${distKm.toStringAsFixed(1)} km";
+                                } catch (_) {}
+                              } else {
+                                distanceStr = "${(8.0 + index * 1.2).toStringAsFixed(1)} km";
+                              }
+
+                              return GestureDetector(
+                                onTap: () => _selectSuggestion(suggestion),
                                 child: Container(
-                                  margin: const EdgeInsets.only(bottom: 4),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 5),
-                                  decoration: BoxDecoration(
-                                      color: _destCtrl.text.startsWith(d.label)
-                                          ? kOrangeLight
-                                          : kGray,
-                                      borderRadius: BorderRadius.circular(10)),
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  decoration: const BoxDecoration(
+                                    border: Border(bottom: BorderSide(color: Color(0xFFF2F4F7), width: 1)),
+                                  ),
                                   child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      Container(
-                                          width: 34,
-                                          height: 34,
-                                          decoration: BoxDecoration(
-                                              color: kWhite,
-                                              borderRadius: BorderRadius.circular(10),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                    color: Colors.black.withOpacity(0.05),
-                                                    blurRadius: 6,
-                                                    offset: const Offset(0, 1.5))
-                                              ]),
-                                          child: Center(
-                                              child: Text(d.icon,
-                                                  style: const TextStyle(fontSize: 15)))),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                          child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                            Text(d.label,
+                                      SizedBox(
+                                        width: 38,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.location_on_rounded,
+                                              color: Color(0xFF667085),
+                                              size: 16,
+                                            ),
+                                            if (distanceStr != null) ...[
+                                              const SizedBox(height: 1),
+                                              Text(
+                                                distanceStr,
                                                 style: const TextStyle(
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w500,
-                                                    color: kDark)),
-                                            Text(d.sub,
-                                                style: const TextStyle(
-                                                    fontSize: 11, color: kMuted)),
-                                          ])),
-                                      const SizedBox(width: 8),
-                                      GestureDetector(
-                                        onTap: () async {
-                                          final newAddress = await _showEditAddressDialog(d.label, d.sub);
-                                          if (newAddress != null && newAddress.trim().isNotEmpty) {
-                                            if (d.label == 'Home') {
-                                              await AuthService.setHomeAddress(newAddress.trim());
-                                            } else {
-                                              await AuthService.setOfficeAddress(newAddress.trim());
-                                            }
-                                            setState(() {});
-                                            ss(() {});
-                                          }
-                                        },
-                                        child: Container(
-                                          padding: const EdgeInsets.all(4),
-                                          decoration: BoxDecoration(
-                                            color: kWhite,
-                                            shape: BoxShape.circle,
-                                            border: Border.all(color: const Color(0xFFE4E7EC), width: 1),
-                                          ),
-                                          child: const Icon(
-                                            Icons.edit_rounded,
-                                            color: Color(0xFF667085),
-                                            size: 12,
-                                          ),
+                                                  fontSize: 8.0,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: Color(0xFF667085),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
                                         ),
                                       ),
-                                      if (_destCtrl.text.startsWith(d.label)) ...[
-                                        const SizedBox(width: 6),
-                                        const Text('✓',
-                                            style:
-                                                TextStyle(color: kOrange, fontSize: 14)),
-                                      ],
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              suggestion.placeName,
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w500,
+                                                color: kDark,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            if (suggestion.placeAddress.isNotEmpty) ...[
+                                              const SizedBox(height: 1),
+                                              Text(
+                                                suggestion.placeAddress,
+                                                style: const TextStyle(
+                                                  fontSize: 11,
+                                                  color: kMuted,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Icon(
+                                        Icons.favorite_border_rounded,
+                                        color: Color(0xFF98A2B3),
+                                        size: 15,
+                                      ),
+                                      const SizedBox(width: 4),
                                     ],
                                   ),
                                 ),
-                              ),
-                            );
-                          }),
-                        ],
+                              );
+                            },
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('SAVED PLACES',
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: kMuted,
+                                      letterSpacing: 0.5)),
+                              const SizedBox(height: 6),
+                              ..._quickDests.map((d) {
+                                final full = '${d.label}, ${d.sub}';
+                                return StatefulBuilder(
+                                  builder: (_, ss) => GestureDetector(
+                                    onTap: () async {
+                                      setState(() => _destCtrl.text = full);
+                                      FocusScope.of(context).unfocus();
+                                      await _loadFare();
+                                      setState(() => _step = 'confirm');
+                                    },
+                                    child: Container(
+                                      margin: const EdgeInsets.only(bottom: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 5),
+                                      decoration: BoxDecoration(
+                                          color: _destCtrl.text.startsWith(d.label)
+                                              ? kOrangeLight
+                                              : kGray,
+                                          borderRadius: BorderRadius.circular(10)),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                              width: 34,
+                                              height: 34,
+                                              decoration: BoxDecoration(
+                                                  color: kWhite,
+                                                  borderRadius: BorderRadius.circular(10),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                        color: Colors.black.withOpacity(0.05),
+                                                        blurRadius: 6,
+                                                        offset: const Offset(0, 1.5))
+                                                  ]),
+                                              child: Center(
+                                                  child: Text(d.icon,
+                                                      style: const TextStyle(fontSize: 15)))),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                              child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                Text(d.label,
+                                                    style: const TextStyle(
+                                                        fontSize: 13,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: kDark)),
+                                                Text(d.sub,
+                                                    style: const TextStyle(
+                                                        fontSize: 11, color: kMuted)),
+                                              ])),
+                                          const SizedBox(width: 8),
+                                          GestureDetector(
+                                            onTap: () async {
+                                              final newAddress = await _showEditAddressDialog(d.label, d.sub);
+                                              if (newAddress != null && newAddress.trim().isNotEmpty) {
+                                                if (d.label == 'Home') {
+                                                  await AuthService.setHomeAddress(newAddress.trim());
+                                                } else {
+                                                  await AuthService.setOfficeAddress(newAddress.trim());
+                                                }
+                                                setState(() {});
+                                                ss(() {});
+                                              }
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: BoxDecoration(
+                                                color: kWhite,
+                                                shape: BoxShape.circle,
+                                                border: Border.all(color: const Color(0xFFE4E7EC), width: 1),
+                                              ),
+                                              child: const Icon(
+                                                Icons.edit_rounded,
+                                                color: Color(0xFF667085),
+                                                size: 12,
+                                              ),
+                                            ),
+                                          ),
+                                          if (_destCtrl.text.startsWith(d.label)) ...[
+                                            const SizedBox(width: 6),
+                                            const Text('✓',
+                                                style:
+                                                    TextStyle(color: kOrange, fontSize: 14)),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ],
+                          ),
+                const SizedBox(height: 20),
+                StatefulBuilder(
+                  builder: (_, ss) {
+                    final hasText = _destCtrl.text.isNotEmpty;
+                    return ElevatedButton(
+                      onPressed: hasText
+                          ? () async {
+                              await _loadFare();
+                              setState(() => _step = 'confirm');
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: hasText
+                            ? widget.service.accent
+                            : const Color(0xFFEEEEEE),
+                        foregroundColor: hasText ? kWhite : kMuted,
+                        disabledBackgroundColor: const Color(0xFFEEEEEE),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                        elevation: hasText ? 8 : 0,
+                        shadowColor: widget.service.accent.withOpacity(0.27),
                       ),
-          ),
-          if (!isKeyboardOpen)
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 36),
-              color: kWhite,
-              child: StatefulBuilder(
-                builder: (_, ss) {
-                  final hasText = _destCtrl.text.isNotEmpty;
-                  return ElevatedButton(
-                    onPressed: hasText
-                        ? () async {
-                            await _loadFare();
-                            setState(() => _step = 'confirm');
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: hasText
-                          ? widget.service.accent
-                          : const Color(0xFFEEEEEE),
-                      foregroundColor: hasText ? kWhite : kMuted,
-                      disabledBackgroundColor: const Color(0xFFEEEEEE),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      elevation: hasText ? 8 : 0,
-                      shadowColor: widget.service.accent.withOpacity(0.27),
-                    ),
-                    child: SizedBox(
-                        width: double.infinity,
-                        child: Center(
-                            child: Text(
-                                hasText
-                                    ? 'Find ${widget.service.name} →'
-                                    : 'Enter a destination',
-                                style: const TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.w700)))),
-                  );
-                },
-              ),
+                      child: SizedBox(
+                          width: double.infinity,
+                          child: Center(
+                              child: Text(
+                                  hasText
+                                      ? 'Find ${widget.service.name} →'
+                                      : 'Enter a destination',
+                                  style: const TextStyle(
+                                      fontSize: 16, fontWeight: FontWeight.w700)))),
+                    );
+                  },
+                ),
+              ],
             ),
-        ],
+          ),
+        ),
       ),
     );
   }

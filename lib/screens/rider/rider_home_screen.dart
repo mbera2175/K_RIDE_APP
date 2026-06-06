@@ -4437,7 +4437,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                         color: const Color(0xFFFFF3E0),
                         borderRadius: BorderRadius.circular(10)),
                     child: Row(children: [
-                      const Text('🚗', style: TextStyle(fontSize: 18)),
+                      ServiceIconWidget(icon: _selectedVehicleType, size: 22),
                       const SizedBox(width: 8),
                       const Text('Vehicle:',
                           style: TextStyle(
@@ -4447,17 +4447,57 @@ class _WhereToScreenState extends State<WhereToScreen>
                           child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                         value: _selectedVehicleType,
-                        items: const [
+                        items: [
                           DropdownMenuItem(
-                              value: 'ac_cab', child: Text('AC Cab')),
+                            value: 'ac_cab',
+                            child: Row(
+                              children: [
+                                ServiceIconWidget(icon: 'ac_cab', size: 20),
+                                const SizedBox(width: 8),
+                                const Text('AC Cab', style: TextStyle(fontSize: 13)),
+                              ],
+                            ),
+                          ),
                           DropdownMenuItem(
-                              value: 'non_ac_cab', child: Text('Non-AC Cab')),
+                            value: 'non_ac_cab',
+                            child: Row(
+                              children: [
+                                ServiceIconWidget(icon: 'non_ac_cab', size: 20),
+                                const SizedBox(width: 8),
+                                const Text('Non-AC Cab', style: TextStyle(fontSize: 13)),
+                              ],
+                            ),
+                          ),
                           DropdownMenuItem(
-                              value: 'bike', child: Text('Bike')),
+                            value: 'bike',
+                            child: Row(
+                              children: [
+                                ServiceIconWidget(icon: 'bike', size: 20),
+                                const SizedBox(width: 8),
+                                const Text('Bike', style: TextStyle(fontSize: 13)),
+                              ],
+                            ),
+                          ),
                           DropdownMenuItem(
-                              value: 'auto', child: Text('Auto')),
+                            value: 'auto',
+                            child: Row(
+                              children: [
+                                ServiceIconWidget(icon: 'auto', size: 20),
+                                const SizedBox(width: 8),
+                                const Text('Auto', style: TextStyle(fontSize: 13)),
+                              ],
+                            ),
+                          ),
                           DropdownMenuItem(
-                              value: 'toto', child: Text('Toto')),
+                            value: 'toto',
+                            child: Row(
+                              children: [
+                                ServiceIconWidget(icon: 'toto', size: 20),
+                                const SizedBox(width: 8),
+                                const Text('Toto', style: TextStyle(fontSize: 13)),
+                              ],
+                            ),
+                          ),
                         ],
                         onChanged: (val) {
                           if (val != null) {

@@ -229,8 +229,6 @@ const recentPlaces = [
 const savedLocations = [
   PlaceItem(icon: '🏠', label: 'Home', sub: 'Sector 15, Noida'),
   PlaceItem(icon: '💼', label: 'Office', sub: 'Cyber City, Gurugram'),
-  PlaceItem(icon: '✈️', label: 'Airport', sub: 'IGI Terminal 3, Delhi'),
-  PlaceItem(icon: '🛍️', label: 'Select Mall', sub: 'Saket, Delhi'),
 ];
 
 // ══════════════════════════════════════════════════════════════
@@ -2194,8 +2192,6 @@ class _WhereToScreenState extends State<WhereToScreen>
   final _quickDests = const [
     PlaceItem(icon: '🏠', label: 'Home', sub: 'Sector 15, Noida'),
     PlaceItem(icon: '💼', label: 'Office', sub: 'Cyber City, Gurugram'),
-    PlaceItem(icon: '🛍️', label: 'Select Mall', sub: 'Saket, Delhi'),
-    PlaceItem(icon: '✈️', label: 'Airport', sub: 'IGI Terminal 3, Delhi'),
   ];
 
   String _normalizeTripStatus(dynamic status) {

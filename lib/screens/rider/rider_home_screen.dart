@@ -517,6 +517,7 @@ class ServiceIconWidget extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => Text('🚕', style: TextStyle(fontSize: size)),
       );
     }
     if (cleanIcon == '🏍️' || cleanIcon == 'bike') {
@@ -525,14 +526,24 @@ class ServiceIconWidget extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => Text('🏍️', style: TextStyle(fontSize: size)),
       );
     }
     if (cleanIcon == '🛺' || cleanIcon == 'auto') {
       return Image.asset(
-        'assets/images/auto.png',
+        'assets/images/auto rikswa.png',
         width: size,
         height: size,
         fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return Image.asset(
+            'assets/images/auto.png',
+            width: size,
+            height: size,
+            fit: BoxFit.contain,
+            errorBuilder: (context, err, st) => Text('🛺', style: TextStyle(fontSize: size)),
+          );
+        },
       );
     }
     if (cleanIcon == '🛵' || cleanIcon == 'toto') {
@@ -541,6 +552,7 @@ class ServiceIconWidget extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => Text('🛵', style: TextStyle(fontSize: size)),
       );
     }
     if (cleanIcon == '🚑' || cleanIcon == 'ambulance') {
@@ -549,6 +561,34 @@ class ServiceIconWidget extends StatelessWidget {
         width: size,
         height: size,
         fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => Text('🚑', style: TextStyle(fontSize: size)),
+      );
+    }
+    if (cleanIcon == '🍱' || cleanIcon == 'food') {
+      return Image.asset(
+        'assets/images/food.png',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => Text('🍱', style: TextStyle(fontSize: size)),
+      );
+    }
+    if (cleanIcon == '📦' || cleanIcon == 'parcel') {
+      return Image.asset(
+        'assets/images/parcel.png',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => Text('📦', style: TextStyle(fontSize: size)),
+      );
+    }
+    if (cleanIcon == '💊' || cleanIcon == 'medicine') {
+      return Image.asset(
+        'assets/images/medicine.png',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => Text('💊', style: TextStyle(fontSize: size)),
       );
     }
 
@@ -7131,8 +7171,11 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       width: 140,
       height: 70,
       child: Image.asset(
-        'assets/images/car_hero.png',
+        'assets/images/Car for banner.png',
         fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(child: Text('🚗', style: TextStyle(fontSize: 48)));
+        },
       ),
     );
   }
@@ -7549,9 +7592,17 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  const Positioned.fill(
+                  Positioned.fill(
                     child: Center(
-                      child: Text('🚗⚡', style: TextStyle(fontSize: 30)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Image.asset(
+                          'assets/images/ev car banner.png',
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Text('🚗⚡', style: TextStyle(fontSize: 30)),
+                        ),
+                      ),
                     ),
                   ),
                   const Positioned(

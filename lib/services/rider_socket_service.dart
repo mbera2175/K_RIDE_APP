@@ -30,7 +30,7 @@ class RiderSocketService {
       }
 
       if (_channel != null) {
-        _channel!.sink.close(status.goingAway);
+        _channel!.sink.close(status.normalClosure);
         _channel = null;
       }
       _isConnected = false;
@@ -132,7 +132,7 @@ class RiderSocketService {
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
     _isConnected = false;
-    _channel?.sink.close(status.goingAway);
+    _channel?.sink.close(status.normalClosure);
     _channel = null;
   }
 }

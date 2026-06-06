@@ -66,7 +66,7 @@ class DriverSocketService {
     _isConnected = false;
 
     _channel?.sink.close(
-      status.goingAway,
+      status.normalClosure,
     );
 
     _channel = null;

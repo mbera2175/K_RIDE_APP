@@ -3377,6 +3377,10 @@ class _WhereToScreenState extends State<WhereToScreen>
             (status == 'accepted' || status == 'arrived' || status == 'started')) {
           return false;
         }
+        if (_searching) {
+          await _cancelCurrentRide(closeAfterCancel: true);
+          return false;
+        }
         widget.onBack();
         return false;
       },
@@ -3437,32 +3441,7 @@ class _WhereToScreenState extends State<WhereToScreen>
             myLocationEnabled: true,
           ),
 
-          // Top Header
-          Positioned(
-            top: 52,
-            left: 16,
-            child: GestureDetector(
-              onTap: _cancelCurrentRide,
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(Icons.arrow_back_rounded, color: kDark, size: 20),
-                ),
-              ),
-            ),
-          ),
+
 
           // Bottom Sheet Panel
           Positioned(
@@ -3773,22 +3752,7 @@ class _WhereToScreenState extends State<WhereToScreen>
               children: [
                 Row(
                   children: [
-                    GestureDetector(
-                        onTap: widget.onBack,
-                        child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                                color: kOrangeLight,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: kOrange.withValues(alpha: 0.2))),
-                            child: const Center(
-                                child: Icon(
-                                  Icons.arrow_back_rounded,
-                                  color: kOrange,
-                                  size: 22,
-                                )))),
-                    const SizedBox(width: 12),
+
                     if (widget.genericMode) ...[
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -4337,29 +4301,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                       },
                       myLocationEnabled: true,
                     ),
-                    Positioned(
-                      top: 52,
-                      left: 16,
-                      child: GestureDetector(
-                        onTap: widget.onBack,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: kWhite,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: const [
-                              BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 10,
-                                  offset: Offset(0, 2))
-                            ],
-                          ),
-                          child: const Center(
-                              child: Text('←', style: TextStyle(fontSize: 18))),
-                        ),
-                      ),
-                    ),
+
                   ],
                 ),
               ),
@@ -4766,29 +4708,7 @@ class _WhereToScreenState extends State<WhereToScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                if (tripStatus == 'requested')
-                  GestureDetector(
-                    onTap: widget.onBack,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: kWhite,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 10,
-                            offset: Offset(0, 2),
-                          )
-                        ],
-                      ),
-                      child: const Center(
-                          child: Text('←', style: TextStyle(fontSize: 18))),
-                    ),
-                  )
-                else
-                  const SizedBox(width: 40),
+                const SizedBox(width: 40),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

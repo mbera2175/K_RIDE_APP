@@ -3424,34 +3424,6 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                         toggling: _toggling,
                         spinCtrl: _spinCtrl,
                         onTap: _handleToggle),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        _QuickAction(
-                            icon: '💰',
-                            label: 'Earnings',
-                            danger: false,
-                            onTap: () => setState(() => _navIndex = 1)),
-                        const SizedBox(width: 10),
-                        _QuickAction(
-                            icon: '📋',
-                            label: 'History',
-                            danger: false,
-                            onTap: () => setState(() => _navIndex = 2)),
-                        const SizedBox(width: 10),
-                        _QuickAction(
-                            icon: '👤',
-                            label: 'Profile',
-                            danger: false,
-                            onTap: () => setState(() => _navIndex = 3)),
-                        const SizedBox(width: 10),
-                        _QuickAction(
-                            icon: '🆘',
-                            label: 'SOS',
-                            danger: true,
-                            onTap: () {}),
-                      ],
-                    ),
                   ],
                 ),
               ),

@@ -51,7 +51,7 @@ class MapplsPlaceService {
         queryParams['lng'] = '$nearLng';
       }
 
-      final uri = Uri.parse('${AppConstants.baseUrl}/api/map/autocomplete')
+      final uri = Uri.parse('${AppConstants.baseUrl}/map/autocomplete')
           .replace(queryParameters: queryParams);
 
       final res = await http.get(
@@ -97,7 +97,7 @@ class MapplsPlaceService {
     if (token.isEmpty) return null;
 
     try {
-      final uri = Uri.parse('${AppConstants.baseUrl}/api/map/place-detail')
+      final uri = Uri.parse('${AppConstants.baseUrl}/map/place-detail')
           .replace(queryParameters: {'eLoc': eLoc});
 
       final res = await http.get(
@@ -133,7 +133,7 @@ class MapplsPlaceService {
     if (token.isEmpty) return null;
 
     try {
-      final uri = Uri.parse('${AppConstants.baseUrl}/api/map/reverse-geocode')
+      final uri = Uri.parse('${AppConstants.baseUrl}/map/reverse-geocode')
           .replace(queryParameters: {
         'lat': '$lat',
         'lng': '$lng',

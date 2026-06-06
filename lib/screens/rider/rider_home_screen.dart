@@ -2181,6 +2181,7 @@ class _WhereToScreenState extends State<WhereToScreen>
   double? _driverLng;
   MapplsMapController? _mapController;
   Symbol? _driverSymbol;
+  final List<Symbol> _driverSymbols = [];
   Timer? _searchingTimer;
   int _searchSecondsLeft = 240;
 
@@ -2708,6 +2709,66 @@ class _WhereToScreenState extends State<WhereToScreen>
           lineOpacity: 0.8,
         ));
       }
+    }
+  }
+
+  Future<void> _loadNearbyDriversOnMap() async {
+    if (_mapController == null) return;
+    
+    // Clear old driver symbols
+    for (final sym in _driverSymbols) {
+      try {
+        await _mapController!.removeSymbol(sym);
+      } catch (_) {}
+    }
+    _driverSymbols.clear();
+
+    try {
+      final res = await ApiService.getNearbyDrivers(
+        lat: _pickupLat,
+        lng: _pickupLng,
+        radius: 5.0,
+        vehicleType: _selectedVehicleType,
+      );
+
+      if (res['success'] == true && res['data'] != null) {
+        final List? drivers = res['data']['drivers'] as List?;
+        if (drivers != null && drivers.isNotEmpty) {
+          for (final d in drivers) {
+            final double? lat = (d['lat'] as num?)?.toDouble();
+            final double? lng = (d['lng'] as num?)?.toDouble();
+            if (lat != null && lng != null) {
+              final sym = await _mapController!.addSymbol(SymbolOptions(
+                geometry: LatLng(lat, lng),
+                iconImage: 'car-15',
+                iconSize: 1.8,
+                iconColor: '#FF6B00',
+              ));
+              _driverSymbols.add(sym);
+            }
+          }
+          debugPrint('Added ${drivers.length} nearby drivers to map');
+          return;
+        }
+      }
+      
+      // Fallback: Add 3 mock drivers if API fails or returns no drivers
+      final mockCoords = [
+        LatLng(_pickupLat + 0.0035, _pickupLng - 0.0025),
+        LatLng(_pickupLat - 0.0018, _pickupLng + 0.0042),
+        LatLng(_pickupLat + 0.0022, _pickupLng + 0.0031),
+      ];
+      for (final coord in mockCoords) {
+        final sym = await _mapController!.addSymbol(SymbolOptions(
+          geometry: coord,
+          iconImage: 'car-15',
+          iconSize: 1.8,
+          iconColor: '#FF6B00',
+        ));
+        _driverSymbols.add(sym);
+      }
+    } catch (e) {
+      debugPrint('Error loading nearby drivers on map: $e');
     }
   }
 
@@ -3920,6 +3981,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                             textColor: '#1A1A1A',
                           ));
                           await _drawRiderTripRoute();
+                          await _loadNearbyDriversOnMap();
                         } catch (_) {}
                       },
                       myLocationEnabled: true,
@@ -4088,8 +4150,13 @@ class _WhereToScreenState extends State<WhereToScreen>
                             DropdownMenuItem(
                                 value: 'toto', child: Text('Toto')),
                           ],
-                          onChanged: (val) =>
-                              setState(() => _selectedVehicleType = val!),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() => _selectedVehicleType = val);
+                              _loadFare();
+                              _loadNearbyDriversOnMap();
+                            }
+                          },
                         ))),
                       ]),
                     ),

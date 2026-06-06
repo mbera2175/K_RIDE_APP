@@ -184,6 +184,26 @@ class ApiService {
     return _handle(res);
   }
 
+  static Future<Map<String, dynamic>> getNearbyDrivers({
+    required double lat,
+    required double lng,
+    double radius = 5.0,
+    String? vehicleType,
+  }) async {
+    final queryParams = <String, String>{
+      'lat': '$lat',
+      'lng': '$lng',
+      'radius': '$radius',
+    };
+    if (vehicleType != null) {
+      queryParams['vehicle_type'] = vehicleType;
+    }
+    final uri = Uri.parse('$_base/drivers/nearby').replace(queryParameters: queryParams);
+    final res = await http.get(uri, headers: _authHeaders).timeout(_timeout);
+    return _handle(res);
+  }
+
+
   static Future<Map<String, dynamic>> bookTrip(Map<String, dynamic> body) async {
     final res = await http.post(Uri.parse('$_base/trips/book'),
       headers: _authHeaders, body: jsonEncode(body)).timeout(_timeout);

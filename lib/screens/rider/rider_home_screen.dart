@@ -7274,7 +7274,14 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               label: 'Car & Bike',
               bgColor: kOrangeBg,
               arrowColor: kOrange,
-              vehicleEmojis: '🚗  🏍️',
+              vehicleImage: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ServiceIconWidget(icon: 'ac_cab', size: 40),
+                  const SizedBox(width: 4),
+                  ServiceIconWidget(icon: 'bike', size: 40),
+                ],
+              ),
               onTap: () {
                 final items = _rideServices.where((s) => [1, 2, 3].contains(s.id)).toList();
                 setState(() => _seeAll = (title: 'Car & Bike', items: items));
@@ -7287,7 +7294,14 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               label: 'Auto & Toto',
               bgColor: kGreenBg,
               arrowColor: kGreenArrow,
-              vehicleEmojis: '🛺  🛺',
+              vehicleImage: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ServiceIconWidget(icon: 'auto', size: 40),
+                  const SizedBox(width: 4),
+                  ServiceIconWidget(icon: 'toto', size: 40),
+                ],
+              ),
               onTap: () {
                 final items = _rideServices.where((s) => [4, 5].contains(s.id)).toList();
                 setState(() => _seeAll = (title: 'Auto & Toto', items: items));
@@ -7300,7 +7314,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               label: 'Ambulance',
               bgColor: kPinkBg,
               arrowColor: kPinkArrow,
-              vehicleEmojis: '🚑',
+              vehicleImage: ServiceIconWidget(icon: 'ambulance', size: 42),
               onTap: () {
                 final service = services.firstWhere((s) => s.id == 6);
                 _openService(service);
@@ -7316,7 +7330,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     required String label,
     required Color bgColor,
     required Color arrowColor,
-    required String vehicleEmojis,
+    required Widget vehicleImage,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -7333,9 +7347,10 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Center(
-              child: Text(
-                vehicleEmojis,
-                style: const TextStyle(fontSize: 26),
+              child: Container(
+                height: 52,
+                alignment: Alignment.center,
+                child: vehicleImage,
               ),
             ),
             Row(
@@ -7345,10 +7360,12 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                   child: Text(
                     label,
                     style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
                       color: Colors.black87,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Container(
@@ -7373,17 +7390,39 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          Expanded(child: _buildServiceCard(emoji: '📦', label: 'Parcel', onTap: () => _openService(services.firstWhere((s) => s.id == 8)))),
+          Expanded(
+            child: _buildServiceCard(
+              iconKey: 'parcel',
+              label: 'Parcel',
+              onTap: () => _openService(services.firstWhere((s) => s.id == 8)),
+            ),
+          ),
           const SizedBox(width: 10),
-          Expanded(child: _buildServiceCard(emoji: '💊', label: 'Medicine', onTap: () => _openService(services.firstWhere((s) => s.id == 9)))),
+          Expanded(
+            child: _buildServiceCard(
+              iconKey: 'medicine',
+              label: 'Medicine',
+              onTap: () => _openService(services.firstWhere((s) => s.id == 9)),
+            ),
+          ),
           const SizedBox(width: 10),
-          Expanded(child: _buildServiceCard(emoji: '🍔', label: 'Food', onTap: () => _openService(services.firstWhere((s) => s.id == 7)))),
+          Expanded(
+            child: _buildServiceCard(
+              iconKey: 'food',
+              label: 'Food',
+              onTap: () => _openService(services.firstWhere((s) => s.id == 7)),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildServiceCard({required String emoji, required String label, required VoidCallback onTap}) {
+  Widget _buildServiceCard({
+    required String iconKey,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -7395,16 +7434,18 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
         ),
         child: Row(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 26)),
-            const SizedBox(width: 7),
+            ServiceIconWidget(icon: iconKey, size: 28),
+            const SizedBox(width: 8),
             Flexible(
               child: Text(
                 label,
                 style: const TextStyle(
                   fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: Colors.black87,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

@@ -92,6 +92,17 @@ class AuthService {
     await _prefs?.setString('profile_pic', url);
   }
 
+  // ── Saved Address Getters/Setters ────────────────────────
+  static String get homeAddress => _prefs?.getString('home_address') ?? 'Sector 15, Noida';
+  static Future<void> setHomeAddress(String address) async {
+    await _prefs?.setString('home_address', address);
+  }
+
+  static String get officeAddress => _prefs?.getString('office_address') ?? 'Cyber City, Gurugram';
+  static Future<void> setOfficeAddress(String address) async {
+    await _prefs?.setString('office_address', address);
+  }
+
   // ── Logout ───────────────────────────────────────────────
   static Future<void> logout({bool forced = false}) async {
     await _prefs?.clear();

@@ -219,16 +219,16 @@ const promos = [
       gradientColors: [Color(0xFF5E35B1), Color(0xFF7B1FA2)]),
 ];
 
-const recentPlaces = [
-  PlaceItem(icon: '🏠', label: 'Home', sub: 'Sector 15, Noida'),
-  PlaceItem(icon: '💼', label: 'Office', sub: 'Cyber City, Gurugram'),
+List<PlaceItem> get recentPlaces => [
+  PlaceItem(icon: '🏠', label: 'Home', sub: AuthService.homeAddress),
+  PlaceItem(icon: '💼', label: 'Office', sub: AuthService.officeAddress),
   PlaceItem(icon: '🛍️', label: 'Select Mall', sub: 'Saket, Delhi'),
   PlaceItem(icon: '✈️', label: 'Airport', sub: 'IGI Terminal 3, Delhi'),
 ];
 
-const savedLocations = [
-  PlaceItem(icon: '🏠', label: 'Home', sub: 'Sector 15, Noida'),
-  PlaceItem(icon: '💼', label: 'Office', sub: 'Cyber City, Gurugram'),
+List<PlaceItem> get savedLocations => [
+  PlaceItem(icon: '🏠', label: 'Home', sub: AuthService.homeAddress),
+  PlaceItem(icon: '💼', label: 'Office', sub: AuthService.officeAddress),
 ];
 
 // ══════════════════════════════════════════════════════════════
@@ -684,8 +684,46 @@ class _LocationModalState extends State<LocationModal> {
 
   void _useCurrentLocation() async {
     setState(() => _locating = true);
-    await Future.delayed(const Duration(milliseconds: 1500));
-    widget.onSelect('Connaught Place, New Delhi');
+    try {
+      final permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        widget.onSelect('Current Location');
+        return;
+      }
+      final pos = await Geolocator.getCurrentPosition();
+      try {
+        final placemarks = await geo.placemarkFromCoordinates(pos.latitude, pos.longitude);
+        if (placemarks.isNotEmpty) {
+          final pm = placemarks.first;
+          final String name = pm.name ?? '';
+          final String subLocality = pm.subLocality ?? '';
+          final String locality = pm.locality ?? '';
+          final String street = pm.street ?? '';
+          
+          String address = "";
+          if (street.isNotEmpty && !street.contains("+") && !street.contains("Unnamed")) {
+            address += "$street, ";
+          } else if (name.isNotEmpty && !name.contains("+") && !name.contains("Unnamed")) {
+            address += "$name, ";
+          }
+          if (subLocality.isNotEmpty) address += "$subLocality, ";
+          if (locality.isNotEmpty) address += locality;
+          
+          final finalAddress = address.trim().endsWith(",") 
+              ? address.trim().substring(0, address.trim().length - 1) 
+              : address.trim();
+          widget.onSelect(finalAddress.isEmpty ? 'Current Location' : finalAddress);
+        } else {
+          widget.onSelect('Current Location');
+        }
+      } catch (_) {
+        widget.onSelect('Current Location');
+      }
+    } catch (_) {
+      widget.onSelect('Current Location');
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
   }
 
   @override
@@ -2148,7 +2186,7 @@ class WhereToScreen extends StatefulWidget {
 
 class _WhereToScreenState extends State<WhereToScreen>
     with WidgetsBindingObserver {
-  final _pickupCtrl = TextEditingController(text: 'Connaught Place, New Delhi');
+  final _pickupCtrl = TextEditingController(text: 'Fetching current location...');
   late TextEditingController _destCtrl;
   String _step = 'input';
   PaymentMethod _paymentMethod = paymentMethods[0];
@@ -2189,9 +2227,9 @@ class _WhereToScreenState extends State<WhereToScreen>
   final FocusNode _pickupFocus = FocusNode();
   final FocusNode _destFocus = FocusNode();
 
-  final _quickDests = const [
-    PlaceItem(icon: '🏠', label: 'Home', sub: 'Sector 15, Noida'),
-    PlaceItem(icon: '💼', label: 'Office', sub: 'Cyber City, Gurugram'),
+  List<PlaceItem> get _quickDests => [
+    PlaceItem(icon: '🏠', label: 'Home', sub: AuthService.homeAddress),
+    PlaceItem(icon: '💼', label: 'Office', sub: AuthService.officeAddress),
   ];
 
   String _normalizeTripStatus(dynamic status) {
@@ -2246,7 +2284,14 @@ class _WhereToScreenState extends State<WhereToScreen>
     _pickupCtrl.addListener(_onSearchTextChanged);
     
     _pickupFocus.addListener(() {
-      if (!_pickupFocus.hasFocus) {
+      if (_pickupFocus.hasFocus) {
+        if (_pickupCtrl.text == 'Fetching current location...' || _pickupCtrl.text == 'Current Location') {
+          _pickupCtrl.clear();
+        }
+      } else {
+        if (_pickupCtrl.text.isEmpty) {
+          _pickupCtrl.text = 'Current Location';
+        }
         Future.delayed(const Duration(milliseconds: 200), () {
           if (mounted && !_pickupFocus.hasFocus && !_destFocus.hasFocus) {
             setState(() => _suggestions = []);
@@ -2464,7 +2509,12 @@ class _WhereToScreenState extends State<WhereToScreen>
   Future<void> _getLocation() async {
     try {
       final permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
+      if (permission == LocationPermission.denied) {
+        setState(() {
+          _pickupCtrl.text = 'Current Location';
+        });
+        return;
+      }
       final pos = await Geolocator.getCurrentPosition();
       setState(() {
         _pickupLat = pos.latitude;
@@ -2508,8 +2558,87 @@ class _WhereToScreenState extends State<WhereToScreen>
         });
       }
     } catch (e) {
-      // Keep default if GPS fails
+      setState(() {
+        _pickupCtrl.text = 'Current Location';
+      });
     }
+  }
+
+  Future<String?> _showEditAddressDialog(String label, String currentVal) async {
+    final controller = TextEditingController(text: currentVal);
+    return showDialog<String>(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: kWhite,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Update $label Address",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: kDark,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: kGray,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFEEEEEE), width: 1.2),
+                  ),
+                  child: TextField(
+                    controller: controller,
+                    autofocus: true,
+                    style: const TextStyle(fontSize: 13, color: kDark),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      hintText: "Enter address...",
+                      hintStyle: TextStyle(color: kMuted),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        "Cancel",
+                        style: TextStyle(color: kMuted, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context, controller.text),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kOrange,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        "Save",
+                        style: TextStyle(color: kWhite, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Timer? _driverAnimTimer;
@@ -3920,10 +4049,40 @@ class _WhereToScreenState extends State<WhereToScreen>
                                                 style: const TextStyle(
                                                     fontSize: 11, color: kMuted)),
                                           ])),
-                                      if (_destCtrl.text.startsWith(d.label))
+                                      const SizedBox(width: 8),
+                                      GestureDetector(
+                                        onTap: () async {
+                                          final newAddress = await _showEditAddressDialog(d.label, d.sub);
+                                          if (newAddress != null && newAddress.trim().isNotEmpty) {
+                                            if (d.label == 'Home') {
+                                              await AuthService.setHomeAddress(newAddress.trim());
+                                            } else {
+                                              await AuthService.setOfficeAddress(newAddress.trim());
+                                            }
+                                            setState(() {});
+                                            ss(() {});
+                                          }
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: kWhite,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(color: const Color(0xFFE4E7EC), width: 1),
+                                          ),
+                                          child: const Icon(
+                                            Icons.edit_rounded,
+                                            color: Color(0xFF667085),
+                                            size: 12,
+                                          ),
+                                        ),
+                                      ),
+                                      if (_destCtrl.text.startsWith(d.label)) ...[
+                                        const SizedBox(width: 6),
                                         const Text('✓',
                                             style:
                                                 TextStyle(color: kOrange, fontSize: 14)),
+                                      ],
                                     ],
                                   ),
                                 ),

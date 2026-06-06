@@ -3661,7 +3661,37 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                         MyDocumentsScreen(driverId: AuthService.driverId)));
           },
         ),
-        const SizedBox(height: 40),
+        const SizedBox(height: 12),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+                color: kOrangeLight, borderRadius: BorderRadius.circular(10)),
+            child: const Icon(Icons.share_rounded, color: kOrange),
+          ),
+          title: Text('Refer a Friend',
+              style: GoogleFonts.sora(
+                  fontSize: 15, fontWeight: FontWeight.w600, color: kDark)),
+          trailing: const Icon(Icons.chevron_right_rounded, color: kMuted),
+          onTap: _showReferralBottomSheet,
+        ),
+        const SizedBox(height: 12),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+                color: kOrangeLight, borderRadius: BorderRadius.circular(10)),
+            child: const Icon(Icons.headset_mic_rounded, color: kOrange),
+          ),
+          title: Text('Support & Help',
+              style: GoogleFonts.sora(
+                  fontSize: 15, fontWeight: FontWeight.w600, color: kDark)),
+          trailing: const Icon(Icons.chevron_right_rounded, color: kMuted),
+          onTap: _showSupportBottomSheet,
+        ),
+        const SizedBox(height: 30),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
@@ -3684,6 +3714,339 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         ),
       ]),
     ));
+  }
+
+  void _showReferralBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.75,
+          ),
+          child: FutureBuilder<Map<String, dynamic>>(
+            future: ApiService.getMe(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox(
+                  height: 250,
+                  child: Center(
+                    child: CircularProgressIndicator(color: kOrange),
+                  ),
+                );
+              }
+
+              // Extract the referral code safely
+              final data = snapshot.data?['data'];
+              final referralCode = data?['referral_code']?.toString() ?? 'KRIDE50';
+
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Handle bar
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDDDDDD),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Gift Icon/Emoji with pulsing border effect or stylish box
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: kOrangeLight,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: kOrange.withOpacity(0.2), width: 2),
+                      ),
+                      child: const Center(
+                        child: Text('🎁', style: TextStyle(fontSize: 40)),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    Text(
+                      'Refer a Friend & Earn! 👥',
+                      style: GoogleFonts.sora(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: kDark,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+
+                    Text(
+                      'Share your unique referral code with friends. When they register and take their first ride, both of you will receive bonus coins! 🪙',
+                      style: GoogleFonts.sora(
+                        fontSize: 13.5,
+                        color: kMuted,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 28),
+
+                    // Referral Code Box
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 18, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFBFBFB),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFEEEEEE)),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'YOUR REFERRAL CODE',
+                            style: GoogleFonts.sora(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: kMuted,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Dashed-style look with rounded orange text
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: kOrangeLight,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: kOrange.withOpacity(0.3),
+                                style: BorderStyle.solid,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Text(
+                              referralCode,
+                              style: GoogleFonts.sora(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w900,
+                                color: kOrange,
+                                letterSpacing: 3,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Copy Code Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: referralCode));
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  'Referral code "$referralCode" copied to clipboard! 🎁',
+                                  style: GoogleFonts.sora(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600)),
+                              backgroundColor: kOrange,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.copy_rounded,
+                            color: Colors.white, size: 18),
+                        label: Text(
+                          'Copy Referral Code',
+                          style: GoogleFonts.sora(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kOrange,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _supportOptionTile({
+    required String icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: kGray,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFEEEEEE), width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: kWhite,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2))
+                ],
+              ),
+              child: Center(
+                  child: Text(icon, style: const TextStyle(fontSize: 20))),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: GoogleFonts.sora(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: kDark)),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: GoogleFonts.sora(fontSize: 12, color: kMuted)),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                color: kMuted, size: 14),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSupportBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.75),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: const Color(0xFFDDDDDD),
+                      borderRadius: BorderRadius.circular(99))),
+              const SizedBox(height: 20),
+              Text('Contact Support 💬',
+                  style: GoogleFonts.sora(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: kDark)),
+              const SizedBox(height: 12),
+              Text(
+                  'Need assistance with your rides or driver portal?',
+                  style: GoogleFonts.sora(fontSize: 14, color: kMuted),
+                  textAlign: TextAlign.center),
+              const SizedBox(height: 24),
+              _supportOptionTile(
+                icon: '📞',
+                title: 'Call Support Helpline',
+                subtitle: 'Instant phone support (24/7)',
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              'Calling Helpline: +91 1800-KRIDE 📞',
+                              style: GoogleFonts.sora(fontSize: 13)),
+                          backgroundColor: kOrange,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10))));
+                },
+              ),
+              _supportOptionTile(
+                icon: '🟢',
+                title: 'Chat on WhatsApp',
+                subtitle: 'Get support via WhatsApp chat',
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              'Opening WhatsApp Support Chat 🟢',
+                              style: GoogleFonts.sora(fontSize: 13)),
+                          backgroundColor: kOrange,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10))));
+                },
+              ),
+              _supportOptionTile(
+                icon: '✉️',
+                title: 'Email support',
+                subtitle: 'support@kride.app',
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              'Opening email compose ✉️',
+                              style: GoogleFonts.sora(fontSize: 13)),
+                          backgroundColor: kOrange,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10))));
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _avatarFallback() => Container(

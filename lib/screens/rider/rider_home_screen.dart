@@ -2429,6 +2429,19 @@ class _WhereToScreenState extends State<WhereToScreen>
           _searchSecondsLeft--;
         } else {
           timer.cancel();
+          _stopSearchPolling();
+          setState(() {
+            _booked = false;
+            _searching = false;
+            _step = 'input';
+            _tripId = null;
+            _otpCode = null;
+            _assignedDriver = null;
+            _driverLat = null;
+            _driverLng = null;
+            _bonusAmount = 0;
+          });
+          _showNoDriverDialog();
         }
       });
     });
@@ -3144,13 +3157,19 @@ class _WhereToScreenState extends State<WhereToScreen>
         _stopSearchPolling();
         _startTrackingPolling();
       } else if (type == "no_driver_found") {
+        _stopSearchPolling();
         setState(() {
           _booked = false;
           _searching = false;
+          _step = 'input';
+          _tripId = null;
+          _otpCode = null;
+          _assignedDriver = null;
+          _driverLat = null;
+          _driverLng = null;
+          _bonusAmount = 0;
         });
-        _stopSearchPolling();
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("No driver found nearby. Try again.")));
+        _showNoDriverDialog();
       } else if (type == "driver_location") {
         final lat = (data["lat"] as num?)?.toDouble();
         final lng = (data["lng"] as num?)?.toDouble();
@@ -3222,6 +3241,66 @@ class _WhereToScreenState extends State<WhereToScreen>
     _debounceTimer?.cancel();
     _driverAnimTimer?.cancel();
     super.dispose();
+  }
+
+  void _showNoDriverDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('😔', style: TextStyle(fontSize: 56)),
+              const SizedBox(height: 16),
+              const Text(
+                'We are sorry',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: kDark,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'No driver available near you',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kOrange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _cancelCurrentRide({bool closeAfterCancel = false}) async {
@@ -3519,7 +3598,11 @@ class _WhereToScreenState extends State<WhereToScreen>
                                     _tripId!,
                                     amount.toDouble(),
                                   );
-                                  setState(() => _bonusAmount += amount);
+                                  setState(() {
+                                    _bonusAmount += amount;
+                                    _searchSecondsLeft = 240;
+                                  });
+                                  _startSearchingTimer();
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(content: Text('+₹$amount bonus added!')),
                                   );
@@ -3568,7 +3651,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          'Total Bonus: ₹$_bonusAmount',
+                          'Total Fare: ₹${_estimatedFare.toStringAsFixed(0)} + ₹${_bonusAmount.toStringAsFixed(0)} = ₹${(_estimatedFare + _bonusAmount).toStringAsFixed(0)}',
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,

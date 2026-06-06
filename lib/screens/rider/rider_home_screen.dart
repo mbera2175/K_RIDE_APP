@@ -2181,12 +2181,14 @@ class WhereToScreen extends StatefulWidget {
   final String prefilledDest;
   final VoidCallback onBack;
   final int? activeTripId;
+  final bool genericMode;
   const WhereToScreen(
       {super.key,
       required this.service,
       required this.prefilledDest,
       required this.onBack,
-      this.activeTripId});
+      this.activeTripId,
+      this.genericMode = false});
 
   @override
   State<WhereToScreen> createState() => _WhereToScreenState();
@@ -3700,17 +3702,20 @@ class _WhereToScreenState extends State<WhereToScreen>
                                 child: Text('←',
                                     style: TextStyle(fontSize: 16))))),
                     const SizedBox(width: 12),
-                    Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                            color: widget.service.color,
-                            borderRadius: BorderRadius.circular(8)),
-                        child: Center(
-                            child: ServiceIconWidget(
-                                icon: widget.service.icon, size: 18))),
-                    const SizedBox(width: 8),
-                    Text(widget.service.name,
+                    if (!widget.genericMode) ...[
+                      Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                              color: widget.service.color,
+                              borderRadius: BorderRadius.circular(8)),
+                          child: Center(
+                              child: ServiceIconWidget(
+                                  icon: widget.service.icon, size: 18))),
+                      const SizedBox(width: 8),
+                    ],
+                    Text(
+                        widget.genericMode ? 'BOOK YOUR RIDE' : widget.service.name,
                         style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
@@ -5165,7 +5170,7 @@ class RiderHomeScreen extends StatefulWidget {
 
 class _RiderHomeScreenState extends State<RiderHomeScreen> {
   String _activeTab = 'home';
-  ({ServiceItem service, String prefilledDest})? _activeScreen;
+  ({ServiceItem service, String prefilledDest, bool genericMode})? _activeScreen;
   ({String title, List<ServiceItem> items})? _seeAll;
   int _promoIdx = 0;
   String _greeting = 'Good morning';
@@ -5271,6 +5276,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
             _activeScreen = (
               service: serviceItem,
               prefilledDest: trip['drop_address'] ?? '',
+              genericMode: false,
             );
           });
         }
@@ -5287,9 +5293,9 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       _rideServices.where((s) => s.id != 10).toList();
   late final _evRide = services.firstWhere((s) => s.id == 10);
 
-  void _openService(ServiceItem service, {String prefilledDest = ''}) {
+  void _openService(ServiceItem service, {String prefilledDest = '', bool genericMode = false}) {
     setState(
-        () => _activeScreen = (service: service, prefilledDest: prefilledDest));
+        () => _activeScreen = (service: service, prefilledDest: prefilledDest, genericMode: genericMode));
   }
 
   void _showNotificationsBottomSheet() {
@@ -6466,7 +6472,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
 
   Widget _buildNewLocationCard() {
     return GestureDetector(
-      onTap: () => _openService(_rideServices[1]),
+      onTap: () => _openService(_rideServices[1], genericMode: true),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -7054,6 +7060,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                   service: _activeScreen!.service,
                   prefilledDest: _activeScreen!.prefilledDest,
                   activeTripId: _restoredTripId,
+                  genericMode: _activeScreen!.genericMode,
                   onBack: () {
                     setState(() {
                       _activeScreen = null;

@@ -3246,8 +3246,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                             borderRadius: BorderRadius.circular(12),
                             child: AuthService.profilePic.isNotEmpty
                                 ? CachedNetworkImage(
-                                    imageUrl:
-                                        '${AuthService.profilePic}?t=${DateTime.now().millisecondsSinceEpoch}',
+                                    imageUrl: AuthService.profilePic,
                                     fit: BoxFit.cover,
                                     placeholder: (context, url) => const Center(
                                         child: CircularProgressIndicator()),
@@ -3582,8 +3581,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             child: ClipOval(
                 child: profilePic.isNotEmpty
                     ? CachedNetworkImage(
-                        imageUrl:
-                            '$profilePic?t=${DateTime.now().millisecondsSinceEpoch}',
+                        imageUrl: profilePic,
                         fit: BoxFit.cover,
                         width: 90,
                         height: 90,

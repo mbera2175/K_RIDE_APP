@@ -7170,12 +7170,32 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     return Container(
       width: 140,
       height: 70,
-      child: Image.asset(
-        'assets/images/Car for banner.png',
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(child: Text('🚗', style: TextStyle(fontSize: 48)));
-        },
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          bottomLeft: Radius.circular(12),
+          topRight: Radius.circular(16),
+          bottomRight: Radius.circular(16),
+        ),
+        child: ShaderMask(
+          shaderCallback: (rect) {
+            return const LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [Colors.transparent, Colors.white],
+              stops: [0.0, 0.4],
+            ).createShader(rect);
+          },
+          blendMode: BlendMode.dstIn,
+          child: Image.asset(
+            'assets/images/Car for banner.png',
+            fit: BoxFit.cover,
+            alignment: Alignment.centerRight,
+            errorBuilder: (context, error, stackTrace) {
+              return const Center(child: Text('🚗', style: TextStyle(fontSize: 48)));
+            },
+          ),
+        ),
       ),
     );
   }
@@ -7350,7 +7370,10 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               child: Container(
                 height: 52,
                 alignment: Alignment.center,
-                child: vehicleImage,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: vehicleImage,
+                ),
               ),
             ),
             Row(
@@ -7628,22 +7651,16 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                   Container(
                     width: 90,
                     height: 90,
+                    clipBehavior: Clip.antiAlias,
                     decoration: const BoxDecoration(
                       color: Color(0xFFDCF0DC),
                       shape: BoxShape.circle,
                     ),
-                  ),
-                  Positioned.fill(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Image.asset(
-                          'assets/images/ev car banner.png',
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Text('🚗⚡', style: TextStyle(fontSize: 30)),
-                        ),
-                      ),
+                    child: Image.asset(
+                      'assets/images/ev car banner.png',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Center(child: Text('🚗⚡', style: TextStyle(fontSize: 30))),
                     ),
                   ),
                   const Positioned(

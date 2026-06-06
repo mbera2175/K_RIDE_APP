@@ -2196,6 +2196,20 @@ class WhereToScreen extends StatefulWidget {
 
 class _WhereToScreenState extends State<WhereToScreen>
     with WidgetsBindingObserver {
+  Future<bool> handleBackPress() async {
+    final status = _normalizeTripStatus(_tripStatus);
+    if (_step == 'tracking' &&
+        (status == 'accepted' || status == 'arrived' || status == 'started')) {
+      return false; // block pop
+    }
+    if (_searching) {
+      await _cancelCurrentRide(closeAfterCancel: true);
+      return true;
+    }
+    widget.onBack();
+    return true;
+  }
+
   final _pickupCtrl = TextEditingController(text: 'Fetching current location...');
   late TextEditingController _destCtrl;
   String _step = 'input';
@@ -5197,6 +5211,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
   String _activeTab = 'home';
   ({ServiceItem service, String prefilledDest, bool genericMode})? _activeScreen;
   ({String title, List<ServiceItem> items})? _seeAll;
+  final _whereToKey = GlobalKey<_WhereToScreenState>();
   int _promoIdx = 0;
   String _greeting = 'Good morning';
   String _currentLocation = 'Connaught Place, New Delhi';
@@ -6935,6 +6950,10 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
+        if (_activeScreen != null) {
+          await _whereToKey.currentState?.handleBackPress();
+          return false;
+        }
         if (_activeTab != 'home') {
           setState(() => _activeTab = 'home');
           return false;
@@ -7082,6 +7101,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               if (_activeScreen != null)
                 Positioned.fill(
                     child: WhereToScreen(
+                  key: _whereToKey,
                   service: _activeScreen!.service,
                   prefilledDest: _activeScreen!.prefilledDest,
                   activeTripId: _restoredTripId,

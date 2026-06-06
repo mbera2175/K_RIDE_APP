@@ -2596,6 +2596,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       await RideAlertService.stopAlert();
       setState(() => _incomingTrip = null);
       await _checkActiveTrip();
+      if (_activeTrip != null && _activeTrip!.pickupLat != null && _activeTrip!.pickupLng != null) {
+        _openNavigation(_activeTrip!.pickupLat!, _activeTrip!.pickupLng!);
+      }
     } else {
       _showSnack(res['error'], isError: true);
       await RideAlertService.stopAlert();
@@ -2907,6 +2910,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         _showSnack('Status updated', isError: false);
         await _checkActiveTrip();
         _drawTripRoute();
+        if (action == 'start' && _activeTrip != null && _activeTrip!.dropLat != null && _activeTrip!.dropLng != null) {
+          _openNavigation(_activeTrip!.dropLat!, _activeTrip!.dropLng!);
+        }
       }
     } else {
       _showSnack(res['error'], isError: true);

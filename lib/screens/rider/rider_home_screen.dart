@@ -7561,52 +7561,56 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
   }
 
   Widget _buildNewEVBanner() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.fromLTRB(20, 0, 0, 0),
-      height: 80,
-      decoration: BoxDecoration(
-        color: kEvBg,
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: ElevatedButton.icon(
-              onPressed: () => _openService(services.firstWhere((s) => s.id == 10)),
-              icon: const Text('Explore EV',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
-              label: const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kGreenText,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              ),
+    return GestureDetector(
+      onTap: () => _openService(services.firstWhere((s) => s.id == 10)),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        height: 110,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-          SizedBox(
-            width: 120,
-            height: 80,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topRight: Radius.circular(22),
-                bottomRight: Radius.circular(22),
-              ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned.fill(
               child: Image.asset(
                 'assets/images/ev car banner.png',
-                fit: BoxFit.contain,
-                alignment: Alignment.centerRight,
+                fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) =>
                     const Center(child: Text('🚗⚡', style: TextStyle(fontSize: 32))),
               ),
             ),
-          ),
-        ],
+            Positioned(
+              left: 20,
+              top: 0,
+              bottom: 0,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: ElevatedButton.icon(
+                  onPressed: () => _openService(services.firstWhere((s) => s.id == 10)),
+                  icon: const Text('Explore EV',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+                  label: const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kGreenText,
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

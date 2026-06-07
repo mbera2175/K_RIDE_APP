@@ -7524,9 +7524,9 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 'assets/images/schdule ride.png',
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.calendar_month_outlined, color: kOrange, size: 32),
+                    const Icon(Icons.calendar_month_outlined, color: kOrange, size: 28),
               ),
-              label: 'Schedule\nRide',
+              label: 'Schedule',
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Schedule Ride feature coming soon!')),
@@ -7541,7 +7541,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 'assets/images/intercity.png',
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.route_rounded, color: kOrange, size: 32),
+                    const Icon(Icons.route_rounded, color: kOrange, size: 28),
               ),
               label: 'Intercity',
               onTap: () {
@@ -7558,7 +7558,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 'assets/images/corporate.png',
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.business_outlined, color: Colors.grey, size: 32),
+                    const Icon(Icons.business_outlined, color: Colors.grey, size: 28),
               ),
               label: 'Corporate',
               onTap: () {
@@ -7581,31 +7581,32 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: kBorder),
         ),
-        child: Column(
+        child: Row(
           children: [
             Container(
-              height: 32,
+              width: 28,
+              height: 28,
               alignment: Alignment.center,
               child: iconWidget,
             ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w700,
-                color: Colors.black87,
-                height: 1.3,
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

@@ -7563,7 +7563,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
   Widget _buildNewEVBanner() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.fromLTRB(20, 0, 0, 0),
+      height: 80,
       decoration: BoxDecoration(
         color: kEvBg,
         borderRadius: BorderRadius.circular(22),
@@ -7571,28 +7572,38 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          ElevatedButton.icon(
-            onPressed: () => _openService(services.firstWhere((s) => s.id == 10)),
-            icon: const Text('Explore EV',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
-            label: const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kGreenText,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: ElevatedButton.icon(
+              onPressed: () => _openService(services.firstWhere((s) => s.id == 10)),
+              icon: const Text('Explore EV',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+              label: const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kGreenText,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
           ),
           SizedBox(
-            width: 110,
-            height: 75,
-            child: Image.asset(
-              'assets/images/ev car banner.png',
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Center(child: Text('🚗⚡', style: TextStyle(fontSize: 32))),
+            width: 120,
+            height: 80,
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(22),
+                bottomRight: Radius.circular(22),
+              ),
+              child: Image.asset(
+                'assets/images/ev car banner.png',
+                fit: BoxFit.contain,
+                alignment: Alignment.centerRight,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Center(child: Text('🚗⚡', style: TextStyle(fontSize: 32))),
+              ),
             ),
           ),
         ],

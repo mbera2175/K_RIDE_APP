@@ -3407,16 +3407,16 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           width: double.infinity,
-          height: 72,
+          height: 52,
           decoration: BoxDecoration(
             color: _isOnline ? const Color(0xFF27AE60) : kOrange,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
                 color: (_isOnline ? const Color(0xFF27AE60) : kOrange)
-                    .withOpacity(0.35),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                    .withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -3425,17 +3425,17 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             children: [
               if (_toggling)
                 const SizedBox(
-                  width: 26,
-                  height: 26,
+                  width: 22,
+                  height: 22,
                   child: CircularProgressIndicator(
-                    strokeWidth: 3,
+                    strokeWidth: 2.5,
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
               else ...[
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.25),
                     shape: BoxShape.circle,
@@ -3443,10 +3443,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                   child: const Icon(
                     Icons.power_settings_new,
                     color: Colors.white,
-                    size: 26,
+                    size: 20,
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 10),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -3455,9 +3455,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                       _isOnline ? 'GO OFFLINE' : 'GO ONLINE',
                       style: GoogleFonts.sora(
                         color: Colors.white,
-                        fontSize: 20,
+                        fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
+                        letterSpacing: 0.3,
                       ),
                     ),
                     Text(
@@ -3466,7 +3466,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                           : 'Start receiving ride requests',
                       style: GoogleFonts.sora(
                         color: Colors.white.withOpacity(0.9),
-                        fontSize: 13,
+                        fontSize: 10,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -3818,7 +3818,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       mainContent = Column(
         children: [
           Expanded(
-            flex: 48,
+            flex: 65,
             child: Stack(
               children: [
                 MapplsMap(
@@ -3862,7 +3862,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                       ],
                     ),
                     child: Text('🗺️ Live Mappls Navigation',
-                        style: GoogleFonts.sora(
+                         style: GoogleFonts.sora(
                             fontSize: 9,
                             color: kMuted,
                             fontWeight: FontWeight.w600)),
@@ -3872,7 +3872,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             ),
           ),
           Expanded(
-            flex: 52,
+            flex: 35,
             child: Container(
               color: kScaffoldBg,
               child: SingleChildScrollView(

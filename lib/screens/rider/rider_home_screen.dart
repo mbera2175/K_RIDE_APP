@@ -7078,6 +7078,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
             onTap: () {
@@ -7086,32 +7087,44 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _menuLine(width: 22),
-                const SizedBox(height: 5),
-                _menuLine(width: 16),
+                Row(
+                  children: [
+                    Text(
+                      '$_greeting, ',
+                      style: const TextStyle(fontSize: 13, color: Colors.black54, fontWeight: FontWeight.w500),
+                    ),
+                    const Text('👋', style: TextStyle(fontSize: 13)),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Where to today?',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black87,
+                    height: 1.2,
+                    fontFamily: 'Sora',
+                  ),
+                ),
               ],
             ),
           ),
-          Row(
-            children: [
-              _buildNotificationBell(),
-              const SizedBox(width: 12),
-              _buildUserAvatar(),
-            ],
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              children: [
+                _buildNotificationBell(),
+                const SizedBox(width: 12),
+                _buildUserAvatar(),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _menuLine({required double width}) => Container(
-        width: width,
-        height: 2.5,
-        decoration: BoxDecoration(
-          color: Colors.black87,
-          borderRadius: BorderRadius.circular(2),
-        ),
-      );
 
   Widget _buildNotificationBell() {
     return GestureDetector(
@@ -7167,74 +7180,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     );
   }
 
-  Widget _buildNewHeroBanner() {
-    return SizedBox(
-      height: 150,
-      child: Stack(
-        children: [
-          Positioned(
-            right: 0,
-            top: 0,
-            bottom: 0,
-            width: MediaQuery.of(context).size.width * 0.55,
-            child: CustomPaint(painter: _SkylinePainter()),
-          ),
-          Positioned(
-            right: 16,
-            bottom: 8,
-            child: _buildCarIllustration(),
-          ),
-          Positioned(
-            right: 20,
-            top: 8,
-            child: const Icon(Icons.location_on_rounded, color: kOrange, size: 52),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 0, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      '$_greeting, ',
-                      style: const TextStyle(fontSize: 15, color: Colors.black54),
-                    ),
-                    const Text('👋', style: TextStyle(fontSize: 15)),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Where to today?',
-                  style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black87,
-                    height: 1.2,
-                    fontFamily: 'Sora',
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildCarIllustration() {
-    return Container(
-      width: 140,
-      height: 70,
-      child: Image.asset(
-        'assets/images/car.png',
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(child: Text('🚗', style: TextStyle(fontSize: 48)));
-        },
-      ),
-    );
-  }
 
   Widget _buildNewLocationCard() {
     return GestureDetector(
@@ -7489,7 +7435,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: kBorder),
+          border: Border.all(color: kOrange, width: 1.2),
         ),
         child: Row(
           children: [
@@ -7585,7 +7531,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: kBorder),
+          border: Border.all(color: kOrange, width: 1.2),
         ),
         child: Row(
           children: [
@@ -7617,90 +7563,45 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
   Widget _buildNewEVBanner() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         color: kEvBg,
         borderRadius: BorderRadius.circular(22),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: const [
-                    Flexible(
-                      child: Text(
-                        'Dedicated EV Section',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: kGreenText,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    Icon(Icons.bolt_rounded, color: kGreenText, size: 18),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'One step closer to\na better world 🌿',
-                  style: TextStyle(fontSize: 12.5, color: Colors.black54, height: 1.4),
-                ),
-                const SizedBox(height: 14),
-                ElevatedButton.icon(
-                  onPressed: () => _openService(services.firstWhere((s) => s.id == 10)),
-                  icon: const Text('Explore EV',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
-                  label: const Icon(Icons.arrow_forward_rounded, size: 16, color: Colors.white),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kGreenText,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                  ),
-                ),
-              ],
+          ElevatedButton.icon(
+            onPressed: () => _openService(services.firstWhere((s) => s.id == 10)),
+            icon: const Text('Explore EV',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+            label: const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kGreenText,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
           ),
-          const SizedBox(width: 10),
-          Column(
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 90,
-                    height: 90,
-                    clipBehavior: Clip.antiAlias,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFDCF0DC),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Image.asset(
-                      'assets/images/ev car banner.png',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Center(child: Text('🚗⚡', style: TextStyle(fontSize: 30))),
-                    ),
-                  ),
-                  const Positioned(
-                    top: -4,
-                    right: -4,
-                    child: Text('🍃', style: TextStyle(fontSize: 14)),
-                  ),
-                  const Positioned(
-                    top: 4,
-                    right: -14,
-                    child: Text('🍃', style: TextStyle(fontSize: 10)),
-                  ),
-                ],
+          Container(
+            width: 110,
+            height: 110,
+            clipBehavior: Clip.antiAlias,
+            decoration: const BoxDecoration(
+              color: Color(0xFFDCF0DC),
+              shape: BoxShape.circle,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Image.asset(
+                'assets/images/ev car banner.png',
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Center(child: Text('🚗⚡', style: TextStyle(fontSize: 32))),
               ),
-            ],
+            ),
           ),
         ],
       ),
@@ -7736,8 +7637,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildNewTopBar(),
-                        _buildNewHeroBanner(),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 18),
                         _buildNewLocationCard(),
                         const SizedBox(height: 18),
                         _buildNewRideCategoryRow(),
@@ -8186,48 +8086,7 @@ class _RecentPlaceTileState extends State<_RecentPlaceTile> {
   }
 }
 
-class _SkylinePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size s) {
-    final bg = Paint()
-      ..color = const Color(0xFFFFDDC8).withOpacity(0.35)
-      ..style = PaintingStyle.fill;
 
-    final path = Path()
-      ..moveTo(0, s.height)
-      ..lineTo(0, s.height * 0.55)
-      ..lineTo(s.width * 0.07, s.height * 0.55)
-      ..lineTo(s.width * 0.07, s.height * 0.35)
-      ..lineTo(s.width * 0.13, s.height * 0.35)
-      ..lineTo(s.width * 0.13, s.height * 0.45)
-      ..lineTo(s.width * 0.22, s.height * 0.45)
-      ..lineTo(s.width * 0.22, s.height * 0.2)
-      ..lineTo(s.width * 0.30, s.height * 0.2)
-      ..lineTo(s.width * 0.30, s.height * 0.38)
-      ..lineTo(s.width * 0.38, s.height * 0.38)
-      ..lineTo(s.width * 0.38, s.height * 0.12)
-      ..lineTo(s.width * 0.47, s.height * 0.12)
-      ..lineTo(s.width * 0.47, s.height * 0.28)
-      ..lineTo(s.width * 0.56, s.height * 0.28)
-      ..lineTo(s.width * 0.56, s.height * 0.08)
-      ..lineTo(s.width * 0.65, s.height * 0.08)
-      ..lineTo(s.width * 0.65, s.height * 0.22)
-      ..lineTo(s.width * 0.75, s.height * 0.22)
-      ..lineTo(s.width * 0.75, s.height * 0.35)
-      ..lineTo(s.width * 0.85, s.height * 0.35)
-      ..lineTo(s.width * 0.85, s.height * 0.18)
-      ..lineTo(s.width * 0.93, s.height * 0.18)
-      ..lineTo(s.width * 0.93, s.height * 0.30)
-      ..lineTo(s.width, s.height * 0.30)
-      ..lineTo(s.width, s.height)
-      ..close();
-
-    canvas.drawPath(path, bg);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter o) => false;
-}
 
 // BOTTOM NAVIGATION BAR
 // ─────────────────────────────────────────────────────────────

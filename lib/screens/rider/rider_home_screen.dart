@@ -7226,32 +7226,12 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     return Container(
       width: 140,
       height: 70,
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(12),
-          bottomLeft: Radius.circular(12),
-          topRight: Radius.circular(16),
-          bottomRight: Radius.circular(16),
-        ),
-        child: ShaderMask(
-          shaderCallback: (rect) {
-            return const LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [Colors.transparent, Colors.white],
-              stops: [0.0, 0.4],
-            ).createShader(rect);
-          },
-          blendMode: BlendMode.dstIn,
-          child: Image.asset(
-            'assets/images/Car for banner.png',
-            fit: BoxFit.cover,
-            alignment: Alignment.centerRight,
-            errorBuilder: (context, error, stackTrace) {
-              return const Center(child: Text('🚗', style: TextStyle(fontSize: 48)));
-            },
-          ),
-        ),
+      child: Image.asset(
+        'assets/images/car.png',
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(child: Text('🚗', style: TextStyle(fontSize: 48)));
+        },
       ),
     );
   }
@@ -7540,10 +7520,13 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
         children: [
           Expanded(
             child: _buildOtherOptionCard(
-              icon: Icons.calendar_month_outlined,
-              badgeIcon: Icons.access_time_rounded,
+              iconWidget: Image.asset(
+                'assets/images/schdule ride.png',
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.calendar_month_outlined, color: kOrange, size: 32),
+              ),
               label: 'Schedule\nRide',
-              iconColor: kOrange,
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Schedule Ride feature coming soon!')),
@@ -7554,10 +7537,13 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: _buildOtherOptionCard(
-              icon: Icons.route_rounded,
+              iconWidget: Image.asset(
+                'assets/images/intercity.png',
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.route_rounded, color: kOrange, size: 32),
+              ),
               label: 'Intercity',
-              iconColor: kOrange,
-              useLocationPin: true,
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Intercity rides coming soon!')),
@@ -7568,9 +7554,13 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: _buildOtherOptionCard(
-              icon: Icons.business_outlined,
+              iconWidget: Image.asset(
+                'assets/images/corporate.png',
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.business_outlined, color: Colors.grey, size: 32),
+              ),
               label: 'Corporate',
-              iconColor: Colors.grey,
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Corporate profile feature coming soon!')),
@@ -7584,11 +7574,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
   }
 
   Widget _buildOtherOptionCard({
-    required IconData icon,
-    IconData? badgeIcon,
+    required Widget iconWidget,
     required String label,
-    required Color iconColor,
-    bool useLocationPin = false,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -7602,42 +7589,23 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
         ),
         child: Column(
           children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(icon, color: iconColor, size: 32),
-                if (badgeIcon != null)
-                  Positioned(
-                    bottom: -2,
-                    right: -6,
-                    child: Container(
-                      width: 16,
-                      height: 16,
-                      decoration: const BoxDecoration(
-                        color: kOrange,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(badgeIcon, size: 10, color: Colors.white),
-                    ),
-                  ),
-                if (useLocationPin)
-                  Positioned(
-                    top: -2,
-                    right: -4,
-                    child: const Icon(Icons.location_on, color: kOrange, size: 14),
-                  ),
-              ],
+            Container(
+              height: 32,
+              alignment: Alignment.center,
+              child: iconWidget,
             ),
             const SizedBox(height: 8),
             Text(
               label,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
                 color: Colors.black87,
                 height: 1.3,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

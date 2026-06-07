@@ -4317,7 +4317,23 @@ class _WhereToScreenState extends State<WhereToScreen>
               children: [
                 Row(
                   children: [
-                    if (!widget.genericMode) ...[
+                    if (widget.genericMode) ...[
+                      Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                              color: kOrangeLight,
+                              borderRadius: BorderRadius.circular(8)),
+                          child: const Center(
+                              child: ServiceIconWidget(
+                                  icon: 'ac_cab', size: 18))),
+                      const SizedBox(width: 8),
+                      const Text('Book Ride',
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: kDark)),
+                    ] else ...[
                       Container(
                           width: 32,
                           height: 32,

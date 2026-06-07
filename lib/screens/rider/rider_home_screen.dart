@@ -7276,12 +7276,12 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               label: 'Car & Bike',
               bgColor: kOrangeBg,
               arrowColor: kOrange,
-              vehicleImage: Row(
+              vehicleImage: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ServiceIconWidget(icon: 'ac_cab', size: 38),
-                  const SizedBox(width: 4),
-                  ServiceIconWidget(icon: 'bike', size: 38),
+                  ServiceIconWidget(icon: 'ac_cab', size: 30),
+                  SizedBox(width: 4),
+                  ServiceIconWidget(icon: 'bike', size: 30),
                 ],
               ),
               onTap: () {
@@ -7296,12 +7296,12 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               label: 'Auto & Toto',
               bgColor: kGreenBg,
               arrowColor: kGreenArrow,
-              vehicleImage: Row(
+              vehicleImage: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ServiceIconWidget(icon: 'auto', size: 38),
-                  const SizedBox(width: 4),
-                  ServiceIconWidget(icon: 'toto', size: 38),
+                  ServiceIconWidget(icon: 'auto', size: 30),
+                  SizedBox(width: 4),
+                  ServiceIconWidget(icon: 'toto', size: 30),
                 ],
               ),
               onTap: () {
@@ -7316,7 +7316,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               label: 'Ambulance',
               bgColor: kPinkBg,
               arrowColor: kPinkArrow,
-              vehicleImage: ServiceIconWidget(icon: 'ambulance', size: 44),
+              vehicleImage: const ServiceIconWidget(icon: 'ambulance', size: 36),
               onTap: () {
                 final service = services.firstWhere((s) => s.id == 6);
                 _openService(service);
@@ -7338,8 +7338,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 118,
-        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+        height: 96,
+        padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(18),
@@ -7350,7 +7350,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           children: [
             Center(
               child: Container(
-                height: 48,
+                height: 36,
                 alignment: Alignment.center,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
@@ -7365,7 +7365,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                   child: Text(
                     label,
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: FontWeight.w800,
                       color: Colors.black87,
                     ),
@@ -7374,13 +7374,13 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                   ),
                 ),
                 Container(
-                  width: 26,
-                  height: 26,
+                  width: 20,
+                  height: 20,
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.arrow_forward_rounded, size: 14, color: arrowColor),
+                  child: Icon(Icons.arrow_forward_rounded, size: 11, color: arrowColor),
                 ),
               ],
             ),
@@ -7588,20 +7588,35 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               ),
             ),
             Positioned(
-              left: 16,
-              bottom: 12,
-              child: ElevatedButton.icon(
-                onPressed: () => _openService(services.firstWhere((s) => s.id == 10)),
-                icon: const Text('Explore EV',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
-                label: const Icon(Icons.arrow_forward_rounded, size: 14, color: Colors.white),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kGreenText,
-                  elevation: 3,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              left: 12,
+              bottom: 10,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: kGreenText,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Explore EV',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_forward_rounded, size: 11, color: Colors.white),
+                  ],
                 ),
               ),
             ),

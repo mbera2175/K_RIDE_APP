@@ -7100,7 +7100,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 Text(
                   AuthService.name,
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                     height: 1.2,
@@ -7589,23 +7589,19 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
             ),
             Positioned(
               left: 20,
-              top: 0,
-              bottom: 0,
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: ElevatedButton.icon(
-                  onPressed: () => _openService(services.firstWhere((s) => s.id == 10)),
-                  icon: const Text('Explore EV',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
-                  label: const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kGreenText,
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              bottom: 16,
+              child: ElevatedButton.icon(
+                onPressed: () => _openService(services.firstWhere((s) => s.id == 10)),
+                icon: const Text('Explore EV',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
+                label: const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kGreenText,
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
                   ),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 ),
               ),
             ),
@@ -7644,7 +7640,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildNewTopBar(),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 32),
                         _buildNewLocationCard(),
                         const SizedBox(height: 18),
                         _buildNewRideCategoryRow(),
@@ -7662,7 +7658,9 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                         ),
                         const SizedBox(height: 12),
                         _buildNewServicesRow(),
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 26),
+                        _buildNewEVBanner(),
+                        const SizedBox(height: 26),
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
@@ -7676,9 +7674,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                         ),
                         const SizedBox(height: 12),
                         _buildNewOtherOptionsRow(),
-                        const SizedBox(height: 22),
-                        _buildNewEVBanner(),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),

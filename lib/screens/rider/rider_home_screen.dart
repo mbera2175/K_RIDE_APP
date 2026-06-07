@@ -7097,11 +7097,11 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                   ],
                 ),
                 const SizedBox(height: 2),
-                const Text(
-                  'Where to today?',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
+                Text(
+                  AuthService.name,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
                     color: Colors.black87,
                     height: 1.2,
                     fontFamily: 'Sora',
@@ -7187,7 +7187,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       onTap: () => _openService(_rideServices[1], genericMode: true),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
@@ -7227,17 +7227,17 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 children: [
                   Column(
                     children: List.generate(
-                      3,
+                      2,
                       (i) => Container(
                         width: 2,
-                        height: 3,
-                        margin: const EdgeInsets.symmetric(vertical: 1.5),
+                        height: 2,
+                        margin: const EdgeInsets.symmetric(vertical: 1.0),
                         color: Colors.grey.shade400,
                       ),
                     ),
                   ),
                   const SizedBox(width: 18),
-                  Expanded(child: Divider(color: Colors.grey.shade200, height: 18)),
+                  Expanded(child: Divider(color: Colors.grey.shade200, height: 8)),
                 ],
               ),
             ),
@@ -7279,9 +7279,9 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               vehicleImage: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ServiceIconWidget(icon: 'ac_cab', size: 40),
+                  ServiceIconWidget(icon: 'ac_cab', size: 46),
                   const SizedBox(width: 4),
-                  ServiceIconWidget(icon: 'bike', size: 40),
+                  ServiceIconWidget(icon: 'bike', size: 46),
                 ],
               ),
               onTap: () {
@@ -7299,9 +7299,9 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               vehicleImage: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ServiceIconWidget(icon: 'auto', size: 40),
+                  ServiceIconWidget(icon: 'auto', size: 46),
                   const SizedBox(width: 4),
-                  ServiceIconWidget(icon: 'toto', size: 40),
+                  ServiceIconWidget(icon: 'toto', size: 46),
                 ],
               ),
               onTap: () {
@@ -7316,7 +7316,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               label: 'Ambulance',
               bgColor: kPinkBg,
               arrowColor: kPinkArrow,
-              vehicleImage: ServiceIconWidget(icon: 'ambulance', size: 42),
+              vehicleImage: ServiceIconWidget(icon: 'ambulance', size: 54),
               onTap: () {
                 final service = services.firstWhere((s) => s.id == 6);
                 _openService(service);
@@ -7338,7 +7338,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 135,
+        height: 142,
         padding: const EdgeInsets.fromLTRB(10, 12, 10, 10),
         decoration: BoxDecoration(
           color: bgColor,
@@ -7350,7 +7350,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           children: [
             Center(
               child: Container(
-                height: 52,
+                height: 64,
                 alignment: Alignment.center,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
@@ -7433,7 +7433,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: kOrangeBg,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: kOrange, width: 1.2),
         ),
@@ -7529,7 +7529,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: kOrangeBg,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: kOrange, width: 1.2),
         ),
@@ -7585,22 +7585,14 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
           ),
-          Container(
+          SizedBox(
             width: 110,
-            height: 110,
-            clipBehavior: Clip.antiAlias,
-            decoration: const BoxDecoration(
-              color: Color(0xFFDCF0DC),
-              shape: BoxShape.circle,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.asset(
-                'assets/images/ev car banner.png',
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Center(child: Text('🚗⚡', style: TextStyle(fontSize: 32))),
-              ),
+            height: 75,
+            child: Image.asset(
+              'assets/images/ev car banner.png',
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) =>
+                  const Center(child: Text('🚗⚡', style: TextStyle(fontSize: 32))),
             ),
           ),
         ],

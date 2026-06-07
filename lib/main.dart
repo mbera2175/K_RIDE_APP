@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mappls_gl/mappls_gl.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'utils/app_colors.dart';
 import 'utils/constants.dart';
 import 'services/auth_service.dart';
@@ -36,25 +37,32 @@ class KRideApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'KRide',
-      navigatorKey: navigatorKey,
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
-        textTheme: GoogleFonts.soraTextTheme(),
-        useMaterial3: true,
-        scaffoldBackgroundColor: AppColors.background,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.white,
-          foregroundColor: AppColors.textPrimary,
-          elevation: 0,
-          centerTitle: true,
-        ),
-      ),
-      home: AuthService.isLoggedIn
-          ? const _AutoLoginRedirect()
-          : const RoleSelectionScreen(),
+    return ScreenUtilInit(
+      designSize: const Size(360, 690),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MaterialApp(
+          title: 'KRide',
+          navigatorKey: navigatorKey,
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
+            textTheme: GoogleFonts.soraTextTheme(),
+            useMaterial3: true,
+            scaffoldBackgroundColor: AppColors.background,
+            appBarTheme: const AppBarTheme(
+              backgroundColor: AppColors.white,
+              foregroundColor: AppColors.textPrimary,
+              elevation: 0,
+              centerTitle: true,
+            ),
+          ),
+          home: AuthService.isLoggedIn
+              ? const _AutoLoginRedirect()
+              : const RoleSelectionScreen(),
+        );
+      },
     );
   }
 }

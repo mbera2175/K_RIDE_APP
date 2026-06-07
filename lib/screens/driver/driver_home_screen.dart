@@ -1099,7 +1099,10 @@ class ActiveTripPanel extends StatelessWidget {
           ],
           border: Border.all(color: Colors.black.withOpacity(0.06)),
         ),
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.65,
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1110,268 +1113,277 @@ class ActiveTripPanel extends StatelessWidget {
                     decoration: BoxDecoration(
                         color: kGray2,
                         borderRadius: BorderRadius.circular(99)))),
-            const SizedBox(height: 20),
-
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.07),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: color.withOpacity(0.2), width: 1.5),
-              ),
-              child: Row(
-                children: [
-                  Text(icon, style: const TextStyle(fontSize: 20)),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('ACTIVE TRIP',
-                            style: GoogleFonts.sora(
-                                fontSize: 10,
-                                color: color,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.8)),
-                        Text(label,
-                            style: GoogleFonts.sora(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: kDark)),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text('Your earnings',
-                          style: GoogleFonts.sora(fontSize: 10, color: kMuted)),
-                      Text('₹${trip.driverEarnings}',
-                          style: GoogleFonts.sora(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              color: kOrange)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                  color: kGray, borderRadius: BorderRadius.circular(14)),
-              child: Row(
-                children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                          colors: [kOrange, kOrangeDark],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight),
-                    ),
-                    child: Center(
-                        child: Text(
-                            trip.riderName.isNotEmpty ? trip.riderName[0] : 'R',
-                            style: GoogleFonts.sora(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                                color: kWhite))),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(trip.riderName,
-                            style: GoogleFonts.sora(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: kDark)),
-                        Text('⭐ ${trip.riderRating} · ${trip.vehicle}',
-                            style:
-                                GoogleFonts.sora(fontSize: 12, color: kMuted)),
-                      ],
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      _CircleBtn(
-                          icon: '🧭',
-                          bg: kOrange.withOpacity(0.15),
-                          border: kOrange.withOpacity(0.27),
-                          onTap: () {
-                            final status = _normalizeTripStatus(trip.status);
-                            double? lat;
-                            double? lng;
-                            if (status == 'started') {
-                              lat = trip.dropLat;
-                              lng = trip.dropLng;
-                            } else {
-                              lat = trip.pickupLat;
-                              lng = trip.pickupLng;
-                            }
-                            if (lat != null && lng != null) {
-                              onNavigate(lat, lng);
-                            }
-                          }),
-                      const SizedBox(width: 8),
-                      _CircleBtn(
-                          icon: '📞',
-                          bg: kSuccess.withOpacity(0.15),
-                          border: kSuccess.withOpacity(0.27),
-                          onTap: onCall),
-                      const SizedBox(width: 8),
-                      _CircleBtn(
-                          icon: '💬',
-                          bg: kGray2,
-                          border: kGray2,
-                          onTap: onChat),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                  color: kGray, borderRadius: BorderRadius.circular(14)),
-              child: Column(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: kSuccess,
-                                boxShadow: [
-                                  BoxShadow(color: kSuccess, blurRadius: 5)
-                                ])),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                          child: Text(trip.pickup,
-                              style: GoogleFonts.sora(
-                                  fontSize: 13, color: kDark))),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 3),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                          width: 1.5,
-                          height: 12,
-                          color: const Color(0xFFCCCCCC)),
-                    ),
-                  ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                                color: kOrange,
-                                borderRadius: BorderRadius.circular(2),
-                                boxShadow: [
-                                  BoxShadow(color: kOrange, blurRadius: 5)
-                                ])),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                          child: Text(trip.drop,
-                              style: GoogleFonts.sora(
-                                  fontSize: 13, color: kDark))),
-                    ],
-                  ),
-                ],
-              ),
-            ),
             const SizedBox(height: 16),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.07),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: color.withOpacity(0.2), width: 1.5),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(icon, style: const TextStyle(fontSize: 20)),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('ACTIVE TRIP',
+                                    style: GoogleFonts.sora(
+                                        fontSize: 10,
+                                        color: color,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.8)),
+                                Text(label,
+                                    style: GoogleFonts.sora(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: kDark)),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text('Your earnings',
+                                  style: GoogleFonts.sora(fontSize: 10, color: kMuted)),
+                              Text('₹${trip.driverEarnings}',
+                                  style: GoogleFonts.sora(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w800,
+                                      color: kOrange)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
 
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => onAction(action),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: color,
-                  foregroundColor: kWhite,
-                  padding: const EdgeInsets.symmetric(vertical: 17),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                  elevation: 8,
-                  shadowColor: color.withOpacity(0.27),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                          color: kGray, borderRadius: BorderRadius.circular(14)),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 46,
+                            height: 46,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                  colors: [kOrange, kOrangeDark],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight),
+                            ),
+                            child: Center(
+                                child: Text(
+                                    trip.riderName.isNotEmpty ? trip.riderName[0] : 'R',
+                                    style: GoogleFonts.sora(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w800,
+                                        color: kWhite))),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(trip.riderName,
+                                    style: GoogleFonts.sora(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: kDark)),
+                                Text('⭐ ${trip.riderRating} · ${trip.vehicle}',
+                                    style:
+                                        GoogleFonts.sora(fontSize: 12, color: kMuted)),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              _CircleBtn(
+                                  icon: '🧭',
+                                  bg: kOrange.withOpacity(0.15),
+                                  border: kOrange.withOpacity(0.27),
+                                  onTap: () {
+                                    final status = _normalizeTripStatus(trip.status);
+                                    double? lat;
+                                    double? lng;
+                                    if (status == 'started') {
+                                      lat = trip.dropLat;
+                                      lng = trip.dropLng;
+                                    } else {
+                                      lat = trip.pickupLat;
+                                      lng = trip.pickupLng;
+                                    }
+                                    if (lat != null && lng != null) {
+                                      onNavigate(lat, lng);
+                                    }
+                                  }),
+                              const SizedBox(width: 8),
+                              _CircleBtn(
+                                  icon: '📞',
+                                  bg: kSuccess.withOpacity(0.15),
+                                  border: kSuccess.withOpacity(0.27),
+                                  onTap: onCall),
+                              const SizedBox(width: 8),
+                              _CircleBtn(
+                                  icon: '💬',
+                                  bg: kGray2,
+                                  border: kGray2,
+                                  onTap: onChat),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                          color: kGray, borderRadius: BorderRadius.circular(14)),
+                      child: Column(
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: kSuccess,
+                                        boxShadow: [
+                                          BoxShadow(color: kSuccess, blurRadius: 5)
+                                        ])),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                  child: Text(trip.pickup,
+                                      style: GoogleFonts.sora(
+                                          fontSize: 13, color: kDark))),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 3),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                  width: 1.5,
+                                  height: 12,
+                                  color: const Color(0xFFCCCCCC)),
+                            ),
+                          ),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                        color: kOrange,
+                                        borderRadius: BorderRadius.circular(2),
+                                        boxShadow: [
+                                          BoxShadow(color: kOrange, blurRadius: 5)
+                                        ])),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                  child: Text(trip.drop,
+                                      style: GoogleFonts.sora(
+                                          fontSize: 13, color: kDark))),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => onAction(action),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: color,
+                          foregroundColor: kWhite,
+                          padding: const EdgeInsets.symmetric(vertical: 17),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                          elevation: 8,
+                          shadowColor: color.withOpacity(0.27),
+                        ),
+                        child: Text('$btn →',
+                            style: GoogleFonts.sora(
+                                fontSize: 16, fontWeight: FontWeight.w700)),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    if (canCancel) ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton.icon(
+                          onPressed: () => onAction('cancel'),
+                          icon: const Text('✕', style: TextStyle(fontSize: 16)),
+                          label: const Text('Cancel Ride'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: kError,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                    // Cash + SOS buttons
+                    Row(children: [
+                      if (status == 'completed')
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => onAction('cash'),
+                            icon: const Text('💵', style: TextStyle(fontSize: 18)),
+                            label: const Text('Cash Collected'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2E7D32),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      if (status == 'completed') const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => onAction('sos'),
+                          icon: const Text('🆘', style: TextStyle(fontSize: 18)),
+                          label: const Text('SOS'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red[700],
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                    ]),
+                  ],
                 ),
-                child: Text('$btn →',
-                    style: GoogleFonts.sora(
-                        fontSize: 16, fontWeight: FontWeight.w700)),
               ),
             ),
-            const SizedBox(height: 10),
-            if (canCancel) ...[
-              SizedBox(
-                width: double.infinity,
-                child: TextButton.icon(
-                  onPressed: () => onAction('cancel'),
-                  icon: const Text('✕', style: TextStyle(fontSize: 16)),
-                  label: const Text('Cancel Ride'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: kError,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-            ],
-            // Cash + SOS buttons
-            Row(children: [
-              if (status == 'completed')
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => onAction('cash'),
-                    icon: const Text('💵', style: TextStyle(fontSize: 18)),
-                    label: const Text('Cash Collected'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E7D32),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                ),
-              if (status == 'completed') const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => onAction('sos'),
-                  icon: const Text('🆘', style: TextStyle(fontSize: 18)),
-                  label: const Text('SOS'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red[700],
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
-            ]),
           ],
         ),
       ),
@@ -3220,64 +3232,83 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       child: Row(
         children: [
           // K logo
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: kOrange,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            alignment: Alignment.center,
-            child: const Text(
-              'K',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'Ride',
-            style: GoogleFonts.sora(
-              color: kDark,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const Spacer(),
-          // Offline/Online pill
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: const Color(0xFFDDDDDD), width: 1.5),
-              borderRadius: BorderRadius.circular(24),
-            ),
+          Flexible(
+            flex: 2,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 8,
-                  height: 8,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
-                    color: _isOnline ? kSuccess : const Color(0xFFE53935),
-                    shape: BoxShape.circle,
+                    color: kOrange,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'K',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  _isOnline ? 'ONLINE' : 'OFFLINE',
-                  style: GoogleFonts.sora(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: kDark,
-                    letterSpacing: 0.5,
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    'Ride',
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.sora(
+                      color: kDark,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.3,
+                    ),
                   ),
                 ),
               ],
+            ),
+          ),
+          const Spacer(),
+          // Offline/Online pill
+          Flexible(
+            flex: 3,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: const Color(0xFFDDDDDD), width: 1.5),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: _isOnline ? kSuccess : const Color(0xFFE53935),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        _isOnline ? 'ONLINE' : 'OFFLINE',
+                        style: GoogleFonts.sora(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: kDark,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -3631,9 +3662,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
           padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
           child: Row(
             children: [
-              // Earnings
               Expanded(
-                child: Row(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
                       width: 42,
@@ -3653,44 +3684,34 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Today's Earnings",
-                            style: GoogleFonts.sora(fontSize: 10, color: kMuted),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '₹${_earnings.today}',
-                            style: GoogleFonts.sora(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: kDark,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              const Icon(Icons.arrow_upward,
-                                  size: 12, color: kSuccess),
-                              Text(
-                                '12%',
-                                style: GoogleFonts.sora(
-                                    fontSize: 10,
-                                    color: kSuccess,
-                                    fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ),
-                          Text(
-                            'vs yesterday',
-                            style: GoogleFonts.sora(fontSize: 9, color: kMuted),
-                          ),
-                        ],
+                    const SizedBox(height: 6),
+                    Text(
+                      "Earnings",
+                      style: GoogleFonts.sora(fontSize: 10, color: kMuted),
+                      textAlign: TextAlign.center,
+                    ),
+                    Text(
+                      '₹${_earnings.today}',
+                      style: GoogleFonts.sora(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: kDark,
                       ),
+                      textAlign: TextAlign.center,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.arrow_upward,
+                            size: 10, color: kSuccess),
+                        Text(
+                          '12%',
+                          style: GoogleFonts.sora(
+                              fontSize: 9,
+                              color: kSuccess,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ],
                     ),
                   ],
                 ),

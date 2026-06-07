@@ -3204,7 +3204,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
 
   Widget _buildAppBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
       decoration: BoxDecoration(
         color: kWhite,
         borderRadius: BorderRadius.circular(16),
@@ -3221,28 +3221,28 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         children: [
           // K logo
           Container(
-            width: 40,
-            height: 40,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
               color: kOrange,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
             alignment: Alignment.center,
             child: const Text(
               'K',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 22,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Text(
-            'K Ride',
+            'Ride',
             style: GoogleFonts.sora(
               color: kDark,
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               letterSpacing: -0.3,
             ),
@@ -3250,7 +3250,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
           const Spacer(),
           // Offline/Online pill
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border.all(color: const Color(0xFFDDDDDD), width: 1.5),
@@ -3289,7 +3289,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             child: Stack(
               children: [
                 const Icon(Icons.notifications_outlined,
-                    size: 26, color: kDark),
+                    size: 24, color: kDark),
                 Positioned(
                   right: 0,
                   top: 0,
@@ -3311,8 +3311,8 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
           GestureDetector(
             onTap: () => setState(() => _navIndex = 3), // Go to Profile
             child: Container(
-              width: 36,
-              height: 36,
+              width: 32,
+              height: 32,
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 color: Color(0xFFCCCCCC),
@@ -3322,8 +3322,8 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                     ? CachedNetworkImage(
                         imageUrl: AuthService.profilePic,
                         fit: BoxFit.cover,
-                        width: 36,
-                        height: 36,
+                        width: 32,
+                        height: 32,
                         placeholder: (context, url) => const Center(
                           child: SizedBox(
                             width: 16,
@@ -3334,10 +3334,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                         errorWidget: (context, url, error) => const Icon(
                           Icons.person,
                           color: Colors.white,
-                          size: 22,
+                          size: 18,
                         ),
                       )
-                    : const Icon(Icons.person, color: Colors.white, size: 22),
+                    : const Icon(Icons.person, color: Colors.white, size: 18),
               ),
             ),
           ),

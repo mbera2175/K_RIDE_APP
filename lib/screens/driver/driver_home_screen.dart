@@ -12,6 +12,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 
 import '../../utils/app_colors.dart';
 import '../../services/auth_service.dart';
@@ -2417,7 +2418,7 @@ class DriverHomeScreen extends StatefulWidget {
 }
 
 class _DriverHomeScreenState extends State<DriverHomeScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   bool _isOnline = false;
   bool _toggling = false;
   TripData? _incomingTrip;
@@ -2435,10 +2436,26 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
   Timer? _tripPollingTimer;
 
   late AnimationController _spinCtrl;
+  bool _isAppBackgrounded = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    
+    // Listen for events from the overlay window isolate
+    FlutterOverlayWindow.overlayListener.listen((event) {
+      if (event is Map) {
+        final action = event['action'];
+        final tripId = event['tripId'];
+        if (action == 'accept' && tripId != null) {
+          _acceptTripById(tripId);
+        } else if (action == 'decline' && tripId != null) {
+          _handleDecline();
+        }
+      }
+    });
+
     _spinCtrl = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 800))
       ..repeat();
@@ -2457,7 +2474,20 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      _isAppBackgrounded = true;
+    } else if (state == AppLifecycleState.resumed) {
+      _isAppBackgrounded = false;
+      // Close overlay window when app returns to foreground
+      FlutterOverlayWindow.closeOverlay();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _spinCtrl.dispose();
     _tripPollingTimer?.cancel();
     super.dispose();
@@ -2519,6 +2549,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         if (online) {
           if (Platform.isAndroid) {
             await Permission.notification.request();
+            final isGranted = await FlutterOverlayWindow.isPermissionGranted();
+            if (!isGranted) {
+              await FlutterOverlayWindow.requestPermission();
+            }
           }
           await FlutterBackgroundService().startService();
 
@@ -2555,6 +2589,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                   _incomingTrip = _mapToTripData(tripData);
                 });
               }
+
+              // Trigger background overlay if app is minimized
+              _triggerOverlay(tripData);
             }
 
             if (data['type'] == 'trip_taken') {
@@ -2563,6 +2600,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                   _incomingTrip = null;
                 });
               }
+              FlutterOverlayWindow.closeOverlay();
 
               _showSnack(
                 'Trip already taken',
@@ -2574,6 +2612,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
           await RideAlertService.stopAlert();
           DriverSocketService.disconnect();
           FlutterBackgroundService().invoke("stopService");
+          FlutterOverlayWindow.closeOverlay();
 
           if (mounted) {
             setState(() {
@@ -2656,6 +2695,68 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     }
     await RideAlertService.stopAlert();
     setState(() => _incomingTrip = null);
+  }
+
+  Future<void> _acceptTripById(int tripId) async {
+    final res = await ApiService.acceptTrip(tripId);
+    if (res['success']) {
+      _showSnack('Trip accepted! Head to pickup. 📍', isError: false);
+      await RideAlertService.stopAlert();
+      if (mounted) {
+        setState(() {
+          _incomingTrip = null;
+        });
+      }
+      await _checkActiveTrip();
+      if (_activeTrip != null && _activeTrip!.pickupLat != null && _activeTrip!.pickupLng != null) {
+        _openNavigation(_activeTrip!.pickupLat!, _activeTrip!.pickupLng!);
+      }
+    } else {
+      _showSnack(res['error'] ?? 'Accept failed', isError: true);
+      await RideAlertService.stopAlert();
+      if (mounted) {
+        setState(() {
+          _incomingTrip = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _triggerOverlay(dynamic rawData) async {
+    if (!_isAppBackgrounded) return;
+
+    final isGranted = await FlutterOverlayWindow.isPermissionGranted();
+    if (!isGranted) return;
+
+    final trip = _mapToTripData(rawData);
+    final payload = {
+      'id': trip.id,
+      'fare': trip.fare,
+      'pickup': trip.pickup,
+      'drop': trip.drop,
+      'distance': trip.distance,
+      'pickupDistanceKm': trip.pickupDistanceKm,
+      'vehicle': trip.vehicle,
+      'payment': trip.payment,
+      'secondsLeft': 30,
+    };
+
+    await FlutterOverlayWindow.showOverlay(
+      height: 380,
+      width: WindowSize.matchParent,
+      alignment: OverlayAlignment.topCenter,
+      visibility: NotificationVisibility.visibilityPublic,
+      flag: OverlayFlag.defaultFlag,
+      overlayTitle: "New Ride Request",
+      overlayContent: "Accept the booking request",
+      enableDrag: true,
+    );
+
+    // Share data to overlay isolate
+    await Future.delayed(const Duration(milliseconds: 150));
+    await FlutterOverlayWindow.shareData(payload);
+    await Future.delayed(const Duration(milliseconds: 150));
+    await FlutterOverlayWindow.shareData(payload);
   }
 
   Future<void> _callRider() async {

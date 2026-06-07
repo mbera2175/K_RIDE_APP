@@ -10,6 +10,7 @@ import 'services/driver_background_service.dart';
 import 'screens/rider/rider_home_screen.dart';
 import 'screens/driver/driver_home_screen.dart';
 import 'screens/auth/role_selection_screen.dart';
+import 'screens/driver/incoming_ride_overlay.dart';
 
 // Global navigator key for force logout
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -78,3 +79,13 @@ class _AutoLoginRedirect extends StatelessWidget {
     return const RoleSelectionScreen();
   }
 }
+
+@pragma("vm:entry-point")
+void overlayMain() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: IncomingRideOverlay(),
+  ));
+}
+

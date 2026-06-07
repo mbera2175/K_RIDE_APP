@@ -47,3 +47,5 @@ app.*.map.json
 # Temporary / local-only directories
 temp_backend/
 scratch/
+temp_backend_check/
+

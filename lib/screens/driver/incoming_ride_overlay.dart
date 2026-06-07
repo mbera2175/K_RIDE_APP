@@ -115,7 +115,7 @@ class _IncomingRideOverlayState extends State<IncomingRideOverlay> {
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
                 blurRadius: 15,
-                offset: const EdgeInsets.symmetric(vertical: 4),
+                offset: const Offset(0, 4),
               ),
             ],
             border: Border.all(

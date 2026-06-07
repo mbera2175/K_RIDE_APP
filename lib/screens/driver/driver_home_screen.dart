@@ -3204,12 +3204,18 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
 
   Widget _buildAppBar() {
     return Container(
-      color: Colors.transparent,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 6,
-        left: 16,
-        right: 16,
-        bottom: 12,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: kWhite,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: kGray2, width: 1.0),
       ),
       child: Row(
         children: [
@@ -3826,34 +3832,17 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                     _mapController = controller;
                   },
                 ),
-                // Soft white gradient container under the AppBar for text legibility
+                // Floating AppBar with rounded corners
                 Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 110,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0xF2FFFFFF), Color(0x00FFFFFF)],
-                      ),
-                    ),
-                  ),
-                ),
-                // Floating AppBar
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
+                  top: MediaQuery.of(context).padding.top + 10,
+                  left: 12,
+                  right: 12,
                   child: _buildAppBar(),
                 ),
-                // Zoom controls shifted slightly down so they sit below the header elements
+                // Zoom controls positioned below the floating AppBar card
                 Positioned(
                   right: 12,
-                  top: 60,
-                  bottom: 0,
+                  top: MediaQuery.of(context).padding.top + 80,
                   child: _buildMapZoomControls(),
                 ),
                 Positioned(

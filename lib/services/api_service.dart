@@ -149,7 +149,7 @@ class ApiService {
           if (rcExpireYear  != null) 'rc_expiry_year'   : rcExpireYear,
           if (dlNumber      != null) 'license_number'   : dlNumber,
           if (licenseExpiry != null) 'license_expiry'   : licenseExpiry,
-          if (aadhaarNumber != null) 'aadhaar_number'   : aadhaarNumber,
+          if (aadhaarNumber != null) 'aadhar_number'    : aadhaarNumber,
         }),
       ).timeout(_timeout);
       return _handle(res);
@@ -326,7 +326,11 @@ class ApiService {
       double amount, String? upiId) async {
     final res = await http.post(Uri.parse('$_base/payments/withdraw'),
       headers: _authHeaders,
-      body: jsonEncode({'amount': amount, 'upi_id': upiId}))
+      body: jsonEncode({
+        'amount': amount,
+        'upi_id': upiId,
+        'method': 'upi',
+      }))
       .timeout(_timeout);
     return _handle(res);
   }

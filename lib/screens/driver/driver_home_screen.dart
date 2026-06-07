@@ -1845,8 +1845,13 @@ class _DriverTripChatScreenState extends State<DriverTripChatScreen> {
 class EarningsScreen extends StatelessWidget {
   final EarningsData earnings;
   final VoidCallback onClose;
-  const EarningsScreen(
-      {super.key, required this.earnings, required this.onClose});
+  final VoidCallback onWithdrawPressed;
+  const EarningsScreen({
+    super.key,
+    required this.earnings,
+    required this.onClose,
+    required this.onWithdrawPressed,
+  });
 
   static const _periods = [
     ('Today', '☀️', 3),
@@ -1948,7 +1953,7 @@ class EarningsScreen extends StatelessWidget {
                             ),
                           ),
                           OutlinedButton(
-                            onPressed: () {},
+                            onPressed: onWithdrawPressed,
                             style: OutlinedButton.styleFrom(
                               foregroundColor: kWhite,
                               side: const BorderSide(color: Color(0x4DFFFFFF)),
@@ -3085,8 +3090,185 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
   Future<void> _loadEarnings() async {
     final res = await ApiService.getEarningsSummary();
     if (res['success'] && mounted) {
-      setState(() => _earningsRaw = res['data']);
+      final data = res['data'];
+      final wb = (data['wallet_balance'] ?? 0.0).toDouble();
+      await AuthService.updateWallet(wb);
+      setState(() => _earningsRaw = data);
     }
+  }
+
+  void _showWithdrawDialog(BuildContext context) {
+    final double balance = double.tryParse(_earnings.wallet) ?? AuthService.walletBalance;
+    final amountCtrl = TextEditingController();
+    final upiCtrl = TextEditingController();
+    bool isWithdrawing = false;
+    String? errorText;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: kWhite,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Text(
+                'Withdraw Earnings',
+                style: GoogleFonts.sora(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: kDark,
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Available Balance: ₹${balance.toStringAsFixed(2)}',
+                    style: GoogleFonts.sora(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: kSuccess,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: amountCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    enabled: !isWithdrawing,
+                    style: GoogleFonts.sora(fontSize: 14),
+                    decoration: InputDecoration(
+                      labelText: 'Amount (₹)',
+                      labelStyle: GoogleFonts.sora(fontSize: 12),
+                      hintText: 'Enter amount to withdraw',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      prefixIcon: const Icon(Icons.currency_rupee, size: 16),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: upiCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    enabled: !isWithdrawing,
+                    style: GoogleFonts.sora(fontSize: 14),
+                    decoration: InputDecoration(
+                      labelText: 'UPI ID',
+                      labelStyle: GoogleFonts.sora(fontSize: 12),
+                      hintText: 'e.g. name@upi',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      prefixIcon: const Icon(Icons.account_balance, size: 16),
+                    ),
+                  ),
+                  if (errorText != null) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      errorText!,
+                      style: GoogleFonts.sora(
+                        color: kError,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isWithdrawing
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.sora(color: kMuted, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: isWithdrawing
+                      ? null
+                      : () async {
+                          final String amtStr = amountCtrl.text.trim();
+                          final String upiStr = upiCtrl.text.trim();
+
+                          if (amtStr.isEmpty) {
+                            setDialogState(() => errorText = 'Amount is required');
+                            return;
+                          }
+                          final double? amt = double.tryParse(amtStr);
+                          if (amt == null || amt <= 0) {
+                            setDialogState(() => errorText = 'Enter a valid amount');
+                            return;
+                          }
+                          if (amt > balance) {
+                            setDialogState(() => errorText = 'Insufficient balance');
+                            return;
+                          }
+                          if (upiStr.isEmpty) {
+                            setDialogState(() => errorText = 'UPI ID is required');
+                            return;
+                          }
+                          if (!upiStr.contains('@')) {
+                            setDialogState(() => errorText = 'Enter a valid UPI ID');
+                            return;
+                          }
+
+                          setDialogState(() {
+                            isWithdrawing = true;
+                            errorText = null;
+                          });
+
+                          final res = await ApiService.requestWithdrawal(amt, upiStr);
+
+                          if (res['success'] == true) {
+                            final double newBal = (res['data']?['new_balance'] ?? 0.0).toDouble();
+                            await AuthService.updateWallet(newBal);
+                            await _loadEarnings();
+                            if (mounted) {
+                              Navigator.of(dialogContext).pop();
+                              _showSnack('Withdrawal of ₹$amt requested successfully!', isError: false);
+                            }
+                          } else {
+                            if (mounted) {
+                              setDialogState(() {
+                                isWithdrawing = false;
+                                errorText = res['error'] ?? 'Withdrawal request failed';
+                              });
+                            }
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kOrange,
+                    foregroundColor: kWhite,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: isWithdrawing
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            color: kWhite,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          'Withdraw',
+                          style: GoogleFonts.sora(fontWeight: FontWeight.bold),
+                        ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _refreshProfileStatus() async {
@@ -3149,7 +3331,8 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             _buildMainMapArea(),
             EarningsScreen(
                 earnings: _earnings,
-                onClose: () => setState(() => _navIndex = 0)),
+                onClose: () => setState(() => _navIndex = 0),
+                onWithdrawPressed: () => _showWithdrawDialog(context)),
             _historyTab(),
             _profileTab(),
           ],

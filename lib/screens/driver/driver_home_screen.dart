@@ -3204,7 +3204,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
 
   Widget _buildAppBar() {
     return Container(
-      color: Colors.white,
+      color: Colors.transparent,
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 6,
         left: 16,
@@ -3811,7 +3811,6 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     } else {
       mainContent = Column(
         children: [
-          _buildAppBar(),
           Expanded(
             flex: 48,
             child: Stack(
@@ -3827,9 +3826,33 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                     _mapController = controller;
                   },
                 ),
+                // Soft white gradient container under the AppBar for text legibility
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    height: 110,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xF2FFFFFF), Color(0x00FFFFFF)],
+                      ),
+                    ),
+                  ),
+                ),
+                // Floating AppBar
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _buildAppBar(),
+                ),
+                // Zoom controls shifted slightly down so they sit below the header elements
                 Positioned(
                   right: 12,
-                  top: 0,
+                  top: 60,
                   bottom: 0,
                   child: _buildMapZoomControls(),
                 ),

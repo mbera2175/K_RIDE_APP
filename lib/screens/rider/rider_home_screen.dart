@@ -7276,13 +7276,23 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               label: 'Car & Bike',
               bgColor: kOrangeBg,
               arrowColor: kOrange,
-              vehicleImage: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ServiceIconWidget(icon: 'ac_cab', size: 30),
-                  SizedBox(width: 4),
-                  ServiceIconWidget(icon: 'bike', size: 30),
-                ],
+              vehicleImage: const SizedBox(
+                width: 68,
+                height: 54,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 0,
+                      bottom: 0,
+                      child: ServiceIconWidget(icon: 'ac_cab', size: 42),
+                    ),
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: ServiceIconWidget(icon: 'bike', size: 42),
+                    ),
+                  ],
+                ),
               ),
               onTap: () {
                 final items = _rideServices.where((s) => [1, 2, 3].contains(s.id)).toList();
@@ -7296,13 +7306,23 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               label: 'Auto & Toto',
               bgColor: kGreenBg,
               arrowColor: kGreenArrow,
-              vehicleImage: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ServiceIconWidget(icon: 'auto', size: 30),
-                  SizedBox(width: 4),
-                  ServiceIconWidget(icon: 'toto', size: 30),
-                ],
+              vehicleImage: const SizedBox(
+                width: 68,
+                height: 54,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 0,
+                      bottom: 0,
+                      child: ServiceIconWidget(icon: 'auto', size: 42),
+                    ),
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: ServiceIconWidget(icon: 'toto', size: 42),
+                    ),
+                  ],
+                ),
               ),
               onTap: () {
                 final items = _rideServices.where((s) => [4, 5].contains(s.id)).toList();
@@ -7316,7 +7336,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               label: 'Ambulance',
               bgColor: kPinkBg,
               arrowColor: kPinkArrow,
-              vehicleImage: const ServiceIconWidget(icon: 'ambulance', size: 36),
+              vehicleImage: const ServiceIconWidget(icon: 'ambulance', size: 50),
               onTap: () {
                 final service = services.firstWhere((s) => s.id == 6);
                 _openService(service);
@@ -7350,7 +7370,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           children: [
             Center(
               child: Container(
-                height: 36,
+                height: 54,
                 alignment: Alignment.center,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,

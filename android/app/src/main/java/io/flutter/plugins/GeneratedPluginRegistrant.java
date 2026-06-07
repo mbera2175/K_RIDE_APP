@@ -31,6 +31,11 @@ public final class GeneratedPluginRegistrant {
       Log.e(TAG, "Error registering plugin flutter_background_service_android, id.flutter.flutter_background_service.FlutterBackgroundServicePlugin", e);
     }
     try {
+      flutterEngine.getPlugins().add(new flutter.overlay.window.flutter_overlay_window.FlutterOverlayWindowPlugin());
+    } catch (Exception e) {
+      Log.e(TAG, "Error registering plugin flutter_overlay_window, flutter.overlay.window.flutter_overlay_window.FlutterOverlayWindowPlugin", e);
+    }
+    try {
       flutterEngine.getPlugins().add(new io.flutter.plugins.flutter_plugin_android_lifecycle.FlutterAndroidLifecyclePlugin());
     } catch (Exception e) {
       Log.e(TAG, "Error registering plugin flutter_plugin_android_lifecycle, io.flutter.plugins.flutter_plugin_android_lifecycle.FlutterAndroidLifecyclePlugin", e);

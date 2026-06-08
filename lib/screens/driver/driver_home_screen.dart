@@ -1334,19 +1334,22 @@ class ActiveTripPanel extends StatelessWidget {
                     if (canCancel) ...[
                       SizedBox(
                         width: double.infinity,
-                        child: TextButton.icon(
+                        child: OutlinedButton.icon(
                           onPressed: () => onAction('cancel'),
-                          icon: const Text('✕', style: TextStyle(fontSize: 16)),
-                          label: const Text('Cancel Ride'),
-                          style: TextButton.styleFrom(
+                          icon: const Text('✕', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          label: Text('Cancel Ride',
+                              style: GoogleFonts.sora(
+                                  fontSize: 14, fontWeight: FontWeight.w600)),
+                          style: OutlinedButton.styleFrom(
                             foregroundColor: kError,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            side: const BorderSide(color: kError, width: 1.5),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 12),
                     ],
                     // Cash + SOS buttons
                     Row(children: [

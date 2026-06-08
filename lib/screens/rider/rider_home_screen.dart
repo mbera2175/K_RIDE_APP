@@ -2334,6 +2334,7 @@ class _WhereToScreenState extends State<WhereToScreen>
   final List<Symbol> _driverSymbols = [];
   Timer? _searchingTimer;
   int _searchSecondsLeft = 150;
+  int _initialSearchDuration = 150;
 
   List<MapplsPlaceSuggestion> _suggestions = [];
   bool _suggestionsLoading = false;
@@ -2951,9 +2952,10 @@ class _WhereToScreenState extends State<WhereToScreen>
     });
   }
 
-  void _startSearchingTimer() {
+  void _startSearchingTimer({int seconds = 150}) {
     _searchingTimer?.cancel();
-    _searchSecondsLeft = 150;
+    _initialSearchDuration = seconds;
+    _searchSecondsLeft = seconds;
     _searchingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();
@@ -4087,25 +4089,7 @@ class _WhereToScreenState extends State<WhereToScreen>
 
   Widget _buildSearchingState() {
     final isAmbulance = widget.service.vehicleType == 'ambulance';
-    int waveSeconds;
-    String waveLabel;
-    if (_searchSecondsLeft > 120) {
-      waveSeconds = _searchSecondsLeft - 120;
-      waveLabel = isAmbulance ? "Wave 1 (5km)" : "Wave 1 (2km)";
-    } else if (_searchSecondsLeft > 90) {
-      waveSeconds = _searchSecondsLeft - 90;
-      waveLabel = isAmbulance ? "Wave 2 (8km)" : "Wave 2 (3km)";
-    } else if (_searchSecondsLeft > 60) {
-      waveSeconds = _searchSecondsLeft - 60;
-      waveLabel = isAmbulance ? "Wave 3 (10km)" : "Wave 3 (4km)";
-    } else if (_searchSecondsLeft > 30) {
-      waveSeconds = _searchSecondsLeft - 30;
-      waveLabel = isAmbulance ? "Wave 4 (10km)" : "Wave 4 (4km)";
-    } else {
-      waveSeconds = _searchSecondsLeft;
-      waveLabel = isAmbulance ? "Wave 5 (10km)" : "Wave 5 (4km)";
-    }
-    final timeStr = "$waveSeconds sec";
+    final timeStr = "$_searchSecondsLeft sec";
 
     return Scaffold(
       body: Stack(
@@ -4199,7 +4183,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                             width: 52,
                             height: 52,
                             child: CircularProgressIndicator(
-                              value: waveSeconds / 30.0,
+                              value: _searchSecondsLeft / _initialSearchDuration.toDouble(),
                               strokeWidth: 4.5,
                               color: kOrange,
                               backgroundColor: const Color(0xFFF2F4F7),
@@ -4230,7 +4214,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                             Text(
                               isAmbulance
                                   ? 'Finding your ambulance...'
-                                  : 'Finding your driver ($waveLabel)...',
+                                  : 'Finding your driver...',
                               style: const TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.bold,
@@ -4293,7 +4277,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                                 setState(() {
                                   _bonusAmount += amount;
                                 });
-                                _startSearchingTimer();
+                                _startSearchingTimer(seconds: 90);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text('+₹$amount bonus added!'),
@@ -5093,7 +5077,6 @@ class _WhereToScreenState extends State<WhereToScreen>
                 const SizedBox(height: 6),
                 Flexible(
                   child: SingleChildScrollView(
-                    shrinkWrap: true,
                     physics: const BouncingScrollPhysics(),
                     child: Column(
                       children: [

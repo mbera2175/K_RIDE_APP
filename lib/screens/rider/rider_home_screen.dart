@@ -3415,15 +3415,19 @@ class _WhereToScreenState extends State<WhereToScreen>
     }
     
     if (source != null && destination != null) {
-      final points = await MapService.getRoute(source, destination);
-      if (points.isNotEmpty && mounted) {
-        _mapController!.clearLines();
-        await _mapController!.addLine(LineOptions(
-          geometry: points,
-          lineColor: status == 'started' ? "#00C853" : "#FF6B00",
-          lineWidth: 5.0,
-          lineOpacity: 0.8,
-        ));
+      try {
+        final points = await MapService.getRoute(source, destination);
+        if (points.isNotEmpty && mounted) {
+          _mapController!.clearLines();
+          await _mapController!.addLine(LineOptions(
+            geometry: points,
+            lineColor: status == 'started' ? "#00C853" : "#FF6B00",
+            lineWidth: 5.0,
+            lineOpacity: 0.8,
+          ));
+        }
+      } catch (e) {
+        debugPrint('Error drawing trip route: $e');
       }
     }
   }
@@ -4091,9 +4095,8 @@ class _WhereToScreenState extends State<WhereToScreen>
     final isAmbulance = widget.service.vehicleType == 'ambulance';
     final timeStr = "$_searchSecondsLeft sec";
 
-    return Scaffold(
-      body: Stack(
-        children: [
+    return Stack(
+      children: [
           // Map Background
           Positioned.fill(
             child: MapplsMap(
@@ -4389,8 +4392,7 @@ class _WhereToScreenState extends State<WhereToScreen>
           ),
           if (_socketDisconnected) _buildReconnectionOverlay(),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildReconnectionOverlay() {
@@ -5021,8 +5023,9 @@ class _WhereToScreenState extends State<WhereToScreen>
             ),
             onMapCreated: (MapplsMapController controller) async {
               _mapController = controller;
+              await _registerCustomIcons(controller);
+              
               try {
-                await _registerCustomIcons(controller);
                 await controller.addSymbol(SymbolOptions(
                   geometry: LatLng(_pickupLat, _pickupLng),
                   iconImage: 'marker-15',
@@ -5032,6 +5035,9 @@ class _WhereToScreenState extends State<WhereToScreen>
                   textOffset: const Offset(0, 1.5),
                   textColor: '#FF6B00',
                 ));
+              } catch (_) {}
+
+              try {
                 await controller.addSymbol(SymbolOptions(
                   geometry: LatLng(_dropLat, _dropLng),
                   iconImage: 'marker-15',
@@ -5041,9 +5047,10 @@ class _WhereToScreenState extends State<WhereToScreen>
                   textOffset: const Offset(0, 1.5),
                   textColor: '#1A1A1A',
                 ));
-                await _drawRiderTripRoute();
-                await _loadNearbyDriversOnMap();
               } catch (_) {}
+
+              await _loadNearbyDriversOnMap();
+              await _drawRiderTripRoute();
             },
             myLocationEnabled: true,
           ),
@@ -5519,52 +5526,53 @@ class _WhereToScreenState extends State<WhereToScreen>
       durationStr = "$etaMinutes min";
     }
 
-    return Scaffold(
-      backgroundColor: kWhite,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: MapplsMap(
-              initialCameraPosition: CameraPosition(
-                target: LatLng(_pickupLat, _pickupLng),
-                zoom: 14,
-              ),
-              onMapCreated: (MapplsMapController controller) async {
-                _mapController = controller;
-                try {
-                  await _registerCustomIcons(controller);
-                  await controller.addSymbol(SymbolOptions(
-                    geometry: LatLng(_pickupLat, _pickupLng),
-                    iconImage: 'marker-15',
-                    iconSize: 2.0,
-                    iconColor: '#FF6B00',
-                    textField: 'Pickup',
-                    textOffset: const Offset(0, 1.5),
-                    textColor: '#FF6B00',
-                  ));
-                  await controller.addSymbol(SymbolOptions(
-                    geometry: LatLng(_dropLat, _dropLng),
-                    iconImage: 'marker-15',
-                    iconSize: 2.0,
-                    iconColor: '#1A1A1A',
-                    textField: 'Drop',
-                    textOffset: const Offset(0, 1.5),
-                    textColor: '#1A1A1A',
-                  ));
-                  if (_driverLat != null && _driverLng != null) {
-                    final prevLat = _lastDriverLat ?? _driverLat!;
-                    final prevLng = _lastDriverLng ?? _driverLng!;
-                    final bearing = _calculateBearing(prevLat, prevLng, _driverLat!, _driverLng!);
-                    await _updateDriverMarkerAnimated(_driverLat!, _driverLng!);
-                  }
-                  await _drawRiderTripRoute();
-                } catch (e) {
-                  debugPrint('Map symbols creation error: $e');
-                }
-              },
-              myLocationEnabled: true,
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: MapplsMap(
+            initialCameraPosition: CameraPosition(
+              target: LatLng(_pickupLat, _pickupLng),
+              zoom: 14,
             ),
+            onMapCreated: (MapplsMapController controller) async {
+              _mapController = controller;
+              await _registerCustomIcons(controller);
+              
+              try {
+                await controller.addSymbol(SymbolOptions(
+                  geometry: LatLng(_pickupLat, _pickupLng),
+                  iconImage: 'marker-15',
+                  iconSize: 2.0,
+                  iconColor: '#FF6B00',
+                  textField: 'Pickup',
+                  textOffset: const Offset(0, 1.5),
+                  textColor: '#FF6B00',
+                ));
+              } catch (_) {}
+
+              try {
+                await controller.addSymbol(SymbolOptions(
+                  geometry: LatLng(_dropLat, _dropLng),
+                  iconImage: 'marker-15',
+                  iconSize: 2.0,
+                  iconColor: '#1A1A1A',
+                  textField: 'Drop',
+                  textOffset: const Offset(0, 1.5),
+                  textColor: '#1A1A1A',
+                ));
+              } catch (_) {}
+
+              try {
+                if (_driverLat != null && _driverLng != null) {
+                  await _updateDriverMarkerAnimated(_driverLat!, _driverLng!);
+                }
+              } catch (_) {}
+
+              await _drawRiderTripRoute();
+            },
+            myLocationEnabled: true,
           ),
+        ),
           Positioned(
             top: MediaQuery.of(context).padding.top + 12,
             left: 16,
@@ -5600,8 +5608,7 @@ class _WhereToScreenState extends State<WhereToScreen>
           ),
           if (_socketDisconnected) _buildReconnectionOverlay(),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildTrackingToast(String tripStatus) {

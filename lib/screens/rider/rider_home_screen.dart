@@ -2926,7 +2926,13 @@ class _WhereToScreenState extends State<WhereToScreen>
               MaterialPageRoute(
                 builder: (_) => TripReceiptScreen(
                   tripId: completedTripId,
-                  onClose: widget.onBack,
+                  onClose: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RiderHomeScreen()),
+                      (route) => false,
+                    );
+                  },
                 ),
               ),
             );
@@ -3090,7 +3096,13 @@ class _WhereToScreenState extends State<WhereToScreen>
           MaterialPageRoute(
             builder: (_) => TripReceiptScreen(
               tripId: _tripId!,
-              onClose: widget.onBack,
+              onClose: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RiderHomeScreen()),
+                  (route) => false,
+                );
+              },
             ),
           ),
         );
@@ -3397,16 +3409,19 @@ class _WhereToScreenState extends State<WhereToScreen>
         await _mapController!.updateSymbol(_driverSymbol!, SymbolOptions(
           geometry: LatLng(lat, lng),
           iconRotate: bearing,
+          iconImage: useIcon ? iconName : null,
+          iconSize: useIcon ? 0.9 : null,
+          textField: useIcon ? null : emoji,
+          textSize: useIcon ? null : 32.0,
         ));
       } else {
         _driverSymbol = await _mapController!.addSymbol(SymbolOptions(
           geometry: LatLng(lat, lng),
           iconImage: useIcon ? iconName : null,
-          iconSize: useIcon ? 0.7 : null,
-          textField: useIcon ? 'Driver' : '$emoji Driver',
-          textOffset: const Offset(0, -1.5),
-          textColor: '#FF6B00',
-          textSize: useIcon ? 12.0 : 16.0,
+          iconSize: useIcon ? 0.9 : null,
+          textField: useIcon ? null : emoji,
+          textSize: useIcon ? null : 32.0,
+          textOffset: const Offset(0, 0),
           iconRotate: bearing,
         ));
       }
@@ -3415,11 +3430,10 @@ class _WhereToScreenState extends State<WhereToScreen>
         _driverSymbol = await _mapController!.addSymbol(SymbolOptions(
           geometry: LatLng(lat, lng),
           iconImage: useIcon ? iconName : null,
-          iconSize: useIcon ? 0.7 : null,
-          textField: useIcon ? 'Driver' : '$emoji Driver',
-          textOffset: const Offset(0, -1.5),
-          textColor: '#FF6B00',
-          textSize: useIcon ? 12.0 : 16.0,
+          iconSize: useIcon ? 0.9 : null,
+          textField: useIcon ? null : emoji,
+          textSize: useIcon ? null : 32.0,
+          textOffset: const Offset(0, 0),
           iconRotate: bearing,
         ));
       } catch (_) {}
@@ -3476,8 +3490,10 @@ class _WhereToScreenState extends State<WhereToScreen>
     final type = _selectedVehicleType.toLowerCase();
     if (type.contains('bike')) {
       return 'custom-bike';
-    } else if (type.contains('auto') || type.contains('toto')) {
+    } else if (type.contains('auto')) {
       return 'custom-auto';
+    } else if (type.contains('toto')) {
+      return 'custom-toto';
     } else if (type.contains('ambulance')) {
       return 'custom-ambulance';
     } else {
@@ -3490,6 +3506,7 @@ class _WhereToScreenState extends State<WhereToScreen>
       'custom-bike': 'assets/images/bike.png',
       'custom-car': 'assets/images/car.png',
       'custom-auto': 'assets/images/auto.png',
+      'custom-toto': 'assets/images/toto.png',
       'custom-ambulance': 'assets/images/ambulance.png',
     };
     for (final entry in assets.entries) {
@@ -3498,7 +3515,7 @@ class _WhereToScreenState extends State<WhereToScreen>
         final ByteData data = await rootBundle.load(entry.value);
         final ui.Codec codec = await ui.instantiateImageCodec(
           data.buffer.asUint8List(),
-          targetWidth: 80,
+          targetWidth: 120,
         );
         final ui.FrameInfo fi = await codec.getNextFrame();
         final ByteData? pngBytes = await fi.image.toByteData(format: ui.ImageByteFormat.png);
@@ -3570,7 +3587,7 @@ class _WhereToScreenState extends State<WhereToScreen>
         final sym = await _mapController!.addSymbol(SymbolOptions(
           geometry: coord,
           iconImage: useIcon ? iconName : null,
-          iconSize: useIcon ? 0.5 : null,
+          iconSize: useIcon ? 0.9 : null,
           textField: useIcon ? null : emoji,
           textSize: useIcon ? null : 32.0,
         ));
@@ -3954,7 +3971,16 @@ class _WhereToScreenState extends State<WhereToScreen>
             context,
             MaterialPageRoute(
               builder: (_) =>
-                  TripReceiptScreen(tripId: _tripId!, onClose: widget.onBack),
+                  TripReceiptScreen(
+                    tripId: _tripId!,
+                    onClose: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const RiderHomeScreen()),
+                        (route) => false,
+                      );
+                    },
+                  ),
             ));
       } else if (type == "trip_cancelled") {
         RiderSocketService.disconnect();
@@ -4178,25 +4204,25 @@ class _WhereToScreenState extends State<WhereToScreen>
                 final useIcon = _registeredIcons.contains(iconName);
                 final emoji = _getVehicleEmoji(_selectedVehicleType);
 
-                // Add 3 mock nearby driver icons to represent active search using correct icon or emoji fallback
+                 // Add 3 mock nearby driver icons to represent active search using correct icon or emoji fallback
                 await _mapController!.addSymbol(SymbolOptions(
                   geometry: LatLng(_pickupLat + 0.0035, _pickupLng - 0.0025),
                   iconImage: useIcon ? iconName : null,
-                  iconSize: useIcon ? 0.5 : null,
+                  iconSize: useIcon ? 0.9 : null,
                   textField: useIcon ? null : emoji,
                   textSize: useIcon ? null : 32.0,
                 ));
                 await _mapController!.addSymbol(SymbolOptions(
                   geometry: LatLng(_pickupLat - 0.0018, _pickupLng + 0.0042),
                   iconImage: useIcon ? iconName : null,
-                  iconSize: useIcon ? 0.5 : null,
+                  iconSize: useIcon ? 0.9 : null,
                   textField: useIcon ? null : emoji,
                   textSize: useIcon ? null : 32.0,
                 ));
                 await _mapController!.addSymbol(SymbolOptions(
                   geometry: LatLng(_pickupLat + 0.0022, _pickupLng + 0.0031),
                   iconImage: useIcon ? iconName : null,
-                  iconSize: useIcon ? 0.5 : null,
+                  iconSize: useIcon ? 0.9 : null,
                   textField: useIcon ? null : emoji,
                   textSize: useIcon ? null : 32.0,
                 ));
@@ -5674,7 +5700,7 @@ class _WhereToScreenState extends State<WhereToScreen>
             right: 0,
             child: Container(
               constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.45,
+                maxHeight: MediaQuery.of(context).size.height * 0.55,
               ),
               color: const Color(0xFFF9F9F9), // kBg
               child: SingleChildScrollView(
@@ -5682,17 +5708,17 @@ class _WhereToScreenState extends State<WhereToScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     _buildDistanceBanner(distKm, etaMinutes, tripStatus),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     _buildDriverCard(context, driverName, driverPhone, driverPhotoUrl, driverRating, vehicleModel, vehicleNo),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     _buildOtpSosRow(context, showOtp, expectOtp, tripStatus),
                     if (tripStatus == 'requested' ||
                         tripStatus == 'driver_assigned' ||
                         tripStatus == 'accepted' ||
                         tripStatus == 'arrived') ...[
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       _buildCancelButton(context),
                     ],
                     SizedBox(
@@ -6469,6 +6495,8 @@ class _WhereToScreenState extends State<WhereToScreen>
         return '🛺';
       case 'toto':
         return '🛺';
+      case 'ambulance':
+        return '🚑';
       default:
         return '🚖';
     }

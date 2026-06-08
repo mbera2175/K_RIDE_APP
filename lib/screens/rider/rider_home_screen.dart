@@ -6020,7 +6020,7 @@ class _WhereToScreenState extends State<WhereToScreen>
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: const Color(0xFFA8DFC0), width: 1),
             ),
-            child: const Icon(icon, color: Color(0xFF27AE60), size: 26),
+            child: Icon(icon, color: const Color(0xFF27AE60), size: 26),
           ),
           const SizedBox(height: 6),
           Text(

@@ -2333,7 +2333,7 @@ class _WhereToScreenState extends State<WhereToScreen>
   Symbol? _driverSymbol;
   final List<Symbol> _driverSymbols = [];
   Timer? _searchingTimer;
-  int _searchSecondsLeft = 240;
+  int _searchSecondsLeft = 90;
 
   List<MapplsPlaceSuggestion> _suggestions = [];
   bool _suggestionsLoading = false;
@@ -2953,7 +2953,7 @@ class _WhereToScreenState extends State<WhereToScreen>
 
   void _startSearchingTimer() {
     _searchingTimer?.cancel();
-    _searchSecondsLeft = 240;
+    _searchSecondsLeft = 90;
     _searchingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();
@@ -4089,15 +4089,15 @@ class _WhereToScreenState extends State<WhereToScreen>
     final isAmbulance = widget.service.vehicleType == 'ambulance';
     int waveSeconds;
     String waveLabel;
-    if (_searchSecondsLeft > 160) {
-      waveSeconds = _searchSecondsLeft - 160;
-      waveLabel = "Wave 1 (2km)";
-    } else if (_searchSecondsLeft > 80) {
-      waveSeconds = _searchSecondsLeft - 80;
-      waveLabel = "Wave 2 (3km)";
+    if (_searchSecondsLeft > 60) {
+      waveSeconds = _searchSecondsLeft - 60;
+      waveLabel = isAmbulance ? "Wave 1 (5km)" : "Wave 1 (2km)";
+    } else if (_searchSecondsLeft > 30) {
+      waveSeconds = _searchSecondsLeft - 30;
+      waveLabel = isAmbulance ? "Wave 2 (8km)" : "Wave 2 (3km)";
     } else {
       waveSeconds = _searchSecondsLeft;
-      waveLabel = "Wave 3 (4km)";
+      waveLabel = isAmbulance ? "Wave 3 (10km)" : "Wave 3 (4km)";
     }
     final timeStr = "$waveSeconds sec";
 
@@ -4193,7 +4193,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                             width: 52,
                             height: 52,
                             child: CircularProgressIndicator(
-                              value: waveSeconds / 80.0,
+                              value: waveSeconds / 30.0,
                               strokeWidth: 4.5,
                               color: kOrange,
                               backgroundColor: const Color(0xFFF2F4F7),
@@ -4288,7 +4288,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                                   );
                                   setState(() {
                                     _bonusAmount += amount;
-                                    _searchSecondsLeft = 240;
+                                    _searchSecondsLeft = 90;
                                   });
                                   _startSearchingTimer();
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -5076,7 +5076,6 @@ class _WhereToScreenState extends State<WhereToScreen>
                     const SizedBox(height: 6),
                     Flexible(
                       child: SingleChildScrollView(
-                        shrinkWrap: true,
                         physics: const BouncingScrollPhysics(),
                         child: Column(
                           children: [
@@ -5506,16 +5505,18 @@ class _WhereToScreenState extends State<WhereToScreen>
     }
 
     // Dynamic distance & ETA calculation
+    double distKm = 0.0;
+    int etaMinutes = 0;
     String? distanceStr;
     String? durationStr;
     if (_driverLat != null && _driverLng != null) {
       final double targetLat = (tripStatus == 'started') ? _dropLat : _pickupLat;
       final double targetLng = (tripStatus == 'started') ? _dropLng : _pickupLng;
       final double distMeters = Geolocator.distanceBetween(_driverLat!, _driverLng!, targetLat, targetLng);
-      final double distKm = distMeters / 1000.0;
+      distKm = distMeters / 1000.0;
       distanceStr = "${distKm.toStringAsFixed(1)} km";
-      final int minutes = (distKm * 2.0).round() + 1;
-      durationStr = "$minutes min";
+      etaMinutes = (distKm * 2.0).round() + 1;
+      durationStr = "$etaMinutes min";
     }
 
     return Scaffold(

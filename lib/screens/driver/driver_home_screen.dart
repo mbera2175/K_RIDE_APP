@@ -2475,6 +2475,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     _loadEarnings();
     _checkActiveTrip();
     _refreshProfileStatus();
+    if (_isOnline) {
+      _connectDriverSocket();
+    }
   }
 
   @override
@@ -2509,6 +2512,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       _currentLat = pos.latitude;
       _currentLng = pos.longitude;
       await ApiService.updateLocation(_currentLat, _currentLng);
+      if (_isOnline) {
+        _connectDriverSocket();
+      }
       Geolocator.getPositionStream(
         locationSettings: const LocationSettings(
             accuracy: LocationAccuracy.high, distanceFilter: 20),
@@ -2523,6 +2529,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         }
         if (_isOnline) {
           await ApiService.updateLocation(_currentLat, _currentLng);
+          _connectDriverSocket();
         }
         if (_activeTrip != null) {
           _drawTripRoute();
@@ -2688,6 +2695,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       }
     } else {
       if (mounted) setState(() => _activeTrip = null);
+      if (_isOnline) {
+        _connectDriverSocket();
+      }
     }
     if (mounted) setState(() => _loadingActive = false);
   }
@@ -3421,6 +3431,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         final online = driver['is_online'] == true;
         await AuthService.setIsOnline(online);
         _isOnline = online;
+        if (online) {
+          _connectDriverSocket();
+        }
       }
       if (mounted) setState(() {});
     }

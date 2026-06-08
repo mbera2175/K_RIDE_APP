@@ -4281,23 +4281,42 @@ class _WhereToScreenState extends State<WhereToScreen>
                             child: GestureDetector(
                               onTap: () async {
                                 if (_tripId == null) return;
+                                final oldBonusAmount = _bonusAmount;
+                                final oldSearchSecondsLeft = _searchSecondsLeft;
+                                final startTime = DateTime.now();
+                                setState(() {
+                                  _bonusAmount += amount;
+                                });
+                                _startSearchingTimer();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('+₹$amount bonus added!'),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
                                 try {
-                                  await ApiService.addBonus(
+                                  final res = await ApiService.addBonus(
                                     _tripId!,
                                     amount.toDouble(),
                                   );
-                                  setState(() {
-                                    _bonusAmount += amount;
-                                    _searchSecondsLeft = 90;
-                                  });
-                                  _startSearchingTimer();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('+₹$amount bonus added!')),
-                                  );
+                                  if (res['success'] != true) {
+                                    throw Exception(res['error'] ?? 'Server error');
+                                  }
                                 } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Failed to add bonus')),
-                                  );
+                                  if (mounted && _searching && _tripId != null) {
+                                    final elapsed = DateTime.now().difference(startTime).inSeconds;
+                                    setState(() {
+                                      _bonusAmount = oldBonusAmount;
+                                      final revertedSeconds = oldSearchSecondsLeft - elapsed;
+                                      _searchSecondsLeft = revertedSeconds > 0 ? revertedSeconds : 0;
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Failed to add bonus: ${e.toString().replaceAll('Exception: ', '').replaceAll('Exception:', '').trim()}'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
                                 }
                               },
                               child: Container(

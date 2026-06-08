@@ -55,7 +55,7 @@ class _DriverStep2VehicleState extends State<DriverStep2Vehicle> {
   final _cityCtrl  = TextEditingController();
   final _stateCtrl = TextEditingController();
 
-  String _vehicleType = 'cab_ac';
+  String _vehicleType = 'ac_cab';
   bool   _loading     = false;
   String _error       = '';
 

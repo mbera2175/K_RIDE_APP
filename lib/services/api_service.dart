@@ -388,7 +388,8 @@ class ApiService {
   static Future<Map<String, dynamic>> addBonus(int tripId, double bonusAmount) async {
     final res = await http.post(Uri.parse('$_base/trips/$tripId/bonus'),
       headers: _authHeaders,
-      body: jsonEncode({'bonus_amount': bonusAmount})).timeout(_timeout);
+      body: jsonEncode({'bonus_amount': bonusAmount}))
+      .timeout(const Duration(seconds: 45));
     return _handle(res);
   }
 

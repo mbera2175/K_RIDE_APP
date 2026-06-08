@@ -4081,15 +4081,26 @@ class _WhereToScreenState extends State<WhereToScreen>
 
   Widget _buildSearchingState() {
     final isAmbulance = widget.service.vehicleType == 'ambulance';
-    final m = (_searchSecondsLeft ~/ 60).toString().padLeft(2, '0');
-    final s = (_searchSecondsLeft % 60).toString().padLeft(2, '0');
-    final timeStr = "$m:$s";
+    int waveSeconds;
+    String waveLabel;
+    if (_searchSecondsLeft > 160) {
+      waveSeconds = _searchSecondsLeft - 160;
+      waveLabel = "Wave 1 (2km)";
+    } else if (_searchSecondsLeft > 80) {
+      waveSeconds = _searchSecondsLeft - 80;
+      waveLabel = "Wave 2 (3km)";
+    } else {
+      waveSeconds = _searchSecondsLeft;
+      waveLabel = "Wave 3 (4km)";
+    }
+    final timeStr = "$waveSeconds sec";
 
     return Scaffold(
       body: Stack(
         children: [
           // Map Background
-          MapplsMap(
+          Positioned.fill(
+            child: MapplsMap(
             initialCameraPosition: CameraPosition(
               target: LatLng(_pickupLat, _pickupLng),
               zoom: 14.2,
@@ -4128,6 +4139,7 @@ class _WhereToScreenState extends State<WhereToScreen>
               } catch (_) {}
             },
             myLocationEnabled: true,
+          ),
           ),
 
 
@@ -4175,7 +4187,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                             width: 52,
                             height: 52,
                             child: CircularProgressIndicator(
-                              value: _searchSecondsLeft / 240.0,
+                              value: waveSeconds / 80.0,
                               strokeWidth: 4.5,
                               color: kOrange,
                               backgroundColor: const Color(0xFFF2F4F7),
@@ -4203,10 +4215,12 @@ class _WhereToScreenState extends State<WhereToScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Finding your driver...',
-                              style: TextStyle(
-                                fontSize: 18,
+                            Text(
+                              isAmbulance
+                                  ? 'Finding your ambulance...'
+                                  : 'Finding your driver ($waveLabel)...',
+                              style: const TextStyle(
+                                fontSize: 17,
                                 fontWeight: FontWeight.bold,
                                 color: kDark,
                               ),
@@ -5578,13 +5592,17 @@ class _WhereToScreenState extends State<WhereToScreen>
               ],
             ),
           ),
-              Container(
-                padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 12 : 40),
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.65,
-                ),
-                decoration: const BoxDecoration(
-                  color: kWhite,
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 12 : 40),
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.65,
+              ),
+              decoration: const BoxDecoration(
+                color: kWhite,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                   boxShadow: [
                     BoxShadow(
@@ -6026,6 +6044,8 @@ class _WhereToScreenState extends State<WhereToScreen>
                   ],
                 ),
               ),
+            ),
+          ),
           if (_socketDisconnected) _buildReconnectionOverlay(),
         ],
       ),

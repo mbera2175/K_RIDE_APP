@@ -2,6 +2,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:mappls_gl/mappls_gl.dart';
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -3355,8 +3356,8 @@ class _WhereToScreenState extends State<WhereToScreen>
       } else {
         _driverSymbol = await _mapController!.addSymbol(SymbolOptions(
           geometry: LatLng(lat, lng),
-          iconImage: 'car-15',
-          iconSize: 2.5,
+          iconImage: _getVehicleIconName(),
+          iconSize: 0.7,
           iconColor: '#FF6B00',
           textField: 'Driver',
           textOffset: const Offset(0, -1.5),
@@ -3369,8 +3370,8 @@ class _WhereToScreenState extends State<WhereToScreen>
       try {
         _driverSymbol = await _mapController!.addSymbol(SymbolOptions(
           geometry: LatLng(lat, lng),
-          iconImage: 'car-15',
-          iconSize: 2.5,
+          iconImage: _getVehicleIconName(),
+          iconSize: 0.7,
           iconColor: '#FF6B00',
           textField: 'Driver',
           textOffset: const Offset(0, -1.5),
@@ -3424,6 +3425,45 @@ class _WhereToScreenState extends State<WhereToScreen>
     }
   }
 
+  String _getVehicleIconName() {
+    final type = _selectedVehicleType.toLowerCase();
+    if (type.contains('bike')) {
+      return 'custom-bike';
+    } else if (type.contains('auto') || type.contains('toto')) {
+      return 'custom-auto';
+    } else if (type.contains('ambulance')) {
+      return 'custom-ambulance';
+    } else {
+      return 'custom-car';
+    }
+  }
+
+  Future<void> _registerCustomIcons(MapplsMapController controller) async {
+    try {
+      final assets = {
+        'custom-bike': 'assets/images/bike.png',
+        'custom-car': 'assets/images/car.png',
+        'custom-auto': 'assets/images/auto.png',
+        'custom-ambulance': 'assets/images/ambulance.png',
+      };
+      for (final entry in assets.entries) {
+        final ByteData data = await rootBundle.load(entry.value);
+        final ui.Codec codec = await ui.instantiateImageCodec(
+          data.buffer.asUint8List(),
+          targetWidth: 100,
+        );
+        final ui.FrameInfo fi = await codec.getNextFrame();
+        final ByteData? pngBytes = await fi.image.toByteData(format: ui.ImageByteFormat.png);
+        if (pngBytes != null) {
+          await controller.addImage(entry.key, pngBytes.buffer.asUint8List());
+        }
+      }
+      debugPrint("All custom map icons registered successfully on controller.");
+    } catch (e) {
+      debugPrint("Error registering custom map icons: $e");
+    }
+  }
+
   Future<void> _loadNearbyDriversOnMap() async {
     if (_mapController == null) return;
     
@@ -3443,42 +3483,40 @@ class _WhereToScreenState extends State<WhereToScreen>
         vehicleType: _selectedVehicleType,
       );
 
+      List<LatLng> coordsToShow = [];
       if (res['success'] == true && res['data'] != null) {
         final List? drivers = res['data']['drivers'] as List?;
-        if (drivers != null && drivers.isNotEmpty) {
+        if (drivers != null) {
           for (final d in drivers) {
             final double? lat = (d['lat'] as num?)?.toDouble();
             final double? lng = (d['lng'] as num?)?.toDouble();
             if (lat != null && lng != null) {
-              final sym = await _mapController!.addSymbol(SymbolOptions(
-                geometry: LatLng(lat, lng),
-                iconImage: 'car-15',
-                iconSize: 1.8,
-                iconColor: '#FF6B00',
-              ));
-              _driverSymbols.add(sym);
+              coordsToShow.add(LatLng(lat, lng));
             }
           }
-          debugPrint('Added ${drivers.length} nearby drivers to map');
-          return;
         }
       }
-      
-      // Fallback: Add 3 mock drivers if API fails or returns no drivers
-      final mockCoords = [
-        LatLng(_pickupLat + 0.0035, _pickupLng - 0.0025),
-        LatLng(_pickupLat - 0.0018, _pickupLng + 0.0042),
-        LatLng(_pickupLat + 0.0022, _pickupLng + 0.0031),
-      ];
-      for (final coord in mockCoords) {
+
+      // Generate random offsets around pickup to ensure we show 4 drivers nearby
+      if (coordsToShow.length < 4) {
+        final random = Random();
+        while (coordsToShow.length < 4) {
+          final double latOffset = (random.nextDouble() - 0.5) * 0.008; 
+          final double lngOffset = (random.nextDouble() - 0.5) * 0.008;
+          coordsToShow.add(LatLng(_pickupLat + latOffset, _pickupLng + lngOffset));
+        }
+      }
+
+      // Add drivers to the map using correct icon
+      for (final coord in coordsToShow) {
         final sym = await _mapController!.addSymbol(SymbolOptions(
           geometry: coord,
-          iconImage: 'car-15',
-          iconSize: 1.8,
-          iconColor: '#FF6B00',
+          iconImage: _getVehicleIconName(),
+          iconSize: 0.5,
         ));
         _driverSymbols.add(sym);
       }
+      debugPrint('Added ${_driverSymbols.length} nearby drivers to map');
     } catch (e) {
       debugPrint('Error loading nearby drivers on map: $e');
     }
@@ -4056,6 +4094,7 @@ class _WhereToScreenState extends State<WhereToScreen>
             onMapCreated: (MapplsMapController controller) async {
               _mapController = controller;
               try {
+                await _registerCustomIcons(controller);
                 // Add Pickup marker
                 await controller.addSymbol(SymbolOptions(
                   geometry: LatLng(_pickupLat, _pickupLng),
@@ -4070,21 +4109,18 @@ class _WhereToScreenState extends State<WhereToScreen>
                 // Add 3 mock nearby driver icons to represent active search
                 await controller.addSymbol(SymbolOptions(
                   geometry: LatLng(_pickupLat + 0.0035, _pickupLng - 0.0025),
-                  iconImage: 'car-15',
-                  iconSize: 1.8,
-                  iconColor: '#FF6B00',
+                  iconImage: _getVehicleIconName(),
+                  iconSize: 0.5,
                 ));
                 await controller.addSymbol(SymbolOptions(
                   geometry: LatLng(_pickupLat - 0.0018, _pickupLng + 0.0042),
-                  iconImage: 'car-15',
-                  iconSize: 1.8,
-                  iconColor: '#FF6B00',
+                  iconImage: _getVehicleIconName(),
+                  iconSize: 0.5,
                 ));
                 await controller.addSymbol(SymbolOptions(
                   geometry: LatLng(_pickupLat + 0.0022, _pickupLng + 0.0031),
-                  iconImage: 'car-15',
-                  iconSize: 1.8,
-                  iconColor: '#FF6B00',
+                  iconImage: _getVehicleIconName(),
+                  iconSize: 0.5,
                 ));
               } catch (_) {}
             },
@@ -4960,6 +4996,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                       onMapCreated: (MapplsMapController controller) async {
                         _mapController = controller;
                         try {
+                          await _registerCustomIcons(controller);
                           await controller.addSymbol(SymbolOptions(
                             geometry: LatLng(_pickupLat, _pickupLng),
                             iconImage: 'marker-15',
@@ -5014,7 +5051,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                                 color: const Color(0xFFDDDDDD),
                                 borderRadius: BorderRadius.circular(99)))),
                     const SizedBox(height: 6),
-                    Expanded(
+                    Flexible(
                       child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
                         child: Column(
@@ -5469,6 +5506,7 @@ class _WhereToScreenState extends State<WhereToScreen>
               onMapCreated: (MapplsMapController controller) async {
                 _mapController = controller;
                 try {
+                  await _registerCustomIcons(controller);
                   await controller.addSymbol(SymbolOptions(
                     geometry: LatLng(_pickupLat, _pickupLng),
                     iconImage: 'marker-15',
@@ -5566,7 +5604,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Expanded(
+                    Flexible(
                       child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
                         child: Column(

@@ -1115,7 +1115,7 @@ class ActiveTripPanel extends StatelessWidget {
                         color: kGray2,
                         borderRadius: BorderRadius.circular(99)))),
             const SizedBox(height: 16),
-            Expanded(
+            Flexible(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Column(

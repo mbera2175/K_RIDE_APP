@@ -1,4 +1,5 @@
 import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
 import 'dart:convert';
 import 'dart:io';
 import '../utils/constants.dart';
@@ -554,11 +555,25 @@ class ApiService {
   // ═══════════════════════════════════════════════════════
 
   static Future<Map<String, dynamic>> sendHeartbeat() async {
-    final res = await http.post(
-      Uri.parse('$_base/driver/heartbeat'),
-      headers: _authHeaders,
-    ).timeout(_timeout);
-    return _handle(res);
+    double lat = 0.0;
+    double lng = 0.0;
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 5),
+      );
+      lat = position.latitude;
+      lng = position.longitude;
+    } catch (e) {
+      try {
+        final lastPos = await Geolocator.getLastKnownPosition();
+        if (lastPos != null) {
+          lat = lastPos.latitude;
+          lng = lastPos.longitude;
+        }
+      } catch (_) {}
+    }
+    return updateLocation(lat, lng);
   }
 
   static Future<Map<String, dynamic>> reconnectTrip() async {

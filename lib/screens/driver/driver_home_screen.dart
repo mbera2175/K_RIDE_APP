@@ -1720,7 +1720,15 @@ class _DriverTripChatScreenState extends State<DriverTripChatScreen> {
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (ctx, i) {
                   final q = _quickMsgs[i];
-                  final label = q['text_en'] ?? q['text_bn'] ?? '';
+                  final String lang = AuthService.language;
+                  final String label;
+                  if (lang == 'bn') {
+                    label = q['text_bn'] ?? q['text_en'] ?? '';
+                  } else if (lang == 'hi') {
+                    label = q['text_hi'] ?? q['text_en'] ?? '';
+                  } else {
+                    label = q['text_en'] ?? q['text_bn'] ?? '';
+                  }
                   return GestureDetector(
                     onTap: () => _sendMessage(
                       label,
@@ -2843,9 +2851,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     
     try {
       if (await canLaunchUrl(googleMapsUrl)) {
-        await launchUrl(googleMapsUrl);
+        await launchUrl(googleMapsUrl, mode: LaunchMode.externalNonBrowserApplication);
       } else if (await canLaunchUrl(appleMapsUrl)) {
-        await launchUrl(appleMapsUrl);
+        await launchUrl(appleMapsUrl, mode: LaunchMode.externalNonBrowserApplication);
       } else {
         final webUrl = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving");
         if (await canLaunchUrl(webUrl)) {
@@ -2855,7 +2863,12 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         }
       }
     } catch (e) {
-      _showSnack('Error launching navigation: $e', isError: true);
+      try {
+        final webUrl = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving");
+        await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+      } catch (innerError) {
+        _showSnack('Error launching navigation: $innerError', isError: true);
+      }
     }
   }
 

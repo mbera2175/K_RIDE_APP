@@ -1831,8 +1831,17 @@ class _TripChatScreenState extends State<TripChatScreen> {
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (ctx, i) {
                 final q = _quickMsgs[i];
+                final String lang = AuthService.language;
+                final String label;
+                if (lang == 'bn') {
+                  label = q['text_bn'] ?? q['text_en'] ?? '';
+                } else if (lang == 'hi') {
+                  label = q['text_hi'] ?? q['text_en'] ?? '';
+                } else {
+                  label = q['text_en'] ?? q['text_bn'] ?? '';
+                }
                 return GestureDetector(
-                  onTap: () => _sendMessage(q['text_bn'] ?? q['text_en'],
+                  onTap: () => _sendMessage(label,
                       type: 'quick', quickKey: q['key']),
                   child: Container(
                     padding:
@@ -1843,7 +1852,7 @@ class _TripChatScreenState extends State<TripChatScreen> {
                       border: Border.all(
                           color: const Color(0xFFFF6B35).withOpacity(0.5)),
                     ),
-                    child: Text(q['text_bn'] ?? q['text_en'] ?? '',
+                    child: Text(label,
                         style: const TextStyle(
                             fontSize: 13, color: Color(0xFFFF6B35))),
                   ),
@@ -3012,6 +3021,7 @@ class _WhereToScreenState extends State<WhereToScreen>
             final dLat = (driver?['current_lat'] as num?)?.toDouble();
             final dLng = (driver?['current_lng'] as num?)?.toDouble();
             if (mounted) {
+              final oldStatus = _normalizeTripStatus(_tripStatus);
               setState(() {
                 _tripStatus = status;
                 if (driver != null) {
@@ -3025,6 +3035,16 @@ class _WhereToScreenState extends State<WhereToScreen>
               if (dLat != null && dLng != null) {
                 _updateDriverMarkerAnimated(dLat, dLng);
                 _drawRiderTripRoute();
+              }
+              if (oldStatus != 'started' && status == 'started') {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("Trip started! Have a safe journey. 🚗"),
+                    backgroundColor: Colors.green));
+                _openNavigation(_dropLat, _dropLng);
+              } else if (oldStatus != 'arrived' && status == 'arrived') {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("Driver has arrived at pickup location! 📍"),
+                    backgroundColor: kOrange));
               }
             }
           }
@@ -3898,6 +3918,7 @@ class _WhereToScreenState extends State<WhereToScreen>
           _otpCode = null;
         });
         _stopSearchPolling();
+        _stopTrackingPolling();
         RiderSocketService.disconnect();
         Navigator.pushReplacement(
             context,
@@ -3908,6 +3929,7 @@ class _WhereToScreenState extends State<WhereToScreen>
       } else if (type == "trip_cancelled") {
         RiderSocketService.disconnect();
         _stopSearchPolling();
+        _stopTrackingPolling();
         setState(() {
           _booked = false;
           _searching = false;
@@ -5628,7 +5650,7 @@ class _WhereToScreenState extends State<WhereToScreen>
       iconBgColor = const Color(0xFF27AE60);
       iconData = Icons.check_circle_outline_rounded;
     } else if (tripStatus == 'started') {
-      title = 'On the trip!';
+      title = 'Trip started!';
       subtitle = 'Heading to destination';
       iconBgColor = const Color(0xFF007AFF);
       iconData = Icons.navigation_rounded;
@@ -5704,6 +5726,9 @@ class _WhereToScreenState extends State<WhereToScreen>
     if (tripStatus == 'started') {
       textTitle = 'Arriving at destination';
       textSubtitle = '${distanceKm.toStringAsFixed(1)} km remaining • $etaMinutes min';
+    } else if (tripStatus == 'arrived') {
+      textTitle = 'Driver has arrived!';
+      textSubtitle = 'Meet the driver at your pickup point';
     } else {
       textTitle = 'Driver is ${distanceKm.toStringAsFixed(1)} km away';
       textSubtitle = 'Arriving in $etaMinutes min';
@@ -5811,9 +5836,9 @@ class _WhereToScreenState extends State<WhereToScreen>
     
     try {
       if (await canLaunchUrl(googleMapsUrl)) {
-        await launchUrl(googleMapsUrl);
+        await launchUrl(googleMapsUrl, mode: LaunchMode.externalNonBrowserApplication);
       } else if (await canLaunchUrl(appleMapsUrl)) {
-        await launchUrl(appleMapsUrl);
+        await launchUrl(appleMapsUrl, mode: LaunchMode.externalNonBrowserApplication);
       } else {
         final webUrl = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving");
         if (await canLaunchUrl(webUrl)) {
@@ -5825,9 +5850,14 @@ class _WhereToScreenState extends State<WhereToScreen>
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error launching navigation: $e')),
-      );
+      try {
+        final webUrl = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving");
+        await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+      } catch (innerError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error launching navigation: $innerError')),
+        );
+      }
     }
   }
 
@@ -6060,26 +6090,26 @@ class _WhereToScreenState extends State<WhereToScreen>
         children: const [
           Row(
             children: [
-              Icon(Icons.verified_user_rounded, color: Color(0xFF27AE60), size: 18),
+              Icon(Icons.verified_user_rounded, color: Color(0xFF27AE60), size: 16),
               SizedBox(width: 6),
               Text(
                 'Trip Status',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   color: panelTextDark,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 6),
+          SizedBox(height: 2),
           Text(
             'Verified\n& Active',
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 13,
               fontWeight: FontWeight.w700,
               color: Color(0xFF27AE60),
-              height: 1.3,
+              height: 1.2,
             ),
           ),
         ],
@@ -6090,26 +6120,26 @@ class _WhereToScreenState extends State<WhereToScreen>
         children: [
           Row(
             children: const [
-              Icon(Icons.lock_outline_rounded, color: panelTextDark, size: 18),
+              Icon(Icons.lock_outline_rounded, color: panelTextDark, size: 16),
               SizedBox(width: 6),
               Text(
                 'OTP for Driver',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   color: panelTextDark,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 2),
           Text(
             _otpCode!,
             style: const TextStyle(
-              fontSize: 32,
+              fontSize: 26,
               fontWeight: FontWeight.w900,
               color: panelOrange,
-              letterSpacing: 4,
+              letterSpacing: 3,
             ),
           ),
         ],
@@ -6120,22 +6150,22 @@ class _WhereToScreenState extends State<WhereToScreen>
         children: const [
           Row(
             children: [
-              Icon(Icons.lock_outline_rounded, color: panelTextDark, size: 18),
+              Icon(Icons.lock_outline_rounded, color: panelTextDark, size: 16),
               SizedBox(width: 6),
               Text(
                 'OTP for Driver',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   color: panelTextDark,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 12),
+          SizedBox(height: 6),
           SizedBox(
-            width: 20,
-            height: 20,
+            width: 16,
+            height: 16,
             child: CircularProgressIndicator(
               strokeWidth: 2,
               valueColor: AlwaysStoppedAnimation<Color>(panelOrange),
@@ -6149,26 +6179,26 @@ class _WhereToScreenState extends State<WhereToScreen>
         children: [
           Row(
             children: const [
-              Icon(Icons.lock_outline_rounded, color: panelTextDark, size: 18),
+              Icon(Icons.lock_outline_rounded, color: panelTextDark, size: 16),
               SizedBox(width: 6),
               Text(
                 'OTP for Driver',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   color: panelTextDark,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 2),
           const Text(
             '--',
             style: TextStyle(
-              fontSize: 32,
+              fontSize: 26,
               fontWeight: FontWeight.w900,
               color: panelOrange,
-              letterSpacing: 4,
+              letterSpacing: 3,
             ),
           ),
         ],
@@ -6181,8 +6211,8 @@ class _WhereToScreenState extends State<WhereToScreen>
         children: [
           Expanded(
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
-              height: 104,
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+              height: 80,
               decoration: BoxDecoration(
                 color: panelCardBg,
                 borderRadius: BorderRadius.circular(14),
@@ -6218,8 +6248,8 @@ class _WhereToScreenState extends State<WhereToScreen>
                 }
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
-                height: 104,
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                height: 80,
                 decoration: BoxDecoration(
                   color: panelCardBg,
                   borderRadius: BorderRadius.circular(14),
@@ -6236,26 +6266,26 @@ class _WhereToScreenState extends State<WhereToScreen>
                   children: const [
                     Row(
                       children: [
-                        Icon(Icons.wifi_tethering_rounded, color: panelOrange, size: 18),
+                        Icon(Icons.wifi_tethering_rounded, color: panelOrange, size: 16),
                         SizedBox(width: 6),
                         Text(
                           'SOS Help',
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 12,
                             color: panelTextDark,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 6),
+                    SizedBox(height: 2),
                     Text(
                       'Emergency\nassistance',
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: panelOrange,
-                        height: 1.3,
+                        height: 1.2,
                       ),
                     ),
                   ],

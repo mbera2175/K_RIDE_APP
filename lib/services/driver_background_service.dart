@@ -54,8 +54,8 @@ void onStart(ServiceInstance service) async {
     service.stopSelf();
   });
 
-  // Perform periodic pings every 30 seconds
-  Timer.periodic(const Duration(seconds: 30), (timer) async {
+  // Perform periodic pings every 10 seconds
+  Timer.periodic(const Duration(seconds: 10), (timer) async {
     // Re-read SharedPreferences session inside loop to check if still logged in
     await AuthService.init();
     

@@ -835,7 +835,7 @@ class _LocationModalState extends State<LocationModal> {
           child: Container(
             constraints: BoxConstraints(
                 maxHeight: MediaQuery.of(context).size.height * 0.85),
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+            padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 12 : 40),
             decoration: const BoxDecoration(
               color: kWhite,
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -1054,7 +1054,7 @@ class PaymentModal extends StatelessWidget {
         child: GestureDetector(
           onTap: () {},
           child: Container(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+            padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 12 : 40),
             decoration: const BoxDecoration(
                 color: kWhite,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
@@ -1194,7 +1194,7 @@ class SeeAllModal extends StatelessWidget {
           child: Container(
             constraints: BoxConstraints(
                 maxHeight: MediaQuery.of(context).size.height * 0.8),
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+            padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 12 : 40),
             decoration: const BoxDecoration(
                 color: kWhite,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
@@ -2568,7 +2568,7 @@ class _WhereToScreenState extends State<WhereToScreen>
           builder: (context, setModalState) {
             return Padding(
               padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + (MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 8 : 20),
                 left: 16,
                 right: 16,
                 top: 20,
@@ -4099,7 +4099,7 @@ class _WhereToScreenState extends State<WhereToScreen>
             left: 0,
             right: 0,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+              padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 12 : 32),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -4989,7 +4989,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                 ),
               ),
               Container(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                padding: EdgeInsets.fromLTRB(16, 12, 16, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 8 : 20),
                 constraints: BoxConstraints(
                   maxHeight: MediaQuery.of(context).size.height * 0.65,
                 ),
@@ -5536,7 +5536,7 @@ class _WhereToScreenState extends State<WhereToScreen>
             ),
           ),
               Container(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+                padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 12 : 40),
                 constraints: BoxConstraints(
                   maxHeight: MediaQuery.of(context).size.height * 0.65,
                 ),
@@ -6200,7 +6200,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       ),
       builder: (context) {
         return Container(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+          padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 12 : 40),
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(context).size.height * 0.7,
           ),
@@ -6356,7 +6356,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           color: Color(0xFF1A1A2E),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
+        padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 12 : 36),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -6620,7 +6620,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
 
   Widget _buildWalletTab() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -6801,7 +6801,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       isScrollControlled: true,
       builder: (context) {
         return Container(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
+          padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 12 : 30),
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(context).size.height * 0.75,
           ),
@@ -6980,7 +6980,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
 
   Widget _buildProfileTab() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       child: Column(
         children: [
           Container(
@@ -7096,7 +7096,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                           borderRadius:
                               BorderRadius.vertical(top: Radius.circular(20))),
                       builder: (_) => Container(
-                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                        padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 8 : 20),
                         constraints: BoxConstraints(
                             maxHeight:
                                 MediaQuery.of(context).size.height * 0.75),
@@ -7799,6 +7799,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
             children: [
               if (_activeTab == 'home')
                 SafeArea(
+                  bottom: false,
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     child: Column(
@@ -7839,15 +7840,15 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                         ),
                         const SizedBox(height: 12),
                         _buildNewOtherOptionsRow(),
-                        const SizedBox(height: 80),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
                 )
               else if (_activeTab == 'profile')
-                SafeArea(child: _buildProfileTab())
+                SafeArea(bottom: false, child: _buildProfileTab())
               else if (_activeTab == 'wallet')
-                SafeArea(child: _buildWalletTab())
+                SafeArea(bottom: false, child: _buildWalletTab())
               else if (_activeTab == 'activity')
                 _RiderActivityTab(),
 
@@ -8108,6 +8109,7 @@ class _RiderActivityTabState extends State<_RiderActivityTab> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
+      bottom: false,
       child: Column(children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
@@ -8172,7 +8174,7 @@ class _RiderActivityTabState extends State<_RiderActivityTab> {
                                       fontSize: 13, color: kMuted)),
                             ]))
                       : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
                           itemCount: _trips.length,
                           itemBuilder: (_, i) => _tripCard(_trips[i]),
                         ),

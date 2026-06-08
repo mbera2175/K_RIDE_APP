@@ -683,7 +683,7 @@ class _IncomingTripModalState extends State<IncomingTripModal>
               ),
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+                padding: EdgeInsets.fromLTRB(20, 24, 20, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 12 : 40),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -1103,7 +1103,7 @@ class ActiveTripPanel extends StatelessWidget {
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.65,
         ),
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+        padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 8 : 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -4470,7 +4470,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       isScrollControlled: true,
       builder: (context) {
         return Container(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
+          padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 12 : 30),
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(context).size.height * 0.75,
           ),
@@ -4710,7 +4710,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 8 : 20),
         constraints: BoxConstraints(
             maxHeight: MediaQuery.of(context).size.height * 0.75),
         child: SingleChildScrollView(

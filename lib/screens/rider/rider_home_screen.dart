@@ -2310,6 +2310,7 @@ class _WhereToScreenState extends State<WhereToScreen>
   int? _tripId;
   bool _searching = false;
   bool _socketDisconnected = false;
+  bool _isChatScreenOpen = false;
   Timer? _searchPollTimer;
   Timer? _trackingPollTimer;
   double _estimatedFare = 0.0;
@@ -3911,6 +3912,10 @@ class _WhereToScreenState extends State<WhereToScreen>
             content: Text(
                 "Trip cancelled by driver: ${data["reason"] ?? 'No reason given'}"),
             backgroundColor: Colors.red));
+      } else if (type == "chat_message") {
+        if (_tripId != null && !_isChatScreenOpen) {
+          _openChatScreen();
+        }
       }
     };
   }
@@ -5762,6 +5767,35 @@ class _WhereToScreenState extends State<WhereToScreen>
     );
   }
 
+  void _openChatScreen() {
+    if (_tripId == null) return;
+    if (_isChatScreenOpen) return;
+    setState(() {
+      _isChatScreenOpen = true;
+    });
+    final driverName = _assignedDriver?['name'] ?? 'Driver';
+    final driverPhone = _assignedDriver?['phone'] ?? '';
+    final driverPhotoUrl = _assignedDriver?['profile_pic_url']?.toString() ?? '';
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TripChatScreen(
+          tripId: _tripId!,
+          driverName: driverName,
+          driverPhone: driverPhone,
+          driverPhotoUrl: driverPhotoUrl,
+          onClose: () {
+            setState(() {
+              _isChatScreenOpen = false;
+            });
+            Navigator.pop(context);
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _buildDriverCard(
     BuildContext context,
     String driverName,
@@ -5929,20 +5963,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                 _actionButton(
                   icon: Icons.chat_bubble_outline_rounded,
                   label: 'Message',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => TripChatScreen(
-                          tripId: _tripId!,
-                          driverName: driverName,
-                          driverPhone: driverPhone,
-                          driverPhotoUrl: driverPhotoUrl,
-                          onClose: () => Navigator.pop(context),
-                        ),
-                      ),
-                    );
-                  },
+                  onTap: _openChatScreen,
                 ),
               ],
             ),

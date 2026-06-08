@@ -1117,6 +1117,7 @@ class ActiveTripPanel extends StatelessWidget {
             const SizedBox(height: 16),
             Flexible(
               child: SingleChildScrollView(
+                shrinkWrap: true,
                 physics: const BouncingScrollPhysics(),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

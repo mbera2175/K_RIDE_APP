@@ -3497,12 +3497,15 @@ class _WhereToScreenState extends State<WhereToScreen>
         }
       }
 
-      // Generate random offsets around pickup to ensure we show 4 drivers nearby
-      if (coordsToShow.length < 4) {
+      // Generate random offsets around pickup to ensure we show 3 to 5 drivers nearby
+      final targetCount = 3 + Random().nextInt(3); // 3, 4, or 5 drivers
+      if (coordsToShow.length > targetCount) {
+        coordsToShow = coordsToShow.sublist(0, targetCount);
+      } else {
         final random = Random();
-        while (coordsToShow.length < 4) {
-          final double latOffset = (random.nextDouble() - 0.5) * 0.008; 
-          final double lngOffset = (random.nextDouble() - 0.5) * 0.008;
+        while (coordsToShow.length < targetCount) {
+          final double latOffset = (random.nextDouble() - 0.5) * 0.006; 
+          final double lngOffset = (random.nextDouble() - 0.5) * 0.006;
           coordsToShow.add(LatLng(_pickupLat + latOffset, _pickupLng + lngOffset));
         }
       }
@@ -5053,6 +5056,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                     const SizedBox(height: 6),
                     Flexible(
                       child: SingleChildScrollView(
+                        shrinkWrap: true,
                         physics: const BouncingScrollPhysics(),
                         child: Column(
                           children: [
@@ -5112,6 +5116,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                                             _fareLoading = true;
                                           });
                                           _loadEstimatedFare();
+                                          _loadNearbyDriversOnMap();
                                         }
                                       },
                                     ),
@@ -5606,6 +5611,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                     const SizedBox(height: 16),
                     Flexible(
                       child: SingleChildScrollView(
+                        shrinkWrap: true,
                         physics: const BouncingScrollPhysics(),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

@@ -3466,14 +3466,14 @@ class _WhereToScreenState extends State<WhereToScreen>
   }
 
   Future<void> _registerCustomIcons(MapplsMapController controller) async {
-    try {
-      final assets = {
-        'custom-bike': 'assets/images/bike.png',
-        'custom-car': 'assets/images/car.png',
-        'custom-auto': 'assets/images/auto.png',
-        'custom-ambulance': 'assets/images/ambulance.png',
-      };
-      for (final entry in assets.entries) {
+    final assets = {
+      'custom-bike': 'assets/images/bike.png',
+      'custom-car': 'assets/images/car.png',
+      'custom-auto': 'assets/images/auto.png',
+      'custom-ambulance': 'assets/images/ambulance.png',
+    };
+    for (final entry in assets.entries) {
+      try {
         final ByteData data = await rootBundle.load(entry.value);
         final ui.Codec codec = await ui.instantiateImageCodec(
           data.buffer.asUint8List(),
@@ -3483,11 +3483,11 @@ class _WhereToScreenState extends State<WhereToScreen>
         final ByteData? pngBytes = await fi.image.toByteData(format: ui.ImageByteFormat.png);
         if (pngBytes != null) {
           await controller.addImage(entry.key, pngBytes.buffer.asUint8List());
+          debugPrint("Successfully registered custom map icon: ${entry.key}");
         }
+      } catch (e) {
+        debugPrint("Failed to register custom map icon ${entry.key}: $e");
       }
-      debugPrint("All custom map icons registered successfully on controller.");
-    } catch (e) {
-      debugPrint("Error registering custom map icons: $e");
     }
   }
 
@@ -3502,6 +3502,7 @@ class _WhereToScreenState extends State<WhereToScreen>
     }
     _driverSymbols.clear();
 
+    List<LatLng> coordsToShow = [];
     try {
       final res = await ApiService.getNearbyDrivers(
         lat: _pickupLat,
@@ -3510,7 +3511,6 @@ class _WhereToScreenState extends State<WhereToScreen>
         vehicleType: _selectedVehicleType,
       );
 
-      List<LatLng> coordsToShow = [];
       if (res['success'] == true && res['data'] != null) {
         final List? drivers = res['data']['drivers'] as List?;
         if (drivers != null) {
@@ -3523,7 +3523,11 @@ class _WhereToScreenState extends State<WhereToScreen>
           }
         }
       }
+    } catch (e) {
+      debugPrint('Error loading nearby drivers from server: $e. Using mock fallback.');
+    }
 
+    try {
       // Generate random offsets around pickup to ensure we show 3 to 5 drivers nearby
       final targetCount = 3 + Random().nextInt(3); // 3, 4, or 5 drivers
       if (coordsToShow.length > targetCount) {
@@ -3548,7 +3552,7 @@ class _WhereToScreenState extends State<WhereToScreen>
       }
       debugPrint('Added ${_driverSymbols.length} nearby drivers to map');
     } catch (e) {
-      debugPrint('Error loading nearby drivers on map: $e');
+      debugPrint('Error adding nearby driver symbols to map: $e');
     }
   }
 
@@ -4126,12 +4130,15 @@ class _WhereToScreenState extends State<WhereToScreen>
               target: LatLng(_pickupLat, _pickupLng),
               zoom: 14.2,
             ),
-            onMapCreated: (MapplsMapController controller) async {
+            onMapCreated: (MapplsMapController controller) {
               _mapController = controller;
+            },
+            onStyleLoadedCallback: () async {
+              if (_mapController == null) return;
               try {
-                await _registerCustomIcons(controller);
+                await _registerCustomIcons(_mapController!);
                 // Add Pickup marker
-                await controller.addSymbol(SymbolOptions(
+                await _mapController!.addSymbol(SymbolOptions(
                   geometry: LatLng(_pickupLat, _pickupLng),
                   iconImage: 'marker-15',
                   iconSize: 2.0,
@@ -4142,17 +4149,17 @@ class _WhereToScreenState extends State<WhereToScreen>
                   textSize: 12.0,
                 ));
                 // Add 3 mock nearby driver icons to represent active search
-                await controller.addSymbol(SymbolOptions(
+                await _mapController!.addSymbol(SymbolOptions(
                   geometry: LatLng(_pickupLat + 0.0035, _pickupLng - 0.0025),
                   iconImage: _getVehicleIconName(),
                   iconSize: 0.5,
                 ));
-                await controller.addSymbol(SymbolOptions(
+                await _mapController!.addSymbol(SymbolOptions(
                   geometry: LatLng(_pickupLat - 0.0018, _pickupLng + 0.0042),
                   iconImage: _getVehicleIconName(),
                   iconSize: 0.5,
                 ));
-                await controller.addSymbol(SymbolOptions(
+                await _mapController!.addSymbol(SymbolOptions(
                   geometry: LatLng(_pickupLat + 0.0022, _pickupLng + 0.0031),
                   iconImage: _getVehicleIconName(),
                   iconSize: 0.5,
@@ -4171,7 +4178,14 @@ class _WhereToScreenState extends State<WhereToScreen>
             left: 0,
             right: 0,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
+              padding: EdgeInsets.fromLTRB(
+                24,
+                16,
+                24,
+                MediaQuery.of(context).padding.bottom > 0
+                    ? MediaQuery.of(context).padding.bottom
+                    : 12,
+              ),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -5043,12 +5057,15 @@ class _WhereToScreenState extends State<WhereToScreen>
               target: LatLng(_pickupLat, _pickupLng),
               zoom: 13,
             ),
-            onMapCreated: (MapplsMapController controller) async {
+            onMapCreated: (MapplsMapController controller) {
               _mapController = controller;
-              await _registerCustomIcons(controller);
+            },
+            onStyleLoadedCallback: () async {
+              if (_mapController == null) return;
+              await _registerCustomIcons(_mapController!);
               
               try {
-                await controller.addSymbol(SymbolOptions(
+                await _mapController!.addSymbol(SymbolOptions(
                   geometry: LatLng(_pickupLat, _pickupLng),
                   iconImage: 'marker-15',
                   iconSize: 2.0,
@@ -5060,7 +5077,7 @@ class _WhereToScreenState extends State<WhereToScreen>
               } catch (_) {}
 
               try {
-                await controller.addSymbol(SymbolOptions(
+                await _mapController!.addSymbol(SymbolOptions(
                   geometry: LatLng(_dropLat, _dropLng),
                   iconImage: 'marker-15',
                   iconSize: 2.0,
@@ -5082,7 +5099,14 @@ class _WhereToScreenState extends State<WhereToScreen>
           left: 0,
           right: 0,
           child: Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              12,
+              16,
+              MediaQuery.of(context).padding.bottom > 0
+                  ? MediaQuery.of(context).padding.bottom
+                  : 12,
+            ),
             decoration: const BoxDecoration(
                 color: kWhite,
                 borderRadius:
@@ -5105,10 +5129,12 @@ class _WhereToScreenState extends State<WhereToScreen>
                             borderRadius: BorderRadius.circular(99)))),
                 const SizedBox(height: 6),
                 Flexible(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Column(
-                      children: [
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 140),
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Column(
+                        children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 4),
@@ -5404,6 +5430,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                     ),
                   ),
                 ),
+              ),
                 const SizedBox(height: 6),
                 SizedBox(
                   width: double.infinity,
@@ -5556,12 +5583,15 @@ class _WhereToScreenState extends State<WhereToScreen>
               target: LatLng(_pickupLat, _pickupLng),
               zoom: 14,
             ),
-            onMapCreated: (MapplsMapController controller) async {
+            onMapCreated: (MapplsMapController controller) {
               _mapController = controller;
-              await _registerCustomIcons(controller);
+            },
+            onStyleLoadedCallback: () async {
+              if (_mapController == null) return;
+              await _registerCustomIcons(_mapController!);
               
               try {
-                await controller.addSymbol(SymbolOptions(
+                await _mapController!.addSymbol(SymbolOptions(
                   geometry: LatLng(_pickupLat, _pickupLng),
                   iconImage: 'marker-15',
                   iconSize: 2.0,
@@ -5573,7 +5603,7 @@ class _WhereToScreenState extends State<WhereToScreen>
               } catch (_) {}
 
               try {
-                await controller.addSymbol(SymbolOptions(
+                await _mapController!.addSymbol(SymbolOptions(
                   geometry: LatLng(_dropLat, _dropLng),
                   iconImage: 'marker-15',
                   iconSize: 2.0,
@@ -5623,7 +5653,10 @@ class _WhereToScreenState extends State<WhereToScreen>
                     const SizedBox(height: 12),
                     _buildCancelButton(context),
                   ],
-                  const SizedBox(height: 16),
+                  SizedBox(
+                      height: MediaQuery.of(context).padding.bottom > 0
+                          ? MediaQuery.of(context).padding.bottom
+                          : 12),
                 ],
               ),
             ),

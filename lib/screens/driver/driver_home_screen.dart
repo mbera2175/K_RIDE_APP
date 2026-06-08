@@ -2419,7 +2419,7 @@ class DriverHomeScreen extends StatefulWidget {
 
 class _DriverHomeScreenState extends State<DriverHomeScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  bool _isOnline = false;
+  bool _isOnline = AuthService.isOnline;
   bool _toggling = false;
   bool _isChatOpen = false;
   TripData? _incomingTrip;
@@ -2483,6 +2483,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       _isAppBackgrounded = false;
       // Close overlay window when app returns to foreground
       FlutterOverlayWindow.closeOverlay();
+      _refreshProfileStatus();
     }
   }
 
@@ -2597,6 +2598,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
 
       if (res['success']) {
         final online = res['data']['is_online'] == true;
+        await AuthService.setIsOnline(online);
 
         if (mounted) {
           setState(() => _isOnline = online);
@@ -2673,6 +2675,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     setState(() => _loadingActive = true);
     final res = await ApiService.getDriverActiveTrip();
     if (res['success'] && res['data']['active_trip'] != null) {
+      await AuthService.setIsOnline(true);
       if (mounted) {
         setState(() {
           _activeTrip = _mapToTripData(res['data']['active_trip']);
@@ -3411,6 +3414,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         await AuthService.updateApprovalStatus(driver['is_approved'] == true);
         final pic = driver['profile_pic_url'] ?? data['profile_pic'] ?? '';
         if ((pic as String).isNotEmpty) await AuthService.updateProfilePic(pic);
+        
+        final online = driver['is_online'] == true;
+        await AuthService.setIsOnline(online);
+        _isOnline = online;
       }
       if (mounted) setState(() {});
     }

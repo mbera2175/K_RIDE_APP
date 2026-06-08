@@ -87,6 +87,11 @@ class AuthService {
     await _prefs?.setBool('is_approved', approved);
   }
 
+  // ── Online status ────────────────────────────────────────
+  static bool get isOnline => _prefs?.getBool('driver_is_online') ?? false;
+  static Future<void> setIsOnline(bool online) async {
+    await _prefs?.setBool('driver_is_online', online);
+  }
 
   static Future<void> updateProfilePic(String url) async {
     await _prefs?.setString('profile_pic', url);

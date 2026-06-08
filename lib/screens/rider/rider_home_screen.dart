@@ -4156,7 +4156,7 @@ class _WhereToScreenState extends State<WhereToScreen>
             left: 0,
             right: 0,
             child: Container(
-              padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 12 : 32),
+              padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom : 12),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -5023,449 +5023,441 @@ class _WhereToScreenState extends State<WhereToScreen>
   Widget _buildConfirmStep() {
     return Stack(
       children: [
-        Container(
-          color: kWhite,
-          child: Column(
-            children: [
-              Expanded(
-                child: Stack(
-                  children: [
-                    MapplsMap(
-                      initialCameraPosition: CameraPosition(
-                        target: LatLng(_pickupLat, _pickupLng),
-                        zoom: 13,
-                      ),
-                      onMapCreated: (MapplsMapController controller) async {
-                        _mapController = controller;
-                        try {
-                          await _registerCustomIcons(controller);
-                          await controller.addSymbol(SymbolOptions(
-                            geometry: LatLng(_pickupLat, _pickupLng),
-                            iconImage: 'marker-15',
-                            iconSize: 2.0,
-                            iconColor: '#FF6B00',
-                            textField: 'Pickup',
-                            textOffset: const Offset(0, 1.5),
-                            textColor: '#FF6B00',
-                          ));
-                          await controller.addSymbol(SymbolOptions(
-                            geometry: LatLng(_dropLat, _dropLng),
-                            iconImage: 'marker-15',
-                            iconSize: 2.0,
-                            iconColor: '#1A1A1A',
-                            textField: 'Drop',
-                            textOffset: const Offset(0, 1.5),
-                            textColor: '#1A1A1A',
-                          ));
-                          await _drawRiderTripRoute();
-                          await _loadNearbyDriversOnMap();
-                        } catch (_) {}
-                      },
-                      myLocationEnabled: true,
-                    ),
-
-                  ],
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 8 : 20),
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.65,
-                ),
-                decoration: const BoxDecoration(
-                    color: kWhite,
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(24)),
-                    boxShadow: [
-                      BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 32,
-                          offset: Offset(0, -8))
-                    ]),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Center(
-                        child: Container(
-                            width: 40,
-                            height: 4,
-                            decoration: BoxDecoration(
-                                color: const Color(0xFFDDDDDD),
-                                borderRadius: BorderRadius.circular(99)))),
-                    const SizedBox(height: 6),
-                    Flexible(
-                      child: SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                  color: widget.service.color,
-                                  borderRadius: BorderRadius.circular(10)),
-                              child: Row(
-                                children: [
-                                  Container(
-                                      width: 36,
-                                      height: 36,
-                                      decoration: BoxDecoration(
-                                          color: kWhite,
-                                          borderRadius: BorderRadius.circular(10),
-                                          boxShadow: [
-                                            BoxShadow(
-                                                color: Colors.black.withOpacity(0.07),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 2))
-                                          ]),
-                                      child: Center(
-                                          child: ServiceIconWidget(
-                                              icon: widget.service.icon, size: 20))),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                      child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                        Text(widget.service.name,
-                                            style: const TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w800,
-                                                color: kDark)),
-                                        if (widget.service.tag != null && widget.service.tag!.isNotEmpty) ...[
-                                          const SizedBox(height: 2),
-                                          Text(widget.service.tag!,
-                                              style: TextStyle(
-                                                  fontSize: 9,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: widget.service.accent)),
-                                        ],
-                                      ])),
-                                  const SizedBox(width: 10),
-                                  DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value: _selectedVehicleType,
-                                      dropdownColor: kWhite,
-                                      borderRadius: BorderRadius.circular(12),
-                                      items: _buildDropdownItems(widget.service),
-                                      onChanged: (val) {
-                                        if (val != null) {
-                                          setState(() {
-                                            _selectedVehicleType = val;
-                                            _fareLoading = true;
-                                          });
-                                          _loadEstimatedFare();
-                                          _loadNearbyDriversOnMap();
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                  color: kGray,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                      color: const Color(0xFFEEEEEE), width: 1.5)),
-                              child: Column(
-                                children: [
-                                  Row(children: [
-                                    Container(
-                                        width: 8,
-                                        height: 8,
-                                        decoration: const BoxDecoration(
-                                            shape: BoxShape.circle, color: kOrange)),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                        child: Text(_pickupCtrl.text,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                                fontSize: 11.5,
-                                                fontWeight: FontWeight.w600,
-                                                color: kDark)))
-                                  ]),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 4),
-                                    child: Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Container(
-                                        margin: const EdgeInsets.only(left: 19),
-                                        width: 1.5,
-                                        height: 16,
-                                        color: Colors.grey.shade300,
-                                      ),
-                                    ),
-                                  ),
-                                  Row(children: [
-                                    Container(
-                                        width: 8,
-                                        height: 8,
-                                        decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(2),
-                                            color: Colors.red.shade400)),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                        child: Text(_destCtrl.text,
-                                            style: const TextStyle(
-                                                fontSize: 11.5, color: kDark)))
-                                  ]),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            GestureDetector(
-                              onTap: () => setState(() => _useKCoins = !_useKCoins),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: _useKCoins
-                                      ? const Color(0xFFFFF3E0)
-                                      : const Color(0xFFF5F5F5),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                      color: _useKCoins
-                                          ? const Color(0xFFFF6B35)
-                                          : const Color(0xFFEEEEEE),
-                                      width: 1.5),
-                                ),
-                                child: Row(children: [
-                                  const Text('🪙', style: TextStyle(fontSize: 18)),
-                                  const SizedBox(width: 8),
-                                  const Expanded(
-                                      child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                        Text('Use K Coins',
-                                            style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700)),
-                                        Text('100 coins = ₹10 discount',
-                                            style: TextStyle(
-                                                fontSize: 9.5, color: Colors.grey)),
-                                      ])),
-                                  Container(
-                                    width: 36,
-                                    height: 20,
-                                    decoration: BoxDecoration(
-                                        color: _useKCoins
-                                            ? const Color(0xFFFF6B35)
-                                            : Colors.grey[300],
-                                        borderRadius: BorderRadius.circular(10)),
-                                    child: AnimatedAlign(
-                                        duration: const Duration(milliseconds: 200),
-                                        alignment: _useKCoins
-                                            ? Alignment.centerRight
-                                            : Alignment.centerLeft,
-                                        child: Container(
-                                            margin: const EdgeInsets.all(2),
-                                            width: 14,
-                                            height: 14,
-                                            decoration: const BoxDecoration(
-                                                color: Colors.white,
-                                                shape: BoxShape.circle)),
-                                    ),
-                                  ),
-                                ]),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            GestureDetector(
-                              onTap: _showPromoCodeModal,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                    color: kGray,
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                        color: const Color(0xFFEEEEEE), width: 1.5)),
-                                child: Row(
-                                  children: [
-                                    const Text('🎟️',
-                                        style: TextStyle(fontSize: 16)),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                        child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                            _appliedPromoCode != null
-                                                ? 'Promo Applied: $_appliedPromoCode'
-                                                : 'Apply Coupon',
-                                            style: const TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w700,
-                                                color: kDark)),
-                                        Text(
-                                            _appliedPromoCode != null && _promoDiscount > 0
-                                                ? 'Saved ₹${_promoDiscount.toStringAsFixed(2)} on this ride'
-                                                : 'Get discounts on your fare',
-                                            style: TextStyle(
-                                                fontSize: 9,
-                                                color: _appliedPromoCode != null
-                                                    ? const Color(0xFF4CAF50)
-                                                    : kMuted,
-                                                fontWeight: _appliedPromoCode != null
-                                                    ? FontWeight.w600
-                                                    : FontWeight.normal)),
-                                      ],
-                                    )),
-                                    Text(_appliedPromoCode != null ? 'Remove' : 'Apply',
-                                        style: TextStyle(
-                                            fontSize: 11,
-                                            color: _appliedPromoCode != null
-                                                ? Colors.red[700]
-                                                : kOrange,
-                                            fontWeight: FontWeight.w700)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            GestureDetector(
-                              onTap: () => setState(() => _showPaymentModal = true),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                    color: kGray,
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                        color: const Color(0xFFEEEEEE), width: 1.5)),
-                                child: Row(
-                                  children: [
-                                    Text(_paymentMethod.icon,
-                                        style: const TextStyle(fontSize: 16)),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                        child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                          Text(_paymentMethod.label,
-                                              style: const TextStyle(
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: kDark)),
-                                          Text(_paymentMethod.sub,
-                                              style: const TextStyle(
-                                                  fontSize: 9, color: kMuted)),
-                                        ])),
-                                    const Text('Change →',
-                                        style: TextStyle(
-                                            fontSize: 10,
-                                            color: kOrange,
-                                            fontWeight: FontWeight.w700)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            if (widget.service.tag == 'Emergency') ...[
-                              const SizedBox(height: 4),
+        Positioned.fill(
+          child: MapplsMap(
+            initialCameraPosition: CameraPosition(
+              target: LatLng(_pickupLat, _pickupLng),
+              zoom: 13,
+            ),
+            onMapCreated: (MapplsMapController controller) async {
+              _mapController = controller;
+              try {
+                await _registerCustomIcons(controller);
+                await controller.addSymbol(SymbolOptions(
+                  geometry: LatLng(_pickupLat, _pickupLng),
+                  iconImage: 'marker-15',
+                  iconSize: 2.0,
+                  iconColor: '#FF6B00',
+                  textField: 'Pickup',
+                  textOffset: const Offset(0, 1.5),
+                  textColor: '#FF6B00',
+                ));
+                await controller.addSymbol(SymbolOptions(
+                  geometry: LatLng(_dropLat, _dropLng),
+                  iconImage: 'marker-15',
+                  iconSize: 2.0,
+                  iconColor: '#1A1A1A',
+                  textField: 'Drop',
+                  textOffset: const Offset(0, 1.5),
+                  textColor: '#1A1A1A',
+                ));
+                await _drawRiderTripRoute();
+                await _loadNearbyDriversOnMap();
+              } catch (_) {}
+            },
+            myLocationEnabled: true,
+          ),
+        ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            padding: EdgeInsets.fromLTRB(16, 12, 16, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom : 12),
+            decoration: const BoxDecoration(
+                color: kWhite,
+                borderRadius:
+                    BorderRadius.vertical(top: Radius.circular(24)),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 32,
+                      offset: Offset(0, -8))
+                ]),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(
+                    child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                            color: const Color(0xFFDDDDDD),
+                            borderRadius: BorderRadius.circular(99)))),
+                const SizedBox(height: 6),
+                Flexible(
+                  child: SingleChildScrollView(
+                    shrinkWrap: true,
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                              color: widget.service.color,
+                              borderRadius: BorderRadius.circular(10)),
+                          child: Row(
+                            children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                    color: const Color(0xFFFFF0F0),
-                                    borderRadius: BorderRadius.circular(10)),
-                                child: const Row(children: [
-                                  Text('🚨', style: TextStyle(fontSize: 11)),
-                                  SizedBox(width: 4),
-                                  Expanded(
-                                      child: Text(
-                                          'Nearest ambulance will be dispatched immediately',
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                      color: kWhite,
+                                      borderRadius: BorderRadius.circular(8),
+                                      boxShadow: [
+                                        BoxShadow(
+                                            color: Colors.black.withOpacity(0.05),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2))
+                                      ]),
+                                  child: Center(
+                                      child: ServiceIconWidget(
+                                          icon: widget.service.icon, size: 18))),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                  child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                    Text(widget.service.name,
+                                        style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w800,
+                                            color: kDark)),
+                                    if (widget.service.tag != null && widget.service.tag!.isNotEmpty) ...[
+                                      const SizedBox(height: 1),
+                                      Text(widget.service.tag!,
                                           style: TextStyle(
-                                              fontSize: 10,
-                                              color: Color(0xFFE53935),
-                                              fontWeight: FontWeight.w600))),
-                                ]),
+                                              fontSize: 8,
+                                              fontWeight: FontWeight.w700,
+                                              color: widget.service.accent)),
+                                    ],
+                                  ])),
+                              const SizedBox(width: 8),
+                              DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _selectedVehicleType,
+                                  dropdownColor: kWhite,
+                                  borderRadius: BorderRadius.circular(12),
+                                  items: _buildDropdownItems(widget.service),
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      setState(() {
+                                        _selectedVehicleType = val;
+                                        _fareLoading = true;
+                                      });
+                                      _loadEstimatedFare();
+                                      _loadNearbyDriversOnMap();
+                                    }
+                                  },
+                                ),
                               ),
                             ],
-                            const SizedBox(height: 6),
-                          ],
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                              color: kGray,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: const Color(0xFFEEEEEE), width: 1.5)),
+                          child: Column(
+                            children: [
+                              Row(children: [
+                                Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: const BoxDecoration(
+                                        shape: BoxShape.circle, color: kOrange)),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                    child: Text(_pickupCtrl.text,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: kDark)))
+                              ]),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 2),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Container(
+                                    margin: const EdgeInsets.only(left: 17),
+                                    width: 1.2,
+                                    height: 12,
+                                    color: Colors.grey.shade300,
+                                  ),
+                                ),
+                              ),
+                              Row(children: [
+                                Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(1.5),
+                                        color: Colors.red.shade400)),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                    child: Text(_destCtrl.text,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                            fontSize: 11, color: kDark)))
+                              ]),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        GestureDetector(
+                          onTap: () => setState(() => _useKCoins = !_useKCoins),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: _useKCoins
+                                  ? const Color(0xFFFFF3E0)
+                                  : const Color(0xFFF5F5F5),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                  color: _useKCoins
+                                      ? const Color(0xFFFF6B35)
+                                      : const Color(0xFFEEEEEE),
+                                  width: 1.5),
+                            ),
+                            child: Row(children: [
+                              const Text('🪙', style: TextStyle(fontSize: 16)),
+                              const SizedBox(width: 6),
+                              const Expanded(
+                                  child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                    Text('Use K Coins',
+                                        style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700)),
+                                    Text('100 coins = ₹10 discount',
+                                        style: TextStyle(
+                                            fontSize: 9, color: Colors.grey)),
+                                  ])),
+                              Container(
+                                width: 32,
+                                height: 18,
+                                decoration: BoxDecoration(
+                                    color: _useKCoins
+                                        ? const Color(0xFFFF6B35)
+                                        : Colors.grey[300],
+                                    borderRadius: BorderRadius.circular(10)),
+                                child: AnimatedAlign(
+                                    duration: const Duration(milliseconds: 200),
+                                    alignment: _useKCoins
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
+                                    child: Container(
+                                        margin: const EdgeInsets.all(2),
+                                        width: 12,
+                                        height: 12,
+                                        decoration: const BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle)),
+                                ),
+                              ),
+                            ]),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        GestureDetector(
+                          onTap: _showPromoCodeModal,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 5),
+                            decoration: BoxDecoration(
+                                color: kGray,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                    color: const Color(0xFFEEEEEE), width: 1.5)),
+                            child: Row(
+                              children: [
+                                const Text('🎟️',
+                                    style: TextStyle(fontSize: 14)),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                    child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                        _appliedPromoCode != null
+                                            ? 'Promo Applied: $_appliedPromoCode'
+                                            : 'Apply Coupon',
+                                        style: const TextStyle(
+                                            fontSize: 10.5,
+                                            fontWeight: FontWeight.w700,
+                                            color: kDark)),
+                                    Text(
+                                        _appliedPromoCode != null && _promoDiscount > 0
+                                            ? 'Saved ₹${_promoDiscount.toStringAsFixed(2)} on this ride'
+                                            : 'Get discounts on your fare',
+                                        style: TextStyle(
+                                            fontSize: 8.5,
+                                            color: _appliedPromoCode != null
+                                                ? const Color(0xFF4CAF50)
+                                                : kMuted,
+                                            fontWeight: _appliedPromoCode != null
+                                                ? FontWeight.w600
+                                                : FontWeight.normal)),
+                                  ],
+                                )),
+                                Text(_appliedPromoCode != null ? 'Remove' : 'Apply',
+                                    style: TextStyle(
+                                        fontSize: 10.5,
+                                        color: _appliedPromoCode != null
+                                            ? Colors.red[700]
+                                            : kOrange,
+                                        fontWeight: FontWeight.w700)),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        GestureDetector(
+                          onTap: () => setState(() => _showPaymentModal = true),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 5),
+                            decoration: BoxDecoration(
+                                color: kGray,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                    color: const Color(0xFFEEEEEE), width: 1.5)),
+                            child: Row(
+                              children: [
+                                Text(_paymentMethod.icon,
+                                    style: const TextStyle(fontSize: 14)),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                    child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                      Text(_paymentMethod.label,
+                                          style: const TextStyle(
+                                              fontSize: 10.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: kDark)),
+                                      Text(_paymentMethod.sub,
+                                          style: const TextStyle(
+                                              fontSize: 8.5, color: kMuted)),
+                                    ])),
+                                const Text('Change →',
+                                    style: TextStyle(
+                                        fontSize: 9.5,
+                                        color: kOrange,
+                                        fontWeight: FontWeight.w700)),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (widget.service.tag == 'Emergency') ...[
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 5),
+                            decoration: BoxDecoration(
+                                color: const Color(0xFFFFF0F0),
+                                borderRadius: BorderRadius.circular(10)),
+                            child: const Row(children: [
+                              Text('🚨', style: TextStyle(fontSize: 10)),
+                              SizedBox(width: 4),
+                              Expanded(
+                                  child: Text(
+                                      'Nearest ambulance will be dispatched immediately',
+                                      style: TextStyle(
+                                          fontSize: 9.5,
+                                          color: Color(0xFFE53935),
+                                          fontWeight: FontWeight.w600))),
+                            ]),
+                          ),
+                        ],
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          final body = {
-                            "pickup_address": _pickupCtrl.text,
-                            "drop_address": _destCtrl.text,
-                            "pickup_lat": _pickupLat,
-                            "pickup_lng": _pickupLng,
-                            "drop_lat": _dropLat,
-                            "drop_lng": _dropLng,
-                            "vehicle_type": _selectedVehicleType,
-                            "service_type":
-                                widget.service.category == 'delivery'
-                                    ? widget.service.name.toLowerCase()
-                                    : 'ride',
-                            "payment_method": _paymentMethod.id,
-                            "use_kcoins": _useKCoins,
-                            "is_ev_request": widget.service.isEV,
-                            "promo_code": _appliedPromoCode,
-                          };
-                          try {
-                            final result = await ApiService.bookTrip(body);
-                            if (result["success"] == true) {
-                              final bookedTrip =
-                                  result["data"] as Map<String, dynamic>? ??
-                                      const {};
-                              final tripId =
-                                  (bookedTrip["trip_id"] as num?)?.toInt() ??
-                                      (result["trip_id"] as num?)?.toInt();
-                              setState(() {
-                                _booked = true;
-                                _searching = true;
-                                _tripId = tripId;
-                              });
-                              _startSearchPolling();
-                              final riderId = AuthService.riderId;
-                              final token = AuthService.token;
-                              if (riderId != null && token != null) {
-                                _connectSocket(riderId, token);
-                              }
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(result["error"] ??
-                                          "Booking failed")));
-                            }
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Booking error: $e")));
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: widget.service.accent,
-                            foregroundColor: kWhite,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16)),
-                            elevation: 8,
-                            shadowColor:
-                                widget.service.accent.withOpacity(0.27)),
-                        child: Text(
-                            _fareLoading
-                                ? 'Getting fare...'
-                                : 'Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹${(_estimatedFare - _promoDiscount).toStringAsFixed(0)}',
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w700)),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 6),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final body = {
+                        "pickup_address": _pickupCtrl.text,
+                        "drop_address": _destCtrl.text,
+                        "pickup_lat": _pickupLat,
+                        "pickup_lng": _pickupLng,
+                        "drop_lat": _dropLat,
+                        "drop_lng": _dropLng,
+                        "vehicle_type": _selectedVehicleType,
+                        "service_type":
+                            widget.service.category == 'delivery'
+                                ? widget.service.name.toLowerCase()
+                                : 'ride',
+                        "payment_method": _paymentMethod.id,
+                        "use_kcoins": _useKCoins,
+                        "is_ev_request": widget.service.isEV,
+                        "promo_code": _appliedPromoCode,
+                      };
+                      try {
+                        final result = await ApiService.bookTrip(body);
+                        if (result["success"] == true) {
+                          final bookedTrip =
+                              result["data"] as Map<String, dynamic>? ??
+                                  const {};
+                          final tripId =
+                              (bookedTrip["trip_id"] as num?)?.toInt() ??
+                                  (result["trip_id"] as num?)?.toInt();
+                          setState(() {
+                            _booked = true;
+                            _searching = true;
+                            _tripId = tripId;
+                          });
+                          _startSearchPolling();
+                          final riderId = AuthService.riderId;
+                          final token = AuthService.token;
+                          if (riderId != null && token != null) {
+                            _connectSocket(riderId, token);
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(result["error"] ??
+                                      "Booking failed")));
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Booking error: $e")));
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: widget.service.accent,
+                        foregroundColor: kWhite,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                        elevation: 8,
+                        shadowColor:
+                            widget.service.accent.withOpacity(0.27)),
+                    child: Text(
+                        _fareLoading
+                            ? 'Getting fare...'
+                            : 'Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹${(_estimatedFare - _promoDiscount).toStringAsFixed(0)}',
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         if (_showPaymentModal)

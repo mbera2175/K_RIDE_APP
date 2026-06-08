@@ -5559,486 +5559,647 @@ class _WhereToScreenState extends State<WhereToScreen>
             ),
           ),
           Positioned(
-            top: 52,
+            top: MediaQuery.of(context).padding.top + 12,
             left: 16,
             right: 16,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const SizedBox(width: 40),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 10,
-                        offset: Offset(0, 2),
-                      )
-                    ],
-                  ),
-                  child: Text(
-                    statusTitle,
-                    style: const TextStyle(
-                      color: kWhite,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            child: _buildTrackingToast(tripStatus),
           ),
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: Container(
-              padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom + 12 : 40),
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.65,
+              color: const Color(0xFFF9F9F9), // kBg
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 12),
+                  _buildDistanceBanner(distKm, etaMinutes, tripStatus),
+                  const SizedBox(height: 12),
+                  _buildDriverCard(context, driverName, driverPhone, driverPhotoUrl, driverRating, vehicleModel, vehicleNo),
+                  const SizedBox(height: 12),
+                  _buildOtpSosRow(context, showOtp, expectOtp, tripStatus),
+                  if (tripStatus == 'requested' ||
+                      tripStatus == 'driver_assigned' ||
+                      tripStatus == 'accepted' ||
+                      tripStatus == 'arrived') ...[
+                    const SizedBox(height: 12),
+                    _buildCancelButton(context),
+                  ],
+                  const SizedBox(height: 16),
+                ],
               ),
-              decoration: const BoxDecoration(
-                color: kWhite,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+          ),
+          if (_socketDisconnected) _buildReconnectionOverlay(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrackingToast(String tripStatus) {
+    String title = 'Ride accepted!';
+    String subtitle = 'Your driver is on the way';
+    Color iconBgColor = const Color(0xFF27AE60);
+    IconData iconData = Icons.check;
+
+    if (tripStatus == 'requested') {
+      title = 'Finding your ride';
+      subtitle = 'Matching with nearby drivers';
+      iconBgColor = const Color(0xFFFF6B00);
+      iconData = Icons.search_rounded;
+    } else if (tripStatus == 'arrived') {
+      title = 'Driver arrived!';
+      subtitle = 'Meet driver at the pickup point';
+      iconBgColor = const Color(0xFF27AE60);
+      iconData = Icons.check_circle_outline_rounded;
+    } else if (tripStatus == 'started') {
+      title = 'On the trip!';
+      subtitle = 'Heading to destination';
+      iconBgColor = const Color(0xFF007AFF);
+      iconData = Icons.navigation_rounded;
+    } else if (tripStatus == 'completed') {
+      title = 'Trip completed!';
+      subtitle = 'Thank you for riding with us';
+      iconBgColor = Colors.grey;
+      iconData = Icons.done_all_rounded;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: iconBgColor,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(iconData, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF8A8A8A),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDistanceBanner(double distanceKm, int etaMinutes, String tripStatus) {
+    const Color panelOrange = Color(0xFFE84917);
+    const Color panelOrangeSoft = Color(0xFFFFF0EB);
+    const Color panelOrangeBorder = Color(0xFFFFCBB5);
+    const Color panelTextDark = Color(0xFF1A1A1A);
+
+    String textTitle;
+    String textSubtitle;
+    if (tripStatus == 'started') {
+      textTitle = 'Arriving at destination';
+      textSubtitle = '${distanceKm.toStringAsFixed(1)} km remaining • $etaMinutes min';
+    } else {
+      textTitle = 'Driver is ${distanceKm.toStringAsFixed(1)} km away';
+      textSubtitle = 'Arriving in $etaMinutes min';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: panelOrangeSoft,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: panelOrangeBorder, width: 1),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.directions_car, color: panelOrange, size: 30),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    textTitle,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: panelOrange,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    textSubtitle,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: panelTextDark,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Live tracking pill
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: panelOrange, width: 1.5),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.wifi, color: panelOrange, size: 15),
+                  SizedBox(width: 4),
+                  Text(
+                    'Live tracking',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: panelOrange,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDriverCard(
+    BuildContext context,
+    String driverName,
+    String driverPhone,
+    String driverPhotoUrl,
+    dynamic driverRating,
+    String vehicleModel,
+    String vehicleNo,
+  ) {
+    const Color panelOrangeSoft = Color(0xFFFFF0EB);
+    const Color panelOrangeBorder = Color(0xFFFFCBB5);
+    const Color panelOrange = Color(0xFFE84917);
+    const Color panelTextDark = Color(0xFF1A1A1A);
+    const Color panelTextGrey = Color(0xFF8A8A8A);
+    const Color panelDivider = Color(0xFFF0F0F0);
+    const Color panelCardBg = Color(0xFFFFFFFF);
+
+    final initials = driverName.isNotEmpty
+        ? driverName.trim().split(' ').map((e) => e[0]).take(1).join()
+        : '?';
+
+    double ratingVal = 4.8;
+    if (driverRating != null) {
+      if (driverRating is num) {
+        ratingVal = driverRating.toDouble();
+      } else {
+        ratingVal = double.tryParse(driverRating.toString()) ?? 4.8;
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: panelCardBg,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Avatar + name + rating
+            Row(
+              children: [
+                // Avatar
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: panelOrangeSoft,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: panelOrangeBorder, width: 1.5),
+                    image: driverPhotoUrl.isNotEmpty
+                        ? DecorationImage(
+                            image: CachedNetworkImageProvider(driverPhotoUrl),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  alignment: Alignment.center,
+                  child: driverPhotoUrl.isEmpty
+                      ? Text(
+                          initials.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: panelOrange,
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 14),
+                // Name + phone + vehicle
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        driverName,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: panelTextDark,
+                        ),
+                      ),
+                      if (driverPhone.isNotEmpty) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          driverPhone,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: panelTextGrey,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 2),
+                      Text(
+                        '$vehicleModel • $vehicleNo',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: panelTextGrey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Rating pill
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFFBEB),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFFFE082), width: 1),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.star_rounded, color: Color(0xFFF5A623), size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        ratingVal.toStringAsFixed(1),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: panelTextDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+            const Divider(height: 1, thickness: 1, color: panelDivider),
+            const SizedBox(height: 14),
+
+            // Call + Message buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _actionButton(
+                  icon: Icons.phone,
+                  label: 'Call',
+                  onTap: () async {
+                    if (driverPhone.isNotEmpty) {
+                      final uri = Uri.parse('tel:$driverPhone');
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Could not open phone dialer')),
+                        );
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(width: 48),
+                _actionButton(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  label: 'Message',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TripChatScreen(
+                          tripId: _tripId!,
+                          driverName: driverName,
+                          driverPhone: driverPhone,
+                          driverPhotoUrl: driverPhotoUrl,
+                          onClose: () => Navigator.pop(context),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _actionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 72,
+            height: 56,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEAF7EF),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFA8DFC0), width: 1),
+            ),
+            child: const Icon(icon, color: Color(0xFF27AE60), size: 26),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFF8A8A8A),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOtpSosRow(
+    BuildContext context,
+    bool showOtp,
+    bool expectOtp,
+    String tripStatus,
+  ) {
+    const Color panelOrange = Color(0xFFE84917);
+    const Color panelTextDark = Color(0xFF1A1A1A);
+    const Color panelCardBg = Color(0xFFFFFFFF);
+
+    Widget otpCardContent;
+    if (tripStatus == 'started' || tripStatus == 'completed') {
+      otpCardContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Row(
+            children: [
+              Icon(Icons.verified_user_rounded, color: Color(0xFF27AE60), size: 18),
+              SizedBox(width: 6),
+              Text(
+                'Trip Status',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: panelTextDark,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Verified\n& Active',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF27AE60),
+              height: 1.3,
+            ),
+          ),
+        ],
+      );
+    } else if (showOtp && _otpCode != null) {
+      otpCardContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.lock_outline_rounded, color: panelTextDark, size: 18),
+              SizedBox(width: 6),
+              Text(
+                'OTP for Driver',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: panelTextDark,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _otpCode!,
+            style: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              color: panelOrange,
+              letterSpacing: 4,
+            ),
+          ),
+        ],
+      );
+    } else if (expectOtp) {
+      otpCardContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Row(
+            children: [
+              Icon(Icons.lock_outline_rounded, color: panelTextDark, size: 18),
+              SizedBox(width: 6),
+              Text(
+                'OTP for Driver',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: panelTextDark,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(panelOrange),
+            ),
+          ),
+        ],
+      );
+    } else {
+      otpCardContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.lock_outline_rounded, color: panelTextDark, size: 18),
+              SizedBox(width: 6),
+              Text(
+                'OTP for Driver',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: panelTextDark,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            '--',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              color: panelOrange,
+              letterSpacing: 4,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
+              height: 104,
+              decoration: BoxDecoration(
+                color: panelCardBg,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: otpCardContent,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: GestureDetector(
+              onTap: () async {
+                if (_tripId != null) {
+                  try {
+                    await ApiService.raiseSOS(_tripId!);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('🚨 SOS Alert Raised! Support notified.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Failed to raise SOS')),
+                    );
+                  }
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
+                height: 104,
+                decoration: BoxDecoration(
+                  color: panelCardBg,
+                  borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 32,
-                      offset: Offset(0, -8),
-                    )
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
                   ],
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFDDDDDD),
-                          borderRadius: BorderRadius.circular(99),
+                  children: const [
+                    Row(
+                      children: [
+                        Icon(Icons.wifi_tethering_rounded, color: panelOrange, size: 18),
+                        SizedBox(width: 6),
+                        Text(
+                          'SOS Help',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: panelTextDark,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-                    Flexible(
-                      child: SingleChildScrollView(
-                        shrinkWrap: true,
-                        physics: const BouncingScrollPhysics(),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: statusColor,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    statusSubtitle,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.grey[700],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            // Real-time Distance & ETA banner
-                            if (distanceStr != null && durationStr != null) ...[
-                              const SizedBox(height: 12),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: kOrangeBg,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: kOrange.withOpacity(0.15)),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.directions_car_rounded, color: kOrange, size: 18),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        tripStatus == 'started'
-                                            ? 'Heading to destination: $distanceStr remaining ($durationStr)'
-                                            : 'Driver is $distanceStr away. Arriving in $durationStr',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: kOrange,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-
-                            const SizedBox(height: 16),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 56,
-                                  height: 56,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: kOrangeLight,
-                                    border: Border.all(color: kOrange.withOpacity(0.1), width: 1.5),
-                                    image: driverPhotoUrl.isNotEmpty
-                                        ? DecorationImage(
-                                            image: CachedNetworkImageProvider(driverPhotoUrl),
-                                            fit: BoxFit.cover,
-                                          )
-                                        : null,
-                                  ),
-                                  child: driverPhotoUrl.isEmpty
-                                      ? Center(
-                                          child: Text(
-                                            driverName.isNotEmpty
-                                                ? driverName.substring(0, 1).toUpperCase()
-                                                : 'D',
-                                            style: const TextStyle(
-                                              fontSize: 22,
-                                              fontWeight: FontWeight.w800,
-                                              color: kOrange,
-                                            ),
-                                          ),
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              driverName,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: kDark,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 3),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFFFF8E1),
-                                              borderRadius: BorderRadius.circular(6),
-                                              border: Border.all(color: const Color(0xFFFFD54F).withOpacity(0.5), width: 0.8),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                const Icon(Icons.star_rounded,
-                                                    size: 13, color: Color(0xFFFFB300)),
-                                                const SizedBox(width: 2),
-                                                Text(
-                                                  driverRating.toString(),
-                                                  style: const TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xFFFF8F00),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      if (driverPhone.isNotEmpty) ...[
-                                        const SizedBox(height: 3),
-                                        Text(
-                                          driverPhone,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey[600],
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        '$vehicleModel • $vehicleNo',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[600],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Column(
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => TripChatScreen(
-                                              tripId: _tripId!,
-                                              driverName: driverName,
-                                              driverPhone: driverPhone,
-                                              driverPhotoUrl: driverPhotoUrl,
-                                              onClose: () => Navigator.pop(context),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                      child: Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          color: kOrangeLight,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(color: kOrange.withOpacity(0.15), width: 1),
-                                        ),
-                                        child: const Icon(
-                                          Icons.chat_bubble_outline_rounded,
-                                          color: kOrange,
-                                          size: 18,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    GestureDetector(
-                                      onTap: () async {
-                                        if (driverPhone.isNotEmpty) {
-                                          final uri = Uri.parse('tel:$driverPhone');
-                                          if (await canLaunchUrl(uri)) {
-                                            await launchUrl(uri);
-                                          } else {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(content: Text('Could not open phone dialer')),
-                                            );
-                                          }
-                                        }
-                                      },
-                                      child: Container(
-                                        width: 40,
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFE8F5E9),
-                                          shape: BoxShape.circle,
-                                          border: Border.all(color: Colors.green.withOpacity(0.15), width: 1),
-                                        ),
-                                        child: const Icon(
-                                          Icons.phone_enabled_rounded,
-                                          color: Colors.green,
-                                          size: 18,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                if (showOtp)
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16, vertical: 12),
-                                      decoration: BoxDecoration(
-                                        color: kOrangeLight,
-                                        borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(
-                                            color: kOrange.withOpacity(0.25), width: 1.2),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: const [
-                                              Icon(Icons.lock_outline_rounded, size: 14, color: kOrange),
-                                              SizedBox(width: 6),
-                                              Text(
-                                                'OTP for Driver',
-                                                style: TextStyle(
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: kOrange,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Center(
-                                            child: Text(
-                                              _otpCode!,
-                                              style: const TextStyle(
-                                                fontSize: 24,
-                                                fontWeight: FontWeight.w900,
-                                                color: kOrange,
-                                                letterSpacing: 4,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                else if (expectOtp)
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 14, vertical: 12),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFFFF8E1),
-                                        borderRadius: BorderRadius.circular(14),
-                                        border: Border.all(
-                                            color: Colors.amber.shade300, width: 1.2),
-                                      ),
-                                      child: const Text(
-                                        'OTP is loading. Keep this screen open.',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF8A5A00),
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                else
-                                  const Spacer(),
-                                if (showOtp || expectOtp) const SizedBox(width: 12),
-                                GestureDetector(
-                                  onTap: () async {
-                                    if (_tripId != null) {
-                                      try {
-                                        await ApiService.raiseSOS(_tripId!);
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                                '🚨 SOS Alert Raised! Support notified.'),
-                                            backgroundColor: Colors.red,
-                                          ),
-                                        );
-                                      } catch (e) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                              content: Text('Failed to raise SOS')),
-                                        );
-                                      }
-                                    }
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 18, vertical: 14),
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [Colors.red, Color(0xFFD32F2F)],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      borderRadius: BorderRadius.circular(14),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.red.withOpacity(0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 3),
-                                        )
-                                      ],
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: const [
-                                        Icon(Icons.emergency_share_rounded, color: kWhite, size: 16),
-                                        SizedBox(width: 6),
-                                        Text(
-                                          'SOS HELP',
-                                          style: TextStyle(
-                                            color: kWhite,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (tripStatus == 'requested' ||
-                                tripStatus == 'driver_assigned' ||
-                                tripStatus == 'accepted' ||
-                                tripStatus == 'arrived') ...[
-                              const SizedBox(height: 16),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton(
-                                  onPressed: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (ctx) => AlertDialog(
-                                        title: const Text('Cancel Ride?'),
-                                        content: const Text(
-                                            'Are you sure you want to cancel this ride request?'),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(ctx),
-                                            child: const Text('No'),
-                                          ),
-                                          TextButton(
-                                            onPressed: () async {
-                                              Navigator.pop(ctx);
-                                              await _cancelCurrentRide(
-                                                  closeAfterCancel: true);
-                                            },
-                                            child: const Text(
-                                              'Yes, Cancel',
-                                              style: TextStyle(color: Colors.red),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.red,
-                                    side: BorderSide(color: Colors.red.withOpacity(0.25), width: 1.2),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(14)),
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                  ),
-                                  child: const Text(
-                                    'Cancel Ride',
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
+                    SizedBox(height: 6),
+                    Text(
+                      'Emergency\nassistance',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: panelOrange,
+                        height: 1.3,
                       ),
                     ),
                   ],
@@ -6046,8 +6207,73 @@ class _WhereToScreenState extends State<WhereToScreen>
               ),
             ),
           ),
-          if (_socketDisconnected) _buildReconnectionOverlay(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCancelButton(BuildContext context) {
+    const Color panelOrange = Color(0xFFE84917);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GestureDetector(
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Cancel Ride?'),
+              content: const Text('Are you sure you want to cancel this ride request?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('No'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    await _cancelCurrentRide(closeAfterCancel: true);
+                  },
+                  child: const Text(
+                    'Yes, Cancel',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+        child: Container(
+          width: double.infinity,
+          height: 56,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: panelOrange, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: panelOrange.withOpacity(0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.cancel_outlined, color: panelOrange, size: 22),
+              SizedBox(width: 10),
+              Text(
+                'Cancel Ride',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: panelOrange,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

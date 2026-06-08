@@ -3885,6 +3885,7 @@ class _WhereToScreenState extends State<WhereToScreen>
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Trip started! Have a safe journey. 🚗"),
             backgroundColor: Colors.green));
+        _openNavigation(_dropLat, _dropLng);
       } else if (type == "trip_completed") {
         setState(() {
           _tripStatus = 'completed';
@@ -5794,6 +5795,32 @@ class _WhereToScreenState extends State<WhereToScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _openNavigation(double lat, double lng) async {
+    final googleMapsUrl = Uri.parse("google.navigation:q=$lat,$lng&mode=d");
+    final appleMapsUrl = Uri.parse("http://maps.apple.com/?daddr=$lat,$lng");
+    
+    try {
+      if (await canLaunchUrl(googleMapsUrl)) {
+        await launchUrl(googleMapsUrl);
+      } else if (await canLaunchUrl(appleMapsUrl)) {
+        await launchUrl(appleMapsUrl);
+      } else {
+        final webUrl = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving");
+        if (await canLaunchUrl(webUrl)) {
+          await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not open maps application')),
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error launching navigation: $e')),
+      );
+    }
   }
 
   Widget _buildDriverCard(

@@ -4146,7 +4146,7 @@ class _WhereToScreenState extends State<WhereToScreen>
             left: 0,
             right: 0,
             child: Container(
-              padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom : 12),
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -5053,7 +5053,7 @@ class _WhereToScreenState extends State<WhereToScreen>
           left: 0,
           right: 0,
           child: Container(
-            padding: EdgeInsets.fromLTRB(16, 12, 16, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom : 12),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             decoration: const BoxDecoration(
                 color: kWhite,
                 borderRadius:

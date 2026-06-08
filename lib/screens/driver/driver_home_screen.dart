@@ -652,12 +652,6 @@ class _IncomingTripModalState extends State<IncomingTripModal>
   @override
   Widget build(BuildContext context) {
     final maxHeight = MediaQuery.of(context).size.height * 0.90;
-    final displayFare = widget.trip.totalFare > 0
-        ? widget.trip.totalFare
-        : widget.trip.fare.toDouble();
-    final fareLabel = displayFare % 1 == 0
-        ? displayFare.toStringAsFixed(0)
-        : displayFare.toStringAsFixed(2);
     return GestureDetector(
       onTap: () {},
       child: Container(
@@ -727,21 +721,13 @@ class _IncomingTripModalState extends State<IncomingTripModal>
                                       fontWeight: FontWeight.w700,
                                       letterSpacing: 1.5)),
                               const SizedBox(height: 4),
-                              Text.rich(TextSpan(
-                                text: '₹$fareLabel ',
+                              Text(
+                                widget.trip.vehicle.toUpperCase(),
                                 style: GoogleFonts.sora(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w800,
-                                    color: kDark),
-                                children: [
-                                  TextSpan(
-                                      text: '• ${widget.trip.vehicle}',
-                                      style: GoogleFonts.sora(
-                                          fontSize: 15,
-                                          color: kOrange,
-                                          fontWeight: FontWeight.w800))
-                                ],
-                              )),
+                                    color: kOrange),
+                              ),
                               const SizedBox(height: 10),
                               Text(
                                 'Trip ${widget.trip.tripCode} • ${widget.trip.riderName}',

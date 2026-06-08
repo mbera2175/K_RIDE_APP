@@ -16,7 +16,7 @@ class _IncomingRideOverlayState extends State<IncomingRideOverlay> {
   static const _channel = MethodChannel('com.kride.app/native_bridge');
   
   Map<String, dynamic>? _tripData;
-  int _secondsLeft = 30;
+  int _secondsLeft = 25;
   Timer? _timer;
 
   @override
@@ -28,8 +28,8 @@ class _IncomingRideOverlayState extends State<IncomingRideOverlay> {
       if (event is Map) {
         setState(() {
           _tripData = Map<String, dynamic>.from(event);
-          // Set countdown duration if available in payload, default to 30
-          _secondsLeft = _tripData?['secondsLeft'] ?? 30;
+          // Set countdown duration if available in payload, default to 25
+          _secondsLeft = _tripData?['secondsLeft'] ?? 25;
         });
         _startTimer();
       }

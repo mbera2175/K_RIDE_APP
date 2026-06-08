@@ -617,7 +617,7 @@ class IncomingTripModal extends StatefulWidget {
 
 class _IncomingTripModalState extends State<IncomingTripModal>
     with SingleTickerProviderStateMixin {
-  int _timer = 20;
+  int _timer = 25;
   double _progress = 1.0;
   Timer? _countdown;
   late AnimationController _slideCtrl;
@@ -636,7 +636,7 @@ class _IncomingTripModalState extends State<IncomingTripModal>
       if (!mounted) return;
       setState(() {
         _timer--;
-        _progress = (_timer / 20).clamp(0.0, 1.0);
+        _progress = (_timer / 25).clamp(0.0, 1.0);
         if (_timer <= 0) widget.onDecline();
       });
     });
@@ -735,11 +735,11 @@ class _IncomingTripModalState extends State<IncomingTripModal>
                                     color: kDark),
                                 children: [
                                   TextSpan(
-                                      text: 'estimated',
+                                      text: '• ${widget.trip.vehicle}',
                                       style: GoogleFonts.sora(
-                                          fontSize: 13,
-                                          color: kMuted,
-                                          fontWeight: FontWeight.w500))
+                                          fontSize: 15,
+                                          color: kOrange,
+                                          fontWeight: FontWeight.w800))
                                 ],
                               )),
                               const SizedBox(height: 10),
@@ -2760,7 +2760,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       'pickupDistanceKm': trip.pickupDistanceKm,
       'vehicle': trip.vehicle,
       'payment': trip.payment,
-      'secondsLeft': 30,
+      'secondsLeft': 25,
     };
 
     await FlutterOverlayWindow.showOverlay(

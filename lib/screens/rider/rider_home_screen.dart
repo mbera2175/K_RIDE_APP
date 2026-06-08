@@ -7851,12 +7851,46 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               else if (_activeTab == 'activity')
                 _RiderActivityTab(),
 
-              // Bottom Nav
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
+              // Modals & Screens
+              if (_showLocationModal)
+                Positioned.fill(
+                    child: LocationModal(
+                        current: _currentLocation,
+                        onSelect: (loc) => setState(() {
+                              _currentLocation = loc;
+                              _showLocationModal = false;
+                            }),
+                        onClose: () =>
+                            setState(() => _showLocationModal = false))),
+
+              if (_seeAll != null)
+                Positioned.fill(
+                    child: SeeAllModal(
+                        title: _seeAll!.title,
+                        items: _seeAll!.items,
+                        onSelect: _openService,
+                        onClose: () => setState(() => _seeAll = null))),
+
+              if (_activeScreen != null)
+                Positioned.fill(
+                    child: WhereToScreen(
+                  key: _whereToKey,
+                  service: _activeScreen!.service,
+                  prefilledDest: _activeScreen!.prefilledDest,
+                  activeTripId: _restoredTripId,
+                  genericMode: _activeScreen!.genericMode,
+                  onBack: () {
+                    setState(() {
+                      _activeScreen = null;
+                      _restoredTripId = null;
+                    });
+                    _checkActiveTrip();
+                  },
+                )),
+            ],
+          ),
+          bottomNavigationBar: (_activeScreen == null && !_showLocationModal && _seeAll == null)
+              ? Container(
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     boxShadow: [
@@ -7904,47 +7938,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                       },
                     ),
                   ),
-                ),
-              ),
-
-              // Modals & Screens
-              if (_showLocationModal)
-                Positioned.fill(
-                    child: LocationModal(
-                        current: _currentLocation,
-                        onSelect: (loc) => setState(() {
-                              _currentLocation = loc;
-                              _showLocationModal = false;
-                            }),
-                        onClose: () =>
-                            setState(() => _showLocationModal = false))),
-
-              if (_seeAll != null)
-                Positioned.fill(
-                    child: SeeAllModal(
-                        title: _seeAll!.title,
-                        items: _seeAll!.items,
-                        onSelect: _openService,
-                        onClose: () => setState(() => _seeAll = null))),
-
-              if (_activeScreen != null)
-                Positioned.fill(
-                    child: WhereToScreen(
-                  key: _whereToKey,
-                  service: _activeScreen!.service,
-                  prefilledDest: _activeScreen!.prefilledDest,
-                  activeTripId: _restoredTripId,
-                  genericMode: _activeScreen!.genericMode,
-                  onBack: () {
-                    setState(() {
-                      _activeScreen = null;
-                      _restoredTripId = null;
-                    });
-                    _checkActiveTrip();
-                  },
-                )),
-            ],
-          ),
+                )
+              : null,
         ),
       ),
     );

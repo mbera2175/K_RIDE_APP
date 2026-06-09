@@ -5263,15 +5263,7 @@ class _WhereToScreenState extends State<WhereToScreen>
           right: 0,
           child: Container(
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.42,
-            ),
-            padding: EdgeInsets.fromLTRB(
-              16,
-              10,
-              16,
-              MediaQuery.of(context).padding.bottom > 0
-                  ? MediaQuery.of(context).padding.bottom
-                  : 12,
+              maxHeight: MediaQuery.of(context).size.height * 0.52,
             ),
             decoration: const BoxDecoration(
                 color: kWhite,
@@ -5286,21 +5278,22 @@ class _WhereToScreenState extends State<WhereToScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Center(
-                    child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                            color: const Color(0xFFDDDDDD),
-                            borderRadius: BorderRadius.circular(99)))),
-                const SizedBox(height: 6),
+                Padding(
+                  padding: const EdgeInsets.only(top: 10, bottom: 4),
+                  child: Center(
+                      child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFDDDDDD),
+                              borderRadius: BorderRadius.circular(99)))),
+                ),
                 Flexible(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.2),
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: Column(
-                        children: [
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                    child: Column(
+                      children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 4),
@@ -5594,75 +5587,84 @@ class _WhereToScreenState extends State<WhereToScreen>
                     ),
                   ),
                 ),
-              ),
-                const SizedBox(height: 6),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      final body = {
-                        "pickup_address": _pickupCtrl.text,
-                        "drop_address": _destCtrl.text,
-                        "pickup_lat": _pickupLat,
-                        "pickup_lng": _pickupLng,
-                        "drop_lat": _dropLat,
-                        "drop_lng": _dropLng,
-                        "vehicle_type": _selectedVehicleType,
-                        "service_type":
-                            widget.service.category == 'delivery'
-                                ? widget.service.name.toLowerCase()
-                                : 'ride',
-                        "payment_method": _paymentMethod.id,
-                        "use_kcoins": _useKCoins,
-                        "is_ev_request": widget.service.isEV,
-                        "promo_code": _appliedPromoCode,
-                      };
-                      try {
-                        final result = await ApiService.bookTrip(body);
-                        if (result["success"] == true) {
-                          final bookedTrip =
-                              result["data"] as Map<String, dynamic>? ??
-                                  const {};
-                          final tripId =
-                              (bookedTrip["trip_id"] as num?)?.toInt() ??
-                                  (result["trip_id"] as num?)?.toInt();
-                          setState(() {
-                            _booked = true;
-                            _searching = true;
-                            _tripId = tripId;
-                          });
-                          _startSearchPolling();
-                          final riderId = AuthService.riderId;
-                          final token = AuthService.token;
-                          if (riderId != null && token != null) {
-                            _connectSocket(riderId, token);
+                // Pinned Confirm button with SafeArea bottom padding
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    6,
+                    16,
+                    MediaQuery.of(context).padding.bottom > 0
+                        ? MediaQuery.of(context).padding.bottom
+                        : 12,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final body = {
+                          "pickup_address": _pickupCtrl.text,
+                          "drop_address": _destCtrl.text,
+                          "pickup_lat": _pickupLat,
+                          "pickup_lng": _pickupLng,
+                          "drop_lat": _dropLat,
+                          "drop_lng": _dropLng,
+                          "vehicle_type": _selectedVehicleType,
+                          "service_type":
+                              widget.service.category == 'delivery'
+                                  ? widget.service.name.toLowerCase()
+                                  : 'ride',
+                          "payment_method": _paymentMethod.id,
+                          "use_kcoins": _useKCoins,
+                          "is_ev_request": widget.service.isEV,
+                          "promo_code": _appliedPromoCode,
+                        };
+                        try {
+                          final result = await ApiService.bookTrip(body);
+                          if (result["success"] == true) {
+                            final bookedTrip =
+                                result["data"] as Map<String, dynamic>? ??
+                                    const {};
+                            final tripId =
+                                (bookedTrip["trip_id"] as num?)?.toInt() ??
+                                    (result["trip_id"] as num?)?.toInt();
+                            setState(() {
+                              _booked = true;
+                              _searching = true;
+                              _tripId = tripId;
+                            });
+                            _startSearchPolling();
+                            final riderId = AuthService.riderId;
+                            final token = AuthService.token;
+                            if (riderId != null && token != null) {
+                              _connectSocket(riderId, token);
+                            }
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(result["error"] ??
+                                        "Booking failed")));
                           }
-                        } else {
+                        } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text(result["error"] ??
-                                      "Booking failed")));
+                              SnackBar(content: Text("Booking error: $e")));
                         }
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Booking error: $e")));
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: widget.service.accent,
-                        foregroundColor: kWhite,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                        elevation: 8,
-                        shadowColor:
-                            widget.service.accent.withOpacity(0.27)),
-                    child: Text(
-                        _fareLoading
-                            ? 'Getting fare...'
-                            : 'Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹${(_estimatedFare - _promoDiscount).toStringAsFixed(0)}',
-                        style: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w700)),
+                      },
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: widget.service.accent,
+                          foregroundColor: kWhite,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                          elevation: 8,
+                          shadowColor:
+                              widget.service.accent.withOpacity(0.27)),
+                      child: Text(
+                          _fareLoading
+                              ? 'Getting fare...'
+                              : 'Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹${(_estimatedFare - _promoDiscount).toStringAsFixed(0)}',
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w700)),
+                    ),
                   ),
                 ),
               ],

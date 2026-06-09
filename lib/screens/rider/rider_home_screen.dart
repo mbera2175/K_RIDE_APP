@@ -5804,33 +5804,67 @@ class _WhereToScreenState extends State<WhereToScreen>
             right: 0,
             child: Container(
               constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.55,
+                maxHeight: MediaQuery.of(context).size.height * 0.58,
               ),
-              color: const Color(0xFFF9F9F9), // kBg
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 8),
-                    _buildDistanceBanner(distKm, etaMinutes, tripStatus),
-                    const SizedBox(height: 8),
-                    _buildDriverCard(context, driverName, driverPhone, driverPhotoUrl, driverRating, vehicleModel, vehicleNo),
-                    const SizedBox(height: 8),
-                    _buildOtpSosRow(context, showOtp, expectOtp, tripStatus),
-                    if (tripStatus == 'requested' ||
-                        tripStatus == 'driver_assigned' ||
-                        tripStatus == 'accepted' ||
-                        tripStatus == 'arrived') ...[
-                      const SizedBox(height: 8),
-                      _buildCancelButton(context),
-                    ],
-                    SizedBox(
-                        height: MediaQuery.of(context).padding.bottom > 0
+              decoration: const BoxDecoration(
+                color: Color(0xFFF9F9F9),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 24,
+                    offset: Offset(0, -6),
+                  )
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Drag handle
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10, bottom: 4),
+                    child: Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDDDDDD),
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Scrollable content
+                  Flexible(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(
+                        0, 4, 0,
+                        MediaQuery.of(context).padding.bottom > 0
                             ? MediaQuery.of(context).padding.bottom
-                            : 12),
-                  ],
-                ),
+                            : 16,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildDistanceBanner(distKm, etaMinutes, tripStatus),
+                          const SizedBox(height: 8),
+                          _buildDriverCard(context, driverName, driverPhone, driverPhotoUrl, driverRating, vehicleModel, vehicleNo),
+                          const SizedBox(height: 8),
+                          _buildOtpSosRow(context, showOtp, expectOtp, tripStatus),
+                          if (tripStatus == 'requested' ||
+                              tripStatus == 'driver_assigned' ||
+                              tripStatus == 'accepted' ||
+                              tripStatus == 'arrived') ...[
+                            const SizedBox(height: 8),
+                            _buildCancelButton(context),
+                          ],
+                          const SizedBox(height: 4),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

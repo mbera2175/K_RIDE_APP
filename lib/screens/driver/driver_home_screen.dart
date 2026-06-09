@@ -3888,30 +3888,38 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                   ),
                 ),
                 const SizedBox(width: 10),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _isOnline ? 'GO OFFLINE' : 'GO ONLINE',
-                      style: GoogleFonts.sora(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.3,
+                Flexible(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          _isOnline ? 'GO OFFLINE' : 'GO ONLINE',
+                          style: GoogleFonts.sora(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
                       ),
-                    ),
-                    Text(
-                      _isOnline
-                          ? 'You are receiving ride requests'
-                          : 'Start receiving ride requests',
-                      style: GoogleFonts.sora(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w400,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          _isOnline
+                              ? 'You are receiving ride requests'
+                              : 'Start receiving ride requests',
+                          style: GoogleFonts.sora(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ],
@@ -4233,7 +4241,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
           ),
           Positioned(
             right: 16,
-            bottom: 250,
+            top: MediaQuery.of(context).padding.top + 80,
             child: _buildMapZoomControls(),
           ),
           ActiveTripPanel(

@@ -302,8 +302,14 @@ class ApiService {
     return _handle(res);
   }
 
-  static Future<Map<String, dynamic>> completeTrip(int tripId) async {
-    final res = await http.patch(Uri.parse('$_base/trips/$tripId/complete'),
+  static Future<Map<String, dynamic>> completeTrip(
+      int tripId, {double? actualKm, int? actualMinutes}) async {
+    final queryParams = <String, String>{};
+    if (actualKm != null) queryParams['actual_km'] = actualKm.toStringAsFixed(1);
+    if (actualMinutes != null) queryParams['actual_minutes'] = actualMinutes.toString();
+    final uri = Uri.parse('$_base/trips/$tripId/complete')
+        .replace(queryParameters: queryParams.isNotEmpty ? queryParams : null);
+    final res = await http.patch(uri,
       headers: _authHeaders).timeout(_timeout);
     return _handle(res);
   }

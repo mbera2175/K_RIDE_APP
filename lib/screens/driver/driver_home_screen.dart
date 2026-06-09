@@ -2473,6 +2473,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
   bool _isChatOpen = false;
   TripData? _incomingTrip;
   TripData? _activeTrip;
+  DateTime? _tripStartedAt;
   MapplsMapController? _mapController;
   int _navIndex = 0;
   final Offset _driverPos = const Offset(0.5, 0.42);
@@ -3209,11 +3210,26 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         res = await ApiService.verifyTripOtp(tripId, otp);
         break;
       case 'complete':
+        // Calculate actual km and minutes for the backend
+        double actualKm = trip.tripDistanceKm;
+        if (_currentLat != 0 && trip.pickupLat != null && trip.pickupLng != null) {
+          actualKm = Geolocator.distanceBetween(
+            trip.pickupLat!, trip.pickupLng!,
+            _currentLat, _currentLng,
+          ) / 1000.0;
+        }
+        int actualMinutes = 0;
+        if (_tripStartedAt != null) {
+          actualMinutes = DateTime.now().difference(_tripStartedAt!).inMinutes;
+          if (actualMinutes < 1) actualMinutes = 1;
+        }
+
         if (trip.payment.toLowerCase().contains('cash')) {
           final confirmed = await _confirmCashCollected(trip);
           if (!confirmed) return;
 
-          res = await ApiService.completeTrip(tripId);
+          res = await ApiService.completeTrip(tripId,
+              actualKm: actualKm, actualMinutes: actualMinutes);
           if (res['success']) {
             final cashRes = await ApiService.markCashCollected(tripId);
             if (!cashRes['success']) {
@@ -3223,7 +3239,8 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             }
           }
         } else {
-          res = await ApiService.completeTrip(tripId);
+          res = await ApiService.completeTrip(tripId,
+              actualKm: actualKm, actualMinutes: actualMinutes);
         }
         break;
       case 'cash':
@@ -3255,8 +3272,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         _showSnack('Status updated', isError: false);
         await _checkActiveTrip();
         _drawTripRoute();
-        if (action == 'start' && _activeTrip != null && _activeTrip!.dropLat != null && _activeTrip!.dropLng != null) {
-          _openNavigation(_activeTrip!.dropLat!, _activeTrip!.dropLng!);
+        if (action == 'start') {
+          _tripStartedAt = DateTime.now();
+          if (_activeTrip != null && _activeTrip!.dropLat != null && _activeTrip!.dropLng != null) {
+            _openNavigation(_activeTrip!.dropLat!, _activeTrip!.dropLng!);
+          }
         }
       }
     } else {

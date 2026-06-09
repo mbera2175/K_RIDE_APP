@@ -60,6 +60,7 @@ class TripData {
   final String riderRating;
   final String riderName;
   final String riderPhone;
+  final String riderPhotoUrl;
   final String vehicle;
   final double bonusAmount;
   final double totalFare;
@@ -91,6 +92,7 @@ class TripData {
     required this.riderRating,
     required this.riderName,
     required this.riderPhone,
+    required this.riderPhotoUrl,
     required this.vehicle,
     required this.bonusAmount,
     required this.totalFare,
@@ -127,6 +129,7 @@ class TripData {
         riderRating: riderRating,
         riderName: riderName,
         riderPhone: riderPhone,
+        riderPhotoUrl: riderPhotoUrl,
         vehicle: vehicle,
         bonusAmount: bonusAmount,
         totalFare: totalFare,
@@ -352,6 +355,22 @@ TripData _mapToTripData(dynamic raw) {
     riderPhone: data['rider'] is Map<String, dynamic>
         ? _asText((data['rider'] as Map<String, dynamic>)['phone'])
         : _asText(_firstValue(data, const ['rider_phone', 'phone'])),
+    riderPhotoUrl: data['rider'] is Map<String, dynamic>
+        ? _asText(
+            (data['rider'] as Map<String, dynamic>)['profile_pic'] ??
+                (data['rider'] as Map<String, dynamic>)['profile_pic_url'] ??
+                (data['rider'] as Map<String, dynamic>)['profile_photo'] ??
+                (data['rider'] as Map<String, dynamic>)['profile_picture_url'],
+            fallback: '')
+        : _asText(
+            _firstValue(data, const [
+              'rider_profile_pic',
+              'rider_profile_photo',
+              'rider_photo_url',
+              'rider_profile_pic_url',
+              'profile_pic'
+            ]),
+            fallback: ''),
     vehicle: _asText(
             _firstValue(
                 data, const ['vehicle_type', 'vehicle', 'service_type']),
@@ -1162,20 +1181,30 @@ class ActiveTripPanel extends StatelessWidget {
                           Container(
                             width: 46,
                             height: 46,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                  colors: [kOrange, kOrangeDark],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight),
+                              gradient: trip.riderPhotoUrl.isEmpty
+                                  ? const LinearGradient(
+                                      colors: [kOrange, kOrangeDark],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight)
+                                  : null,
+                              image: trip.riderPhotoUrl.isNotEmpty
+                                  ? DecorationImage(
+                                      image: CachedNetworkImageProvider(trip.riderPhotoUrl),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
                             ),
-                            child: Center(
-                                child: Text(
-                                    trip.riderName.isNotEmpty ? trip.riderName[0] : 'R',
-                                    style: GoogleFonts.sora(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w800,
-                                        color: kWhite))),
+                            child: trip.riderPhotoUrl.isEmpty
+                                ? Center(
+                                    child: Text(
+                                        trip.riderName.isNotEmpty ? trip.riderName[0] : 'R',
+                                        style: GoogleFonts.sora(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w800,
+                                            color: kWhite)))
+                                : null,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -1457,10 +1486,20 @@ class _DriverTripReviewScreenState extends State<DriverTripReviewScreen> {
               Container(
                 width: 76,
                 height: 76,
-                decoration: const BoxDecoration(
-                    color: kOrangeLight, shape: BoxShape.circle),
-                child: const Icon(Icons.person_rounded,
-                    color: kOrange, size: 42),
+                decoration: BoxDecoration(
+                  color: kOrangeLight,
+                  shape: BoxShape.circle,
+                  image: widget.trip.riderPhotoUrl.isNotEmpty
+                      ? DecorationImage(
+                          image: CachedNetworkImageProvider(widget.trip.riderPhotoUrl),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: widget.trip.riderPhotoUrl.isEmpty
+                    ? const Icon(Icons.person_rounded,
+                        color: kOrange, size: 42)
+                    : null,
               ),
               const SizedBox(height: 14),
               Text(widget.trip.riderName,

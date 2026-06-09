@@ -5594,7 +5594,8 @@ class _WhereToScreenState extends State<WhereToScreen>
     final driverName = _assignedDriver?['name'] ?? 'Driver';
     final driverPhone = _assignedDriver?['phone'] ?? '';
     final driverPhotoUrl =
-        _assignedDriver?['profile_pic_url']?.toString() ?? '';
+        _assignedDriver?['profile_pic_url']?.toString() ??
+        _assignedDriver?['profile_pic']?.toString() ?? '';
     final driverRating =
         _assignedDriver?['avg_rating'] ?? _assignedDriver?['rating'] ?? '4.8';
     final vehicleModel = _assignedDriver?['vehicle_model'] ??
@@ -5918,7 +5919,8 @@ class _WhereToScreenState extends State<WhereToScreen>
     });
     final driverName = _assignedDriver?['name'] ?? 'Driver';
     final driverPhone = _assignedDriver?['phone'] ?? '';
-    final driverPhotoUrl = _assignedDriver?['profile_pic_url']?.toString() ?? '';
+    final driverPhotoUrl = _assignedDriver?['profile_pic_url']?.toString() ??
+        _assignedDriver?['profile_pic']?.toString() ?? '';
 
     Navigator.push(
       context,

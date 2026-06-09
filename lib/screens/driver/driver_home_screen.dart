@@ -1449,7 +1449,7 @@ class _DriverTripReviewScreenState extends State<DriverTripReviewScreen> {
         content: Text('Review submitted! Thank you.'),
         backgroundColor: kSuccess,
       ));
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      _goHome();
       return;
     }
 
@@ -1457,6 +1457,11 @@ class _DriverTripReviewScreenState extends State<DriverTripReviewScreen> {
       content: Text(res['error'] ?? 'Something went wrong.'),
       backgroundColor: kError,
     ));
+  }
+
+  void _goHome() {
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   @override
@@ -1467,232 +1472,156 @@ class _DriverTripReviewScreenState extends State<DriverTripReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final double initialLat = widget.trip.dropLat ?? 22.5726;
-    final double initialLng = widget.trip.dropLng ?? 88.3639;
-
     return Scaffold(
       backgroundColor: kWhite,
-      body: Stack(
-        children: [
-          // Background Map showing the drop coordinates
-          MapplsMap(
-            initialCameraPosition: CameraPosition(
-              target: LatLng(initialLat, initialLng),
-              zoom: 14.0,
+      resizeToAvoidBottomInset: true,
+      appBar: AppBar(
+        backgroundColor: kWhite,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        title: Text('Review Rider',
+            style: GoogleFonts.sora(
+                color: kDark, fontSize: 18, fontWeight: FontWeight.w800)),
+        actions: [
+          TextButton(
+            onPressed: _goHome,
+            child: Text(
+              'Skip',
+              style: GoogleFonts.sora(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: kMuted),
             ),
-            myLocationEnabled: false,
-          ),
-
-          // Top Floating Action
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 10,
-            right: 16,
-            child: TextButton(
-              onPressed: () =>
-                  Navigator.of(context).popUntil((route) => route.isFirst),
-              style: TextButton.styleFrom(
-                backgroundColor: kWhite,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              ),
-              child: Text(
-                'Skip',
-                style: GoogleFonts.sora(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: kMuted),
-              ),
-            ),
-          ),
-
-          // Draggable Sheet
-          DraggableScrollableSheet(
-            initialChildSize: 0.5,
-            minChildSize: 0.25,
-            maxChildSize: 0.85,
-            snap: true,
-            snapSizes: const [0.25, 0.5, 0.85],
-            builder: (sheetCtx, scrollController) {
-              return Container(
-                decoration: const BoxDecoration(
-                  color: kWhite,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 16,
-                      offset: Offset(0, -4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    // Handle pull bar
-                    Padding(
-                      padding: const EdgeInsets.only(top: 10, bottom: 4),
-                      child: Center(
-                        child: Container(
-                          width: 38,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE4E7EC),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Title
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Text(
-                        'Review Rider',
-                        style: GoogleFonts.sora(
-                          color: kDark,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                    const Divider(height: 1),
-
-                    // Scrollable content
-                    Expanded(
-                      child: ListView(
-                        controller: scrollController,
-                        physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.all(20),
-                        children: [
-                          Center(
-                            child: Container(
-                              width: 76,
-                              height: 76,
-                              decoration: BoxDecoration(
-                                color: kOrangeLight,
-                                shape: BoxShape.circle,
-                                image: widget.trip.riderPhotoUrl.isNotEmpty
-                                    ? DecorationImage(
-                                        image: CachedNetworkImageProvider(widget.trip.riderPhotoUrl),
-                                        fit: BoxFit.cover,
-                                      )
-                                    : null,
-                              ),
-                              child: widget.trip.riderPhotoUrl.isEmpty
-                                  ? const Icon(Icons.person_rounded,
-                                      color: kOrange, size: 42)
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          Text(widget.trip.riderName,
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.sora(
-                                  fontSize: 22, fontWeight: FontWeight.w900, color: kDark)),
-                          const SizedBox(height: 6),
-                          Center(
-                            child: Text('Trip ${widget.trip.tripCode} completed',
-                                style: GoogleFonts.sora(fontSize: 13, color: kMuted)),
-                          ),
-                          const SizedBox(height: 28),
-                          Center(
-                            child: Text('How was this rider?',
-                                style: GoogleFonts.sora(
-                                    fontSize: 16, fontWeight: FontWeight.w800, color: kDark)),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(
-                              5,
-                              (i) => IconButton(
-                                onPressed: _submitting
-                                    ? null
-                                    : () => setState(() => _score = i + 1),
-                                icon: Icon(
-                                  i < _score
-                                      ? Icons.star_rounded
-                                      : Icons.star_border_rounded,
-                                  color: kOrange,
-                                  size: 40,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text('Quick review',
-                                style: GoogleFonts.sora(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: kDark)),
-                          ),
-                          const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: _quickComments.map((text) {
-                              final selected = _commentController.text == text;
-                              return ChoiceChip(
-                                label: Text(text),
-                                selected: selected,
-                                selectedColor: kOrangeLight,
-                                onSelected: _submitting
-                                    ? null
-                                    : (_) => setState(() {
-                                          _commentController.text = text;
-                                        }),
-                                labelStyle: GoogleFonts.sora(
-                                  fontSize: 12,
-                                  color: selected ? kOrange : kDark,
-                                  fontWeight:
-                                      selected ? FontWeight.w800 : FontWeight.w500,
-                                ),
-                                side: BorderSide(
-                                    color: selected ? kOrange : kGray2, width: 1),
-                              );
-                            }).toList(),
-                          ),
-                          const SizedBox(height: 16),
-                          TextField(
-                            controller: _commentController,
-                            enabled: !_submitting,
-                            minLines: 3,
-                            maxLines: 4,
-                            decoration: InputDecoration(
-                              hintText: 'Write your own comment',
-                              filled: true,
-                              fillColor: kGray,
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide.none),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _submitting ? null : _submitReview,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: kOrange,
-                                foregroundColor: kWhite,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16)),
-                              ),
-                              child: Text(_submitting ? 'Submitting...' : 'Submit Review',
-                                  style: GoogleFonts.sora(
-                                      fontSize: 15, fontWeight: FontWeight.w800)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
           ),
         ],
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 76,
+                height: 76,
+                decoration: BoxDecoration(
+                  color: kOrangeLight,
+                  shape: BoxShape.circle,
+                  image: widget.trip.riderPhotoUrl.isNotEmpty
+                      ? DecorationImage(
+                          image: CachedNetworkImageProvider(widget.trip.riderPhotoUrl),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: widget.trip.riderPhotoUrl.isEmpty
+                    ? const Icon(Icons.person_rounded,
+                        color: kOrange, size: 42)
+                    : null,
+              ),
+              const SizedBox(height: 14),
+              Text(widget.trip.riderName,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.sora(
+                      fontSize: 22, fontWeight: FontWeight.w900, color: kDark)),
+              const SizedBox(height: 6),
+              Text('Trip ${widget.trip.tripCode} completed',
+                  style: GoogleFonts.sora(fontSize: 13, color: kMuted)),
+              const SizedBox(height: 28),
+              Text('How was this rider?',
+                  style: GoogleFonts.sora(
+                      fontSize: 16, fontWeight: FontWeight.w800, color: kDark)),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  5,
+                  (i) => IconButton(
+                    onPressed: _submitting
+                        ? null
+                        : () => setState(() => _score = i + 1),
+                    icon: Icon(
+                      i < _score
+                          ? Icons.star_rounded
+                          : Icons.star_border_rounded,
+                      color: kOrange,
+                      size: 40,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Quick review',
+                    style: GoogleFonts.sora(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: kDark)),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _quickComments.map((text) {
+                  final selected = _commentController.text == text;
+                  return ChoiceChip(
+                    label: Text(text),
+                    selected: selected,
+                    selectedColor: kOrangeLight,
+                    onSelected: _submitting
+                        ? null
+                        : (_) => setState(() {
+                              _commentController.text = text;
+                            }),
+                    labelStyle: GoogleFonts.sora(
+                      fontSize: 12,
+                      color: selected ? kOrange : kDark,
+                      fontWeight:
+                          selected ? FontWeight.w800 : FontWeight.w500,
+                    ),
+                    side: BorderSide(
+                        color: selected ? kOrange : kGray2, width: 1),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _commentController,
+                enabled: !_submitting,
+                minLines: 3,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  hintText: 'Write your own comment',
+                  filled: true,
+                  fillColor: kGray,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _submitting ? null : _submitReview,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kOrange,
+                    foregroundColor: kWhite,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: Text(_submitting ? 'Submitting...' : 'Submit Review',
+                      style: GoogleFonts.sora(
+                          fontSize: 15, fontWeight: FontWeight.w800)),
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
       ),
     );
   }

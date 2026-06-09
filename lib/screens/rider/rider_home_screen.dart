@@ -2044,333 +2044,252 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text('Trip Receipt',
+            style: TextStyle(
+                color: Color(0xFF1A1A2E), fontWeight: FontWeight.w800)),
+        leading: IconButton(
+            icon: const Icon(Icons.close, color: Color(0xFF1A1A2E)),
+            onPressed: _goHome),
+        actions: [
+          TextButton(
+            onPressed: _goHome,
+            child: const Text(
+              'Skip',
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF888888)),
+            ),
+          ),
+        ],
+      ),
       body: _loading
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFFFF6B35)))
           : _receipt == null
               ? const Center(child: Text('Receipt not available'))
-              : Stack(
-                  children: [
-                    // Background Map showing the drop coordinates
-                    MapplsMap(
-                      initialCameraPosition: CameraPosition(
-                        target: LatLng(
-                          double.tryParse(_receipt?['drop_latitude']?.toString() ?? 
-                                         _receipt?['drop_lat']?.toString() ?? '') ?? 22.5726,
-                          double.tryParse(_receipt?['drop_longitude']?.toString() ?? 
-                                         _receipt?['drop_lng']?.toString() ?? '') ?? 88.3639,
-                        ),
-                        zoom: 14.0,
-                      ),
-                      myLocationEnabled: false,
-                    ),
-
-                    // Top Floating Actions
-                    Positioned(
-                      top: MediaQuery.of(context).padding.top + 10,
-                      left: 16,
-                      child: CircleAvatar(
-                        backgroundColor: Colors.white,
-                        radius: 20,
-                        child: IconButton(
-                          icon: const Icon(Icons.close, color: Color(0xFF1A1A2E), size: 18),
-                          onPressed: _goHome,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: MediaQuery.of(context).padding.top + 10,
-                      right: 16,
-                      child: TextButton(
-                        onPressed: _goHome,
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        ),
-                        child: const Text(
-                          'Skip',
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF888888)),
-                        ),
-                      ),
-                    ),
-
-                    // Draggable Sheet
-                    DraggableScrollableSheet(
-                      initialChildSize: 0.5,
-                      minChildSize: 0.25,
-                      maxChildSize: 0.85,
-                      snap: true,
-                      snapSizes: const [0.25, 0.5, 0.85],
-                      builder: (sheetCtx, scrollController) {
-                        return Container(
+              : SafeArea(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 70,
+                          height: 70,
                           decoration: const BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 16,
-                                offset: Offset(0, -4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
+                              color: Color(0xFFF0FFF4), shape: BoxShape.circle),
+                          child: const Center(
+                              child: Text('✅', style: TextStyle(fontSize: 36))),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text('Trip Completed!',
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF1A1A2E))),
+                        Text(_receipt!['trip_code'] ?? '',
+                            style:
+                                TextStyle(fontSize: 13, color: Colors.grey[600])),
+                        const SizedBox(height: 24),
+                        _receiptRow('📍 Pickup', _receipt!['pickup_address'] ?? ''),
+                        _receiptRow('🏁 Drop', _receipt!['drop_address'] ?? ''),
+                        const Divider(height: 24),
+                        _receiptRow(
+                            'Distance', '${_receipt!['distance_km'] ?? 0} km'),
+                        _receiptRow(
+                            'Duration', '${_receipt!['duration_min'] ?? 0} min'),
+                        _receiptRow(
+                            'Vehicle',
+                            _receipt!['vehicle_type']
+                                    ?.toString()
+                                    .replaceAll('_', ' ')
+                                    .toUpperCase() ??
+                                ''),
+                        const Divider(height: 24),
+                        _receiptRow('Base Fare', '₹${_receipt!['base_fare'] ?? 0}'),
+                        if ((_receipt!['surge_multiplier'] ?? 1.0) > 1.0)
+                          _receiptRow(
+                              'Surge (${_receipt!['surge_multiplier']}x)', ''),
+                        if ((_receipt!['bonus_amount'] ?? 0) > 0)
+                          _receiptRow(
+                              'Bonus Added', '+₹${_receipt!['bonus_amount']}'),
+                        if ((_receipt!['promo_discount'] ?? 0) > 0)
+                          _receiptRow('Promo (${_receipt!['promo_code']})',
+                              '-₹${_receipt!['promo_discount']}',
+                              color: Colors.green),
+                        if ((_receipt!['kcoin_discount'] ?? 0) > 0)
+                          _receiptRow('K Coins Used (${_receipt!['kcoin_used']})',
+                              '-₹${_receipt!['kcoin_discount']}',
+                              color: Colors.green),
+                        const Divider(height: 24),
+                        Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              // Handle pull bar
-                              Padding(
-                                padding: const EdgeInsets.only(top: 10, bottom: 4),
-                                child: Center(
-                                  child: Container(
-                                    width: 38,
-                                    height: 4,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFE4E7EC),
-                                      borderRadius: BorderRadius.circular(2),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              // Title
-                              const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                                child: Text(
-                                  'Trip Receipt',
+                              const Text('Total Paid',
                                   style: TextStyle(
-                                    fontSize: 18,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF1A1A2E))),
+                              Text('₹${_receipt!['actual_fare'] ?? 0}',
+                                  style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFFFF6B35))),
+                            ]),
+                        const SizedBox(height: 8),
+                        _receiptRow(
+                            'Payment Method',
+                            _receipt!['payment_method']?.toString().toUpperCase() ??
+                                ''),
+                        const SizedBox(height: 24),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFF5F5F5),
+                              borderRadius: BorderRadius.circular(14)),
+                          child: Row(children: [
+                            CircleAvatar(
+                                radius: 24,
+                                backgroundColor: const Color(0xFFFFF3E0),
+                                child: Text(
+                                    _receipt!['driver']?['name']
+                                            ?.toString()
+                                            .substring(0, 1) ??
+                                        'D',
+                                    style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFFFF6B35)))),
+                            const SizedBox(width: 12),
+                            Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(_receipt!['driver']?['name'] ?? 'Driver',
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700)),
+                                  Text(
+                                      _receipt!['driver']?['vehicle_type']
+                                              ?.toString()
+                                              .replaceAll('_', ' ') ??
+                                          '',
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.grey[600])),
+                                ]),
+                          ]),
+                        ),
+                        const SizedBox(height: 24),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFFFF8E1),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: const Color(0xFFFFD180))),
+                          child: Column(children: [
+                            const Text('Rate your driver',
+                                style: TextStyle(
+                                    fontSize: 15,
                                     fontWeight: FontWeight.w800,
-                                    color: Color(0xFF1A1A2E),
+                                    color: Color(0xFF1A1A2E))),
+                            const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(
+                                5,
+                                (i) => IconButton(
+                                  onPressed: _rated
+                                      ? null
+                                      : () => setState(() => _rating = i + 1),
+                                  icon: Icon(
+                                    i < _rating
+                                        ? Icons.star_rounded
+                                        : Icons.star_border_rounded,
+                                    color: const Color(0xFFFF6B35),
+                                    size: 34,
                                   ),
                                 ),
                               ),
-                              const Divider(height: 1),
-                              
-                              // Scrollable content
-                              Expanded(
-                                child: ListView(
-                                  controller: scrollController,
-                                  physics: const BouncingScrollPhysics(),
-                                  padding: const EdgeInsets.all(20),
-                                  children: [
-                                    Container(
-                                      width: 70,
-                                      height: 70,
-                                      decoration: const BoxDecoration(
-                                          color: Color(0xFFF0FFF4), shape: BoxShape.circle),
-                                      child: const Center(
-                                          child: Text('✅', style: TextStyle(fontSize: 36))),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    const Center(
-                                      child: Text('Trip Completed!',
-                                          style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w800,
-                                              color: Color(0xFF1A1A2E))),
-                                    ),
-                                    Center(
-                                      child: Text(_receipt!['trip_code'] ?? '',
-                                          style: TextStyle(fontSize: 13, color: Colors.grey[600])),
-                                    ),
-                                    const SizedBox(height: 24),
-                                    _receiptRow('📍 Pickup', _receipt!['pickup_address'] ?? ''),
-                                    _receiptRow('🏁 Drop', _receipt!['drop_address'] ?? ''),
-                                    const Divider(height: 24),
-                                    _receiptRow('Distance', '${_receipt!['distance_km'] ?? 0} km'),
-                                    _receiptRow('Duration', '${_receipt!['duration_min'] ?? 0} min'),
-                                    _receiptRow(
-                                        'Vehicle',
-                                        _receipt!['vehicle_type']
-                                                ?.toString()
-                                                .replaceAll('_', ' ')
-                                                .toUpperCase() ??
-                                            ''),
-                                    const Divider(height: 24),
-                                    _receiptRow('Base Fare', '₹${_receipt!['base_fare'] ?? 0}'),
-                                    if ((_receipt!['surge_multiplier'] ?? 1.0) > 1.0)
-                                      _receiptRow('Surge (${_receipt!['surge_multiplier']}x)', ''),
-                                    if ((_receipt!['bonus_amount'] ?? 0) > 0)
-                                      _receiptRow('Bonus Added', '+₹${_receipt!['bonus_amount']}'),
-                                    if ((_receipt!['promo_discount'] ?? 0) > 0)
-                                      _receiptRow('Promo (${_receipt!['promo_code']})',
-                                          '-₹${_receipt!['promo_discount']}',
-                                          color: Colors.green),
-                                    if ((_receipt!['kcoin_discount'] ?? 0) > 0)
-                                      _receiptRow('K Coins Used (${_receipt!['kcoin_used']})',
-                                          '-₹${_receipt!['kcoin_discount']}',
-                                          color: Colors.green),
-                                    const Divider(height: 24),
-                                    Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          const Text('Total Paid',
-                                              style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: Color(0xFF1A1A2E))),
-                                          Text('₹${_receipt!['actual_fare'] ?? 0}',
-                                              style: const TextStyle(
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: Color(0xFFFF6B35))),
-                                        ]),
-                                    const SizedBox(height: 8),
-                                    _receiptRow(
-                                        'Payment Method',
-                                        _receipt!['payment_method']?.toString().toUpperCase() ??
-                                            ''),
-                                    const SizedBox(height: 24),
-                                    Container(
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                          color: const Color(0xFFF5F5F5),
-                                          borderRadius: BorderRadius.circular(14)),
-                                      child: Row(children: [
-                                        CircleAvatar(
-                                            radius: 24,
-                                            backgroundColor: const Color(0xFFFFF3E0),
-                                            child: Text(
-                                                _receipt!['driver']?['name']
-                                                        ?.toString()
-                                                        .substring(0, 1) ??
-                                                    'D',
-                                                style: const TextStyle(
-                                                    fontSize: 20,
-                                                    fontWeight: FontWeight.w800,
-                                                    color: Color(0xFFFF6B35)))),
-                                        const SizedBox(width: 12),
-                                        Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(_receipt!['driver']?['name'] ?? 'Driver',
-                                                  style: const TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight: FontWeight.w700)),
-                                              Text(
-                                                  _receipt!['driver']?['vehicle_type']
-                                                          ?.toString()
-                                                          .replaceAll('_', ' ') ??
-                                                      '',
-                                                  style: TextStyle(
-                                                      fontSize: 12, color: Colors.grey[600])),
-                                            ]),
-                                      ]),
-                                    ),
-                                    const SizedBox(height: 24),
-                                    Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                          color: const Color(0xFFFFF8E1),
-                                          borderRadius: BorderRadius.circular(14),
-                                          border: Border.all(color: const Color(0xFFFFD180))),
-                                      child: Column(children: [
-                                        const Text('Rate your driver',
-                                            style: TextStyle(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.w800,
-                                                color: Color(0xFF1A1A2E))),
-                                        const SizedBox(height: 10),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: List.generate(
-                                            5,
-                                            (i) => IconButton(
-                                              onPressed: _rated
-                                                  ? null
-                                                  : () => setState(() => _rating = i + 1),
-                                              icon: Icon(
-                                                i < _rating
-                                                    ? Icons.star_rounded
-                                                    : Icons.star_border_rounded,
-                                                color: const Color(0xFFFF6B35),
-                                                size: 34,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Wrap(
-                                          spacing: 8,
-                                          runSpacing: 8,
-                                          alignment: WrapAlignment.center,
-                                          children: _quickComments.map((text) {
-                                            final selected = _ratingCommentCtrl.text == text;
-                                            return ChoiceChip(
-                                              label: Text(text),
-                                              selected: selected,
-                                              selectedColor: const Color(0xFFFFE0B2),
-                                              onSelected: _rated
-                                                  ? null
-                                                  : (_) => setState(() {
-                                                        _ratingCommentCtrl.text = text;
-                                                      }),
-                                              labelStyle: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: selected
-                                                    ? FontWeight.w800
-                                                    : FontWeight.w500,
-                                                color: selected
-                                                    ? const Color(0xFFFF6B35)
-                                                    : const Color(0xFF1A1A2E),
-                                              ),
-                                              side: BorderSide(
-                                                color: selected
-                                                    ? const Color(0xFFFF6B35)
-                                                    : const Color(0xFFE0E0E0),
-                                              ),
-                                            );
-                                          }).toList(),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        TextField(
-                                          controller: _ratingCommentCtrl,
-                                          enabled: !_rated,
-                                          minLines: 2,
-                                          maxLines: 3,
-                                          decoration: InputDecoration(
-                                            hintText: 'Optional comment',
-                                            filled: true,
-                                            fillColor: Colors.white,
-                                            border: OutlineInputBorder(
-                                                borderRadius: BorderRadius.circular(12),
-                                                borderSide: BorderSide.none),
-                                          ),
-                                        ),
-                                      ]),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    SizedBox(
-                                        width: double.infinity,
-                                        child: ElevatedButton(
-                                          onPressed: _submittingRating ? null : _submitRating,
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: const Color(0xFFFF6B35),
-                                            padding: const EdgeInsets.symmetric(vertical: 14),
-                                            shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(14)),
-                                          ),
-                                          child: Text(
-                                              _submittingRating
-                                                  ? 'Submitting...'
-                                                  : 'Submit Review',
-                                              style: const TextStyle(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: Colors.white)),
-                                        )),
-                                  ],
-                                ),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              alignment: WrapAlignment.center,
+                              children: _quickComments.map((text) {
+                                final selected = _ratingCommentCtrl.text == text;
+                                return ChoiceChip(
+                                  label: Text(text),
+                                  selected: selected,
+                                  selectedColor: const Color(0xFFFFE0B2),
+                                  onSelected: _rated
+                                      ? null
+                                      : (_) => setState(() {
+                                            _ratingCommentCtrl.text = text;
+                                          }),
+                                  labelStyle: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: selected
+                                        ? FontWeight.w800
+                                        : FontWeight.w500,
+                                    color: selected
+                                        ? const Color(0xFFFF6B35)
+                                        : const Color(0xFF1A1A2E),
+                                  ),
+                                  side: BorderSide(
+                                    color: selected
+                                        ? const Color(0xFFFF6B35)
+                                        : const Color(0xFFE0E0E0),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(height: 12),
+                            TextField(
+                              controller: _ratingCommentCtrl,
+                              enabled: !_rated,
+                              minLines: 2,
+                              maxLines: 3,
+                              decoration: InputDecoration(
+                                hintText: 'Optional comment',
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none),
                               ),
-                            ],
-                          ),
-                        );
-                      },
+                            ),
+                          ]),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _submittingRating ? null : _submitRating,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFFF6B35),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14)),
+                              ),
+                              child: Text(
+                                  _submittingRating
+                                      ? 'Submitting...'
+                                      : 'Submit Review',
+                                  style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white)),
+                            )),
+                        const SizedBox(height: 40), // Extra bottom padding for scroll space
+                      ],
                     ),
-                  ],
+                  ),
                 ),
     );
   }

@@ -2296,8 +2296,8 @@ class _WhereToScreenState extends State<WhereToScreen>
       return false; // block pop
     }
     if (_searching) {
-      await _cancelCurrentRide(closeAfterCancel: true);
-      return true;
+      final success = await _cancelCurrentRide(closeAfterCancel: true);
+      return success;
     }
     widget.onBack();
     return true;
@@ -4002,7 +4002,7 @@ class _WhereToScreenState extends State<WhereToScreen>
         });
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
-                "Trip cancelled by driver: ${data["reason"] ?? 'No reason given'}"),
+                "Driver cancelled this ride for: ${data["reason"] ?? 'No reason given'}"),
             backgroundColor: Colors.red));
       } else if (type == "chat_message") {
         if (_tripId != null && !_isChatScreenOpen) {
@@ -4088,16 +4088,93 @@ class _WhereToScreenState extends State<WhereToScreen>
     );
   }
 
-  Future<void> _cancelCurrentRide({bool closeAfterCancel = false}) async {
+  Future<String?> _askRiderCancelReason() async {
+    final controller = TextEditingController();
+    final reason = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) {
+          final isEnabled = controller.text.trim().length >= 4;
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text('Cancel Ride',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Please provide a reason for cancelling your ride request.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF6B6B6B)),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  minLines: 2,
+                  maxLines: 3,
+                  onChanged: (val) {
+                    setState(() {});
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Reason for cancellation (required)',
+                    filled: true,
+                    fillColor: const Color(0xFFF5F5F5),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Back', style: TextStyle(color: Color(0xFF6B6B6B))),
+              ),
+              ElevatedButton(
+                onPressed: isEnabled
+                    ? () {
+                        final value = controller.text.trim();
+                        Navigator.pop(dialogContext, value);
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFD32F2F),
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: const Color(0xFFD32F2F).withOpacity(0.3),
+                  disabledForegroundColor: Colors.white.withOpacity(0.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('Cancel Ride',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    controller.dispose();
+    return reason;
+  }
+
+  Future<bool> _cancelCurrentRide({bool closeAfterCancel = false, String? reason}) async {
     final tripId = _tripId;
+    String finalReason = reason ?? '';
+    if (finalReason.isEmpty) {
+      final input = await _askRiderCancelReason();
+      if (input == null) return false;
+      finalReason = input;
+    }
     try {
       if (tripId != null) {
-        final res = await ApiService.cancelTrip(tripId, 'Cancelled by rider');
+        final res = await ApiService.cancelTrip(tripId, finalReason);
         if (res['success'] != true) {
           throw Exception(res['error'] ?? 'Cancel failed');
         }
       }
-      if (!mounted) return;
+      if (!mounted) return true;
       RiderSocketService.disconnect();
       _stopSearchPolling();
       setState(() {
@@ -4122,11 +4199,13 @@ class _WhereToScreenState extends State<WhereToScreen>
           if (mounted) widget.onBack();
         });
       }
+      return true;
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) return false;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to cancel ride')),
       );
+      return false;
     }
   }
 
@@ -4166,8 +4245,8 @@ class _WhereToScreenState extends State<WhereToScreen>
           return false;
         }
         if (_searching) {
-          await _cancelCurrentRide(closeAfterCancel: true);
-          return false;
+          final success = await _cancelCurrentRide(closeAfterCancel: true);
+          return success;
         }
         widget.onBack();
         return false;
@@ -4472,7 +4551,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton(
-                      onPressed: _cancelCurrentRide,
+                      onPressed: () => _cancelCurrentRide(),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red,
                         side: BorderSide(color: Colors.red.shade200),
@@ -6420,31 +6499,7 @@ class _WhereToScreenState extends State<WhereToScreen>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GestureDetector(
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Cancel Ride?'),
-              content: const Text('Are you sure you want to cancel this ride request?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('No'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    Navigator.pop(ctx);
-                    await _cancelCurrentRide(closeAfterCancel: true);
-                  },
-                  child: const Text(
-                    'Yes, Cancel',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+        onTap: () => _cancelCurrentRide(closeAfterCancel: true),
         child: Container(
           width: double.infinity,
           height: 56,

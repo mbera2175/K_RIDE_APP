@@ -2618,6 +2618,22 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
           _openRiderChat();
         }
       }
+
+      if (data['type'] == 'trip_cancelled') {
+        _clearRoute();
+        if (_isChatOpen) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
+        if (mounted) {
+          setState(() {
+            _activeTrip = null;
+          });
+        }
+        _showSnack(
+          'Rider cancelled this ride for: ${data['reason'] ?? 'No reason given'}',
+          isError: true,
+        );
+      }
     };
 
     if (DriverSocketService.isConnected) return;
@@ -2979,46 +2995,58 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
   }
 
   Future<String?> _askCancelReason() async {
-    final controller = TextEditingController(text: 'Driver cancelled');
+    final controller = TextEditingController();
     final reason = await showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Cancel Ride',
-            style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w800)),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          minLines: 2,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: 'Reason for cancellation',
-            filled: true,
-            fillColor: kGray,
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide.none),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text('Back', style: GoogleFonts.sora(color: kMuted)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final value = controller.text.trim();
-              Navigator.pop(
-                  dialogContext, value.isEmpty ? 'Driver cancelled' : value);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kError,
-              foregroundColor: kWhite,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) {
+          final isEnabled = controller.text.trim().length >= 4;
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Text('Cancel Ride',
+                style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w800)),
+            content: TextField(
+              controller: controller,
+              autofocus: true,
+              minLines: 2,
+              maxLines: 3,
+              onChanged: (val) {
+                setState(() {});
+              },
+              decoration: InputDecoration(
+                hintText: 'Reason for cancellation (required)',
+                filled: true,
+                fillColor: kGray,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none),
+              ),
             ),
-            child: Text('Cancel Ride',
-                style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text('Back', style: GoogleFonts.sora(color: kMuted)),
+              ),
+              ElevatedButton(
+                onPressed: isEnabled
+                    ? () {
+                        final value = controller.text.trim();
+                        Navigator.pop(dialogContext, value);
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kError,
+                  foregroundColor: kWhite,
+                  disabledBackgroundColor: kError.withOpacity(0.3),
+                  disabledForegroundColor: kWhite.withOpacity(0.5),
+                ),
+                child: Text('Cancel Ride',
+                    style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
+              ),
+            ],
+          );
+        },
       ),
     );
     controller.dispose();

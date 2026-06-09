@@ -2961,6 +2961,7 @@ class _WhereToScreenState extends State<WhereToScreen>
             _drawRiderTripRoute();
           }
           _searchPollTimer?.cancel();
+          _startTrackingPolling();
         }
       } catch (e) {
         debugPrint('Search poll error: $e');
@@ -3027,10 +3028,16 @@ class _WhereToScreenState extends State<WhereToScreen>
             final driver = trip['driver'] as Map<String, dynamic>?;
             final dLat = (driver?['current_lat'] as num?)?.toDouble();
             final dLng = (driver?['current_lng'] as num?)?.toDouble();
+            final otpCode = _readTripOtp(trip);
             if (mounted) {
               final oldStatus = _normalizeTripStatus(_tripStatus);
               setState(() {
                 _tripStatus = status;
+                if (status == 'started' || status == 'completed' || status == 'cancelled') {
+                  _otpCode = null;
+                } else if (otpCode != null) {
+                  _otpCode = otpCode;
+                }
                 if (driver != null) {
                   _assignedDriver = driver;
                 }

@@ -4323,197 +4323,231 @@ class _WhereToScreenState extends State<WhereToScreen>
 
 
 
-          // Bottom Sheet Panel
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: EdgeInsets.fromLTRB(
-                24,
-                16,
-                24,
-                MediaQuery.of(context).padding.bottom > 0
-                    ? MediaQuery.of(context).padding.bottom
-                    : 12,
-              ),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 24,
-                    offset: Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Handle pull bar
-                  Container(
-                    width: 38,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE4E7EC),
-                      borderRadius: BorderRadius.circular(2),
+          // Bottom Sheet Panel - Draggable
+          DraggableScrollableSheet(
+            initialChildSize: 0.32,
+            minChildSize: 0.15,
+            maxChildSize: 0.60,
+            snap: true,
+            snapSizes: const [0.15, 0.32, 0.60],
+            builder: (sheetCtx, scrollController) {
+              return Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 24,
+                      offset: Offset(0, -4),
                     ),
-                  ),
-                  const SizedBox(height: 18),
-
-                  // Header with Timer Row
-                  Row(
-                    children: [
-                      // Circular Progress / Pulse container
-                      Stack(
-                        alignment: Alignment.center,
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    // Handle pull bar
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10, bottom: 4),
+                      child: Center(
+                        child: Container(
+                          width: 38,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE4E7EC),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Scrollable content
+                    Expanded(
+                      child: ListView(
+                        controller: scrollController,
+                        physics: const BouncingScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(
+                          24, 8, 24,
+                          MediaQuery.of(context).padding.bottom > 0
+                              ? MediaQuery.of(context).padding.bottom
+                              : 12,
+                        ),
                         children: [
-                          SizedBox(
-                            width: 52,
-                            height: 52,
-                            child: CircularProgressIndicator(
-                              value: _searchSecondsLeft / _initialSearchDuration.toDouble(),
-                              strokeWidth: 4.5,
-                              color: kOrange,
-                              backgroundColor: const Color(0xFFF2F4F7),
-                            ),
-                          ),
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFFFF3E0),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                widget.service.icon,
-                                style: const TextStyle(fontSize: 22),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 16),
-                      // Text & Timer Details
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              isAmbulance
-                                  ? 'Finding your ambulance...'
-                                  : 'Finding your driver...',
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                                color: kDark,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.access_time_filled_rounded,
-                                  size: 14,
-                                  color: kOrange,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '$timeStr remaining',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: kOrange,
+                          // Header with Timer Row
+                          Row(
+                            children: [
+                              // Circular Progress / Pulse container
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 52,
+                                    height: 52,
+                                    child: CircularProgressIndicator(
+                                      value: _searchSecondsLeft / _initialSearchDuration.toDouble(),
+                                      strokeWidth: 4.5,
+                                      color: kOrange,
+                                      backgroundColor: const Color(0xFFF2F4F7),
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const Divider(color: Color(0xFFF2F4F7), height: 1),
-                  const SizedBox(height: 16),
-
-                  if (!isAmbulance) ...[
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'No one accepting? Add a bonus!',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: kDark,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [10, 20, 30, 40, 50, 100].map((amount) {
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: GestureDetector(
-                              onTap: () async {
-                                if (_tripId == null) return;
-                                final oldBonusAmount = _bonusAmount;
-                                final oldSearchSecondsLeft = _searchSecondsLeft;
-                                final startTime = DateTime.now();
-                                setState(() {
-                                  _bonusAmount += amount;
-                                });
-                                _startSearchingTimer(seconds: 90);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('+₹$amount bonus added!'),
-                                    duration: const Duration(seconds: 2),
-                                  ),
-                                );
-                                try {
-                                  final res = await ApiService.addBonus(
-                                    _tripId!,
-                                    amount.toDouble(),
-                                  );
-                                  if (res['success'] != true) {
-                                    throw Exception(res['error'] ?? 'Server error');
-                                  }
-                                } catch (e) {
-                                  if (mounted && _searching && _tripId != null) {
-                                    final elapsed = DateTime.now().difference(startTime).inSeconds;
-                                    setState(() {
-                                      _bonusAmount = oldBonusAmount;
-                                      final revertedSeconds = oldSearchSecondsLeft - elapsed;
-                                      _searchSecondsLeft = revertedSeconds > 0 ? revertedSeconds : 0;
-                                    });
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Failed to add bonus: ${e.toString().replaceAll('Exception: ', '').replaceAll('Exception:', '').trim()}'),
-                                        backgroundColor: Colors.red,
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFFFF3E0),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        widget.service.icon,
+                                        style: const TextStyle(fontSize: 22),
                                       ),
-                                    );
-                                  }
-                                }
-                              },
-                              child: Container(
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 16),
+                              // Text & Timer Details
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      isAmbulance
+                                          ? 'Finding your ambulance...'
+                                          : 'Finding your driver...',
+                                      style: const TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                        color: kDark,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.access_time_filled_rounded,
+                                          size: 14,
+                                          color: kOrange,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '$timeStr remaining',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w700,
+                                            color: kOrange,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          const Divider(color: Color(0xFFF2F4F7), height: 1),
+                          const SizedBox(height: 16),
+
+                          if (!isAmbulance) ...[
+                            const Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'No one accepting? Add a bonus!',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: kDark,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [10, 20, 30, 40, 50, 100].map((amount) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        if (_tripId == null) return;
+                                        final oldBonusAmount = _bonusAmount;
+                                        final oldSearchSecondsLeft = _searchSecondsLeft;
+                                        final startTime = DateTime.now();
+                                        setState(() {
+                                          _bonusAmount += amount;
+                                        });
+                                        _startSearchingTimer(seconds: 90);
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('+₹$amount bonus added!'),
+                                            duration: const Duration(seconds: 2),
+                                          ),
+                                        );
+                                        try {
+                                          final res = await ApiService.addBonus(
+                                            _tripId!,
+                                            amount.toDouble(),
+                                          );
+                                          if (res['success'] != true) {
+                                            throw Exception(res['error'] ?? 'Server error');
+                                          }
+                                        } catch (e) {
+                                          if (mounted && _searching && _tripId != null) {
+                                            final elapsed = DateTime.now().difference(startTime).inSeconds;
+                                            setState(() {
+                                              _bonusAmount = oldBonusAmount;
+                                              final revertedSeconds = oldSearchSecondsLeft - elapsed;
+                                              _searchSecondsLeft = revertedSeconds > 0 ? revertedSeconds : 0;
+                                            });
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text('Failed to add bonus: ${e.toString().replaceAll('Exception: ', '').replaceAll('Exception:', '').trim()}'),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFFFF6F3),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: kOrange.withOpacity(0.4),
+                                            width: 1.2,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '+₹$amount',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: kOrange,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                            if (_bonusAmount > 0) ...[
+                              const SizedBox(height: 12),
+                              Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
+                                  horizontal: 16,
                                   vertical: 8,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFFF6F3),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: kOrange.withOpacity(0.4),
-                                    width: 1.2,
-                                  ),
+                                  color: const Color(0xFFFFF3E0),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
-                                  '+₹$amount',
+                                  'Total Fare: ₹${_estimatedFare.toStringAsFixed(0)} + ₹${_bonusAmount.toStringAsFixed(0)} = ₹${(_estimatedFare + _bonusAmount).toStringAsFixed(0)}',
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
@@ -4521,61 +4555,40 @@ class _WhereToScreenState extends State<WhereToScreen>
                                   ),
                                 ),
                               ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    if (_bonusAmount > 0) ...[
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF3E0),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          'Total Fare: ₹${_estimatedFare.toStringAsFixed(0)} + ₹${_bonusAmount.toStringAsFixed(0)} = ₹${(_estimatedFare + _bonusAmount).toStringAsFixed(0)}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: kOrange,
-                          ),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 20),
-                  ],
+                            ],
+                            const SizedBox(height: 20),
+                          ],
 
-                  // Cancel Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () => _cancelCurrentRide(),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: BorderSide(color: Colors.red.shade200),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        backgroundColor: const Color(0xFFFFF5F5),
-                      ),
-                      child: const Text(
-                        'Cancel Search',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
+                          // Cancel Button
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: () => _cancelCurrentRide(),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: BorderSide(color: Colors.red.shade200),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                backgroundColor: const Color(0xFFFFF5F5),
+                              ),
+                              child: const Text(
+                                'Cancel Search',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                  ],
+                ),
+              );
+            },
           ),
           if (_socketDisconnected) _buildReconnectionOverlay(),
         ],

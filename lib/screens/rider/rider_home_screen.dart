@@ -5931,14 +5931,17 @@ class _WhereToScreenState extends State<WhereToScreen>
           driverPhone: driverPhone,
           driverPhotoUrl: driverPhotoUrl,
           onClose: () {
-            setState(() {
-              _isChatScreenOpen = false;
-            });
             Navigator.pop(context);
           },
         ),
       ),
-    );
+    ).then((_) {
+      if (mounted) {
+        setState(() {
+          _isChatScreenOpen = false;
+        });
+      }
+    });
   }
 
   Future<void> _openNavigation(double lat, double lng) async {

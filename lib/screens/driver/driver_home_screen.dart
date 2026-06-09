@@ -2572,60 +2572,60 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
   }
 
   Future<void> _connectDriverSocket() async {
+    DriverSocketService.onMessage = (data) {
+      debugPrint('Socket message: $data');
+
+      if (data['type'] == 'kicked') {
+        DriverSocketService.disconnect();
+        AuthService.logout(forced: true);
+        _showSnack(
+          data['message'] ?? 'Logged in on another device',
+          isError: true,
+        );
+        return;
+      }
+
+      if (data['type'] == 'new_trip') {
+        final tripData = data['data'];
+
+        RideAlertService.startAlert();
+
+        if (mounted) {
+          setState(() {
+            _incomingTrip = _mapToTripData(tripData);
+          });
+        }
+
+        _triggerOverlay(tripData);
+      }
+
+      if (data['type'] == 'trip_taken') {
+        if (mounted) {
+          setState(() {
+            _incomingTrip = null;
+          });
+        }
+        FlutterOverlayWindow.closeOverlay();
+
+        _showSnack(
+          'Trip already taken',
+          isError: true,
+        );
+      }
+
+      if (data['type'] == 'chat_message') {
+        if (_activeTrip != null && !_isChatOpen) {
+          _openRiderChat();
+        }
+      }
+    };
+
     if (DriverSocketService.isConnected) return;
     try {
       await DriverSocketService.connect(
         AuthService.driverId,
         AuthService.token,
       );
-
-      DriverSocketService.onMessage = (data) {
-        debugPrint('Socket message: $data');
-
-        if (data['type'] == 'kicked') {
-          DriverSocketService.disconnect();
-          AuthService.logout(forced: true);
-          _showSnack(
-            data['message'] ?? 'Logged in on another device',
-            isError: true,
-          );
-          return;
-        }
-
-        if (data['type'] == 'new_trip') {
-          final tripData = data['data'];
-
-          RideAlertService.startAlert();
-
-          if (mounted) {
-            setState(() {
-              _incomingTrip = _mapToTripData(tripData);
-            });
-          }
-
-          _triggerOverlay(tripData);
-        }
-
-        if (data['type'] == 'trip_taken') {
-          if (mounted) {
-            setState(() {
-              _incomingTrip = null;
-            });
-          }
-          FlutterOverlayWindow.closeOverlay();
-
-          _showSnack(
-            'Trip already taken',
-            isError: true,
-          );
-        }
-
-        if (data['type'] == 'chat_message') {
-          if (_activeTrip != null && !_isChatOpen) {
-            _openRiderChat();
-          }
-        }
-      };
     } catch (e) {
       debugPrint('Driver socket connect error: $e');
     }
@@ -2860,14 +2860,17 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
           tripId: trip.id,
           riderName: trip.riderName,
           onClose: () {
-            setState(() {
-              _isChatOpen = false;
-            });
             Navigator.pop(context);
           },
         ),
       ),
-    );
+    ).then((_) {
+      if (mounted) {
+        setState(() {
+          _isChatOpen = false;
+        });
+      }
+    });
   }
 
   Future<void> _openNavigation(double lat, double lng) async {

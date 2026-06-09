@@ -5834,14 +5834,14 @@ class _WhereToScreenState extends State<WhereToScreen>
     String textTitle;
     String textSubtitle;
     if (tripStatus == 'started') {
-      textTitle = 'Arriving at destination';
-      textSubtitle = '${distanceKm.toStringAsFixed(1)} km remaining • $etaMinutes min';
+      textTitle = 'On Trip';
+      textSubtitle = 'Arriving in $etaMinutes min';
     } else if (tripStatus == 'arrived') {
       textTitle = 'Driver has arrived!';
-      textSubtitle = 'Meet the driver at your pickup point';
+      textSubtitle = 'Please meet the driver';
     } else {
-      textTitle = 'Driver is ${distanceKm.toStringAsFixed(1)} km away';
-      textSubtitle = 'Arriving in $etaMinutes min';
+      textTitle = 'Arriving in $etaMinutes min';
+      textSubtitle = 'Your driver is on the way';
     }
 
     return Padding(
@@ -5883,21 +5883,21 @@ class _WhereToScreenState extends State<WhereToScreen>
             ),
             // Live tracking pill
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: panelOrange, width: 1.5),
+                border: Border.all(color: panelOrange, width: 1.2),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: const [
-                  Icon(Icons.wifi, color: panelOrange, size: 15),
-                  SizedBox(width: 4),
+                  Icon(Icons.wifi, color: panelOrange, size: 12),
+                  SizedBox(width: 3),
                   Text(
                     'Live tracking',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 10,
                       color: panelOrange,
                       fontWeight: FontWeight.w600,
                     ),
@@ -6325,7 +6325,9 @@ class _WhereToScreenState extends State<WhereToScreen>
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
               height: 80,
               decoration: BoxDecoration(
-                color: panelCardBg,
+                color: (tripStatus == 'started' || tripStatus == 'completed')
+                    ? const Color(0xFFE8F5E9)
+                    : const Color(0xFFFFF0EB),
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
@@ -6362,7 +6364,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                 height: 80,
                 decoration: BoxDecoration(
-                  color: panelCardBg,
+                  color: const Color(0xFFD32F2F),
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
@@ -6377,13 +6379,13 @@ class _WhereToScreenState extends State<WhereToScreen>
                   children: const [
                     Row(
                       children: [
-                        Icon(Icons.wifi_tethering_rounded, color: panelOrange, size: 16),
+                        Icon(Icons.wifi_tethering_rounded, color: Colors.white, size: 16),
                         SizedBox(width: 6),
                         Text(
                           'SOS Help',
                           style: TextStyle(
                             fontSize: 12,
-                            color: panelTextDark,
+                            color: Colors.white,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -6395,7 +6397,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: panelOrange,
+                        color: Colors.white,
                         height: 1.2,
                       ),
                     ),

@@ -5245,42 +5245,43 @@ class _WhereToScreenState extends State<WhereToScreen>
             myLocationEnabled: true,
           ),
         ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.52,
-            ),
-            decoration: const BoxDecoration(
-                color: kWhite,
-                borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(24)),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 32,
-                      offset: Offset(0, -8))
-                ]),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 10, bottom: 4),
-                  child: Center(
-                      child: Container(
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                              color: const Color(0xFFDDDDDD),
-                              borderRadius: BorderRadius.circular(99)))),
-                ),
-                Flexible(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                    child: Column(
+        DraggableScrollableSheet(
+          initialChildSize: 0.38,
+          minChildSize: 0.18,
+          maxChildSize: 0.70,
+          snap: true,
+          snapSizes: const [0.18, 0.38, 0.70],
+          builder: (sheetCtx, scrollController) {
+            return Container(
+              decoration: const BoxDecoration(
+                  color: kWhite,
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(24)),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 32,
+                        offset: Offset(0, -8))
+                  ]),
+              child: Column(
+                children: [
+                  // Drag handle
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10, bottom: 4),
+                    child: Center(
+                        child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                                color: const Color(0xFFDDDDDD),
+                                borderRadius: BorderRadius.circular(99)))),
+                  ),
+                  // Scrollable content
+                  Expanded(
+                    child: ListView(
+                      controller: scrollController,
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -5571,93 +5572,91 @@ class _WhereToScreenState extends State<WhereToScreen>
                             ]),
                           ),
                         ],
+                        const SizedBox(height: 8),
+                        // Confirm button inside the scrollable list
+                        Padding(
+                          padding: EdgeInsets.only(
+                            bottom: MediaQuery.of(context).padding.bottom > 0
+                                ? MediaQuery.of(context).padding.bottom
+                                : 12,
+                          ),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                final body = {
+                                  "pickup_address": _pickupCtrl.text,
+                                  "drop_address": _destCtrl.text,
+                                  "pickup_lat": _pickupLat,
+                                  "pickup_lng": _pickupLng,
+                                  "drop_lat": _dropLat,
+                                  "drop_lng": _dropLng,
+                                  "vehicle_type": _selectedVehicleType,
+                                  "service_type":
+                                      widget.service.category == 'delivery'
+                                          ? widget.service.name.toLowerCase()
+                                          : 'ride',
+                                  "payment_method": _paymentMethod.id,
+                                  "use_kcoins": _useKCoins,
+                                  "is_ev_request": widget.service.isEV,
+                                  "promo_code": _appliedPromoCode,
+                                };
+                                try {
+                                  final result = await ApiService.bookTrip(body);
+                                  if (result["success"] == true) {
+                                    final bookedTrip =
+                                        result["data"] as Map<String, dynamic>? ??
+                                            const {};
+                                    final tripId =
+                                        (bookedTrip["trip_id"] as num?)?.toInt() ??
+                                            (result["trip_id"] as num?)?.toInt();
+                                    setState(() {
+                                      _booked = true;
+                                      _searching = true;
+                                      _tripId = tripId;
+                                    });
+                                    _startSearchPolling();
+                                    final riderId = AuthService.riderId;
+                                    final token = AuthService.token;
+                                    if (riderId != null && token != null) {
+                                      _connectSocket(riderId, token);
+                                    }
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                            content: Text(result["error"] ??
+                                                "Booking failed")));
+                                  }
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text("Booking error: $e")));
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: widget.service.accent,
+                                  foregroundColor: kWhite,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14)),
+                                  elevation: 8,
+                                  shadowColor:
+                                      widget.service.accent.withOpacity(0.27)),
+                              child: Text(
+                                  _fareLoading
+                                      ? 'Getting fare...'
+                                      : 'Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹${(_estimatedFare - _promoDiscount).toStringAsFixed(0)}',
+                                  style: const TextStyle(
+                                      fontSize: 15, fontWeight: FontWeight.w700)),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                ),
-                // Pinned Confirm button with SafeArea bottom padding
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    16,
-                    6,
-                    16,
-                    MediaQuery.of(context).padding.bottom > 0
-                        ? MediaQuery.of(context).padding.bottom
-                        : 12,
-                  ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        final body = {
-                          "pickup_address": _pickupCtrl.text,
-                          "drop_address": _destCtrl.text,
-                          "pickup_lat": _pickupLat,
-                          "pickup_lng": _pickupLng,
-                          "drop_lat": _dropLat,
-                          "drop_lng": _dropLng,
-                          "vehicle_type": _selectedVehicleType,
-                          "service_type":
-                              widget.service.category == 'delivery'
-                                  ? widget.service.name.toLowerCase()
-                                  : 'ride',
-                          "payment_method": _paymentMethod.id,
-                          "use_kcoins": _useKCoins,
-                          "is_ev_request": widget.service.isEV,
-                          "promo_code": _appliedPromoCode,
-                        };
-                        try {
-                          final result = await ApiService.bookTrip(body);
-                          if (result["success"] == true) {
-                            final bookedTrip =
-                                result["data"] as Map<String, dynamic>? ??
-                                    const {};
-                            final tripId =
-                                (bookedTrip["trip_id"] as num?)?.toInt() ??
-                                    (result["trip_id"] as num?)?.toInt();
-                            setState(() {
-                              _booked = true;
-                              _searching = true;
-                              _tripId = tripId;
-                            });
-                            _startSearchPolling();
-                            final riderId = AuthService.riderId;
-                            final token = AuthService.token;
-                            if (riderId != null && token != null) {
-                              _connectSocket(riderId, token);
-                            }
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(result["error"] ??
-                                        "Booking failed")));
-                          }
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Booking error: $e")));
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: widget.service.accent,
-                          foregroundColor: kWhite,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
-                          elevation: 8,
-                          shadowColor:
-                              widget.service.accent.withOpacity(0.27)),
-                      child: Text(
-                          _fareLoading
-                              ? 'Getting fare...'
-                              : 'Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹${(_estimatedFare - _promoDiscount).toStringAsFixed(0)}',
-                          style: const TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w700)),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+                ],
+              ),
+            );
+          },
         ),
         if (_showPaymentModal)
           Positioned.fill(
@@ -5786,54 +5785,52 @@ class _WhereToScreenState extends State<WhereToScreen>
             right: 16,
             child: _buildTrackingToast(tripStatus),
           ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.58,
-              ),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF9F9F9),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 24,
-                    offset: Offset(0, -6),
-                  )
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Drag handle
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10, bottom: 4),
-                    child: Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFDDDDDD),
-                          borderRadius: BorderRadius.circular(99),
+          DraggableScrollableSheet(
+            initialChildSize: 0.35,
+            minChildSize: 0.15,
+            maxChildSize: 0.65,
+            snap: true,
+            snapSizes: const [0.15, 0.35, 0.65],
+            builder: (sheetCtx, scrollController) {
+              return Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF9F9F9),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 24,
+                      offset: Offset(0, -6),
+                    )
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    // Drag handle
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10, bottom: 4),
+                      child: Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDDDDDD),
+                            borderRadius: BorderRadius.circular(99),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  // Scrollable content
-                  Flexible(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: EdgeInsets.fromLTRB(
-                        0, 4, 0,
-                        MediaQuery.of(context).padding.bottom > 0
-                            ? MediaQuery.of(context).padding.bottom
-                            : 16,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
+                    // Scrollable content
+                    Expanded(
+                      child: ListView(
+                        controller: scrollController,
+                        physics: const BouncingScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(
+                          0, 4, 0,
+                          MediaQuery.of(context).padding.bottom > 0
+                              ? MediaQuery.of(context).padding.bottom
+                              : 16,
+                        ),
                         children: [
                           _buildDistanceBanner(distKm, etaMinutes, tripStatus),
                           const SizedBox(height: 8),
@@ -5851,10 +5848,10 @@ class _WhereToScreenState extends State<WhereToScreen>
                         ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                  ],
+                ),
+              );
+            },
           ),
           if (_socketDisconnected) _buildReconnectionOverlay(),
         ],

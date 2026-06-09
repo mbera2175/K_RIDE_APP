@@ -7949,7 +7949,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       onTap: () => _openService(_rideServices[1], genericMode: true),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
@@ -7966,21 +7966,32 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
             Row(
               children: [
                 Container(
-                  width: 13,
-                  height: 13,
-                  decoration: const BoxDecoration(
-                    color: kOrange,
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
+                    border: Border.all(color: kOrange, width: 2.5),
+                    color: Colors.white,
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: 4,
+                      height: 4,
+                      decoration: const BoxDecoration(
+                        color: kOrange,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 const Expanded(
                   child: Text(
                     'Current location',
-                    style: TextStyle(fontSize: 14.5, color: Colors.black87, fontWeight: FontWeight.w500),
+                    style: TextStyle(fontSize: 16.0, color: Colors.black87, fontWeight: FontWeight.w600),
                   ),
                 ),
-                const Icon(Icons.my_location_rounded, color: kOrange, size: 19),
+                const Icon(Icons.my_location_rounded, color: kOrange, size: 21),
               ],
             ),
             Padding(
@@ -7989,35 +8000,35 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 children: [
                   Column(
                     children: List.generate(
-                      2,
+                      3,
                       (i) => Container(
                         width: 2,
                         height: 2,
-                        margin: const EdgeInsets.symmetric(vertical: 1.0),
+                        margin: const EdgeInsets.symmetric(vertical: 1.5),
                         color: Colors.grey.shade400,
                       ),
                     ),
                   ),
                   const SizedBox(width: 18),
-                  Expanded(child: Divider(color: Colors.grey.shade200, height: 8)),
+                  Expanded(child: Divider(color: Colors.grey.shade200, height: 14)),
                 ],
               ),
             ),
             Row(
               children: [
                 Container(
-                  width: 13,
-                  height: 13,
+                  width: 12,
+                  height: 12,
                   decoration: BoxDecoration(
                     color: kOrange,
-                    borderRadius: BorderRadius.circular(3),
+                    borderRadius: BorderRadius.circular(2.5),
                   ),
                 ),
                 const SizedBox(width: 12),
                 const Expanded(
                   child: Text(
                     'Where to?',
-                    style: TextStyle(fontSize: 14.5, color: Colors.black87, fontWeight: FontWeight.w500),
+                    style: TextStyle(fontSize: 16.0, color: Colors.black54, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -8040,7 +8051,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               arrowColor: kOrange,
               vehicleImage: Image.asset(
                 'assets/images/car_bike.png',
-                height: 54,
+                height: 70,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) => const SizedBox(
                   width: 68,
@@ -8075,7 +8086,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               arrowColor: kGreenArrow,
               vehicleImage: Image.asset(
                 'assets/images/auto_toto.png',
-                height: 54,
+                height: 70,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) => const SizedBox(
                   width: 68,
@@ -8110,7 +8121,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               arrowColor: kPinkArrow,
               vehicleImage: Image.asset(
                 'assets/images/ambulance_card.png',
-                height: 54,
+                height: 70,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) => const ServiceIconWidget(icon: 'ambulance', size: 50),
               ),
@@ -8135,8 +8146,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 96,
-        padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+        height: 125,
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(18),
@@ -8147,7 +8158,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           children: [
             Center(
               child: Container(
-                height: 54,
+                height: 70,
                 alignment: Alignment.center,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
@@ -8162,7 +8173,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                   child: Text(
                     label,
                     style: const TextStyle(
-                      fontSize: 10,
+                      fontSize: 13,
                       fontWeight: FontWeight.w800,
                       color: Colors.black87,
                     ),
@@ -8171,13 +8182,13 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                   ),
                 ),
                 Container(
-                  width: 20,
-                  height: 20,
+                  width: 26,
+                  height: 26,
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.arrow_forward_rounded, size: 11, color: arrowColor),
+                  child: Icon(Icons.arrow_forward_rounded, size: 15, color: arrowColor),
                 ),
               ],
             ),

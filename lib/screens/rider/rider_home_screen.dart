@@ -1989,6 +1989,15 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
     }
   }
 
+  /// Navigates back to the rider home screen, clearing all routes.
+  void _goHome() {
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const RiderHomeScreen()),
+      (route) => false,
+    );
+  }
+
   Future<void> _submitRating() async {
     if (_submittingRating || _rated) return;
     setState(() => _submittingRating = true);
@@ -2002,15 +2011,13 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(res['success'] == true
           ? 'Thanks for rating your driver! 🌟'
-          : (res['error'] ?? 'Rating skipped.')),
-      backgroundColor: res['success'] == true ? Colors.green : Colors.red,
+          : (res['error'] ?? 'Could not submit, but no worries!')),
+      backgroundColor: res['success'] == true ? Colors.green : Colors.orange,
+      duration: const Duration(milliseconds: 1200),
     ));
-    if (res['success'] == true || res['status'] == 400) {
-      // Short delay so the snackbar is visible, then go back to home
-      await Future.delayed(const Duration(milliseconds: 800));
-      if (!mounted) return;
-      widget.onClose();
-    }
+    // Always go home after submit attempt (success or already-rated)
+    await Future.delayed(const Duration(milliseconds: 900));
+    _goHome();
   }
 
   @override
@@ -2045,10 +2052,10 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
                 color: Color(0xFF1A1A2E), fontWeight: FontWeight.w800)),
         leading: IconButton(
             icon: const Icon(Icons.close, color: Color(0xFF1A1A2E)),
-            onPressed: widget.onClose),
+            onPressed: _goHome),
         actions: [
           TextButton(
-            onPressed: widget.onClose,
+            onPressed: _goHome,
             child: const Text(
               'Skip',
               style: TextStyle(
@@ -2941,13 +2948,7 @@ class _WhereToScreenState extends State<WhereToScreen>
               MaterialPageRoute(
                 builder: (_) => TripReceiptScreen(
                   tripId: completedTripId,
-                  onClose: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const RiderHomeScreen()),
-                      (route) => false,
-                    );
-                  },
+                  onClose: () {}, // navigation handled inside TripReceiptScreen
                 ),
               ),
             );
@@ -3118,13 +3119,7 @@ class _WhereToScreenState extends State<WhereToScreen>
           MaterialPageRoute(
             builder: (_) => TripReceiptScreen(
               tripId: _tripId!,
-              onClose: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const RiderHomeScreen()),
-                  (route) => false,
-                );
-              },
+              onClose: () {}, // navigation handled inside TripReceiptScreen
             ),
           ),
         );
@@ -3992,17 +3987,10 @@ class _WhereToScreenState extends State<WhereToScreen>
         Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (_) =>
-                  TripReceiptScreen(
-                    tripId: _tripId!,
-                    onClose: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (_) => const RiderHomeScreen()),
-                        (route) => false,
-                      );
-                    },
-                  ),
+              builder: (_) => TripReceiptScreen(
+                tripId: _tripId!,
+                onClose: () {}, // navigation handled inside TripReceiptScreen
+              ),
             ));
       } else if (type == "trip_cancelled") {
         RiderSocketService.disconnect();

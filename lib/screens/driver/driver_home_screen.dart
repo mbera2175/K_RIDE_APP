@@ -2654,10 +2654,15 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
 
         if (online) {
           if (Platform.isAndroid) {
-            await Permission.notification.request();
-            final isGranted = await FlutterOverlayWindow.isPermissionGranted();
-            if (!isGranted) {
-              await FlutterOverlayWindow.requestPermission();
+            try {
+              await Permission.notification.request();
+              final isGranted = await FlutterOverlayWindow.isPermissionGranted();
+              if (!isGranted) {
+                // Request permission without awaiting to avoid blocking/suspending the online toggle execution flow when settings open
+                FlutterOverlayWindow.requestPermission();
+              }
+            } catch (e) {
+              debugPrint('Error checking/requesting permissions: $e');
             }
           }
           await FlutterBackgroundService().startService();

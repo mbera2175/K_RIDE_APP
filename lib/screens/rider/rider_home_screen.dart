@@ -2001,11 +2001,14 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
     });
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(res['success'] == true
-          ? 'Thanks for rating your driver.'
+          ? 'Thanks for rating your driver! 🌟'
           : (res['error'] ?? 'Rating skipped.')),
       backgroundColor: res['success'] == true ? Colors.green : Colors.red,
     ));
     if (res['success'] == true || res['status'] == 400) {
+      // Short delay so the snackbar is visible, then go back to home
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (!mounted) return;
       widget.onClose();
     }
   }
@@ -2043,6 +2046,18 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
         leading: IconButton(
             icon: const Icon(Icons.close, color: Color(0xFF1A1A2E)),
             onPressed: widget.onClose),
+        actions: [
+          TextButton(
+            onPressed: widget.onClose,
+            child: const Text(
+              'Skip',
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF888888)),
+            ),
+          ),
+        ],
       ),
       body: _loading
           ? const Center(

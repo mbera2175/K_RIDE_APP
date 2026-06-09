@@ -1446,15 +1446,15 @@ class _DriverTripReviewScreenState extends State<DriverTripReviewScreen> {
 
     if (res['success'] == true || res['status'] == 400) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Review submitted.'),
+        content: Text('Review submitted! Thank you.'),
         backgroundColor: kSuccess,
       ));
-      Navigator.pop(context, true);
+      Navigator.of(context).popUntil((route) => route.isFirst);
       return;
     }
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(res['error'] ?? 'Review skipped.'),
+      content: Text(res['error'] ?? 'Something went wrong.'),
       backgroundColor: kError,
     ));
   }
@@ -1476,6 +1476,19 @@ class _DriverTripReviewScreenState extends State<DriverTripReviewScreen> {
         title: Text('Review Rider',
             style: GoogleFonts.sora(
                 color: kDark, fontSize: 18, fontWeight: FontWeight.w800)),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.of(context).popUntil((route) => route.isFirst),
+            child: Text(
+              'Skip',
+              style: GoogleFonts.sora(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: kMuted),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

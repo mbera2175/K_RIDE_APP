@@ -8157,6 +8157,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
         'label': 'Car & Bike',
         'subtitle': 'Quick & Easy',
         'bgColor': kOrangeBg,
+        'imgHeight': 80.0,
+        'useFittedBox': false,
         'imageWidget': SizedBox(
           width: 60,
           height: 85,
@@ -8197,6 +8199,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
         'label': 'Auto & Toto',
         'subtitle': 'Budget Rides',
         'bgColor': kGreenBg,
+        'imgHeight': 76.0,
+        'useFittedBox': false,
         'imageWidget': SizedBox(
           width: 82,
           height: 78,
@@ -8237,6 +8241,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
         'label': 'Ambulance',
         'subtitle': 'Emergency Care',
         'bgColor': kPinkBg,
+        'imgHeight': 56.0,
+        'useFittedBox': true,
         'imageWidget': Image.asset(
           'assets/images/ambulance final.png',
           height: 60,
@@ -8295,6 +8301,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     final Color bgColor = item['bgColor'] as Color;
     final Widget imageWidget = item['imageWidget'] as Widget;
     final VoidCallback onTap = item['onTap'] as VoidCallback;
+    final double imgHeight = (item['imgHeight'] ?? 48.0) as double;
+    final bool useFittedBox = (item['useFittedBox'] ?? true) as bool;
 
     return GestureDetector(
       onTap: onTap,
@@ -8313,11 +8321,13 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               ),
               child: Center(
                 child: SizedBox(
-                  height: 48,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: imageWidget,
-                  ),
+                  height: imgHeight,
+                  child: useFittedBox
+                      ? FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: imageWidget,
+                        )
+                      : imageWidget,
                 ),
               ),
             ),
@@ -8465,8 +8475,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
-        height: 140,
-        clipBehavior: Clip.antiAlias,
+        height: 125,
         decoration: BoxDecoration(
           color: kWhite,
           borderRadius: BorderRadius.circular(24),
@@ -8479,52 +8488,55 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
             )
           ],
         ),
-        child: GestureDetector(
-          onTap: () => _openService(services.firstWhere((s) => s.id == 10)),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: Image.asset(
-                  'assets/images/ev car banner.png',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Center(child: Text('🚗⚡', style: TextStyle(fontSize: 32))),
-                ),
-              ),
-              Positioned(
-                left: 14,
-                bottom: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: kGreenText,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22.5),
+          child: GestureDetector(
+            onTap: () => _openService(services.firstWhere((s) => s.id == 10)),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Image.asset(
+                    'assets/images/ev car banner.png',
+                    fit: BoxFit.fill,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Center(child: Text('🚗⚡', style: TextStyle(fontSize: 32))),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'Explore EV',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                ),
+                Positioned(
+                  left: 14,
+                  bottom: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: kGreenText,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.arrow_forward_rounded, size: 12, color: Colors.white),
-                    ],
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Explore EV',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.arrow_forward_rounded, size: 12, color: Colors.white),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -8563,9 +8575,21 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                         _buildNewTopBar(),
                         const SizedBox(height: 32),
                         _buildNewLocationCard(),
-                        const SizedBox(height: 18),
-                        _buildNewRideCategoryRow(),
                         const SizedBox(height: 22),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'Ride Service',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildNewRideCategoryRow(),
+                        const SizedBox(height: 26),
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
@@ -8580,6 +8604,18 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                         const SizedBox(height: 12),
                         _buildNewServicesRow(),
                         const SizedBox(height: 26),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'EV Service',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
                         _buildNewEVBanner(),
                         const SizedBox(height: 26),
                         const Padding(

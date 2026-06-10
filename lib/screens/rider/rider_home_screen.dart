@@ -8041,29 +8041,30 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               label: 'Car & Bike',
               bgColor: kOrangeBg,
               arrowColor: kOrange,
+              imageContainerHeight: 85,
               vehicleImage: SizedBox(
-                width: 80,
-                height: 70,
+                width: 60,
+                height: 85,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
                     Positioned(
-                      right: -4,
+                      right: -15,
                       bottom: 0,
                       child: Image.asset(
                         'assets/images/bike final.png',
-                        height: 66,
+                        height: 78,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
                             const ServiceIconWidget(icon: 'bike', size: 38),
                       ),
                     ),
                     Positioned(
-                      left: -4,
+                      left: -15,
                       bottom: 0,
                       child: Image.asset(
                         'assets/images/car final.png',
-                        height: 70,
+                        height: 85,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
                             const ServiceIconWidget(icon: 'ac_cab', size: 38),
@@ -8085,8 +8086,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               bgColor: kGreenBg,
               arrowColor: kGreenArrow,
               vehicleImage: SizedBox(
-                width: 80,
-                height: 70,
+                width: 82,
+                height: 78,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -8095,7 +8096,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                       bottom: 0,
                       child: Image.asset(
                         'assets/images/toto final.png',
-                        height: 66,
+                        height: 72,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
                             const ServiceIconWidget(icon: 'toto', size: 38),
@@ -8106,7 +8107,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                       bottom: 0,
                       child: Image.asset(
                         'assets/images/auto final.png',
-                        height: 70,
+                        height: 78,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
                             const ServiceIconWidget(icon: 'auto', size: 38),
@@ -8129,7 +8130,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               arrowColor: kPinkArrow,
               vehicleImage: Image.asset(
                 'assets/images/ambulance final.png',
-                height: 70,
+                height: 78,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) => const ServiceIconWidget(icon: 'ambulance', size: 50),
               ),
@@ -8150,12 +8151,13 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     required Color arrowColor,
     required Widget vehicleImage,
     required VoidCallback onTap,
+    double imageContainerHeight = 70,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 125,
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(18),
@@ -8166,7 +8168,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           children: [
             Center(
               child: Container(
-                height: 70,
+                height: imageContainerHeight,
                 alignment: Alignment.center,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,

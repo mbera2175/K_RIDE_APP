@@ -2374,6 +2374,8 @@ class _WhereToScreenState extends State<WhereToScreen>
   double _estimatedDistance = 0.0;
   int _estimatedDuration = 0;
   bool _fareLoading = false;
+  Map<String, Map<String, dynamic>> _allVehicleFares = {};
+  bool _allFaresLoading = false;
 
   List<dynamic> _activePromos = [];
   String? _appliedPromoCode;
@@ -3384,8 +3386,8 @@ class _WhereToScreenState extends State<WhereToScreen>
     });
     
     if (_destCtrl.text.isNotEmpty && _pickupCtrl.text.isNotEmpty) {
-      await _loadFare();
       setState(() => _step = 'confirm');
+      _loadAllVehicleFares();
     }
   }
 
@@ -3783,6 +3785,75 @@ class _WhereToScreenState extends State<WhereToScreen>
       });
     }
     setState(() => _fareLoading = false);
+  }
+
+  Future<void> _loadAllVehicleFares() async {
+    setState(() => _allFaresLoading = true);
+    final types = ['ac_cab', 'non_ac_cab', 'bike', 'auto', 'toto'];
+    final Map<String, Map<String, dynamic>> results = {};
+
+    // Geocode destination if needed
+    if (_destCtrl.text.isNotEmpty) {
+      try {
+        List<geo.Location> locations =
+            await geo.locationFromAddress(_destCtrl.text);
+        if (locations.isNotEmpty) {
+          _dropLat = locations.first.latitude;
+          _dropLng = locations.first.longitude;
+        }
+      } catch (e) {
+        debugPrint('Geocoding drop error: $e');
+      }
+    }
+    if (_pickupCtrl.text.isNotEmpty &&
+        _pickupCtrl.text != 'Current Location') {
+      try {
+        List<geo.Location> locations =
+            await geo.locationFromAddress(_pickupCtrl.text);
+        if (locations.isNotEmpty) {
+          _pickupLat = locations.first.latitude;
+          _pickupLng = locations.first.longitude;
+        }
+      } catch (e) {
+        debugPrint('Geocoding pickup error: $e');
+      }
+    }
+
+    // Fetch fares for all vehicle types in parallel
+    final futures = types.map((type) async {
+      try {
+        final res = await ApiService.estimateFare(
+          pickupLat: _pickupLat,
+          pickupLng: _pickupLng,
+          dropLat: _dropLat,
+          dropLng: _dropLng,
+          vehicleType: type,
+        );
+        if (res['success'] == true) {
+          results[type] = {
+            'fare': (res['data']?['estimated_fare'] ?? 0.0).toDouble(),
+            'distance': (res['data']?['distance_km'] ?? 0.0).toDouble(),
+            'duration': (res['data']?['duration_min'] ?? 0).toInt(),
+          };
+        }
+      } catch (e) {
+        debugPrint('Fare fetch error for $type: $e');
+      }
+    });
+    await Future.wait(futures);
+
+    if (mounted) {
+      setState(() {
+        _allVehicleFares = results;
+        _allFaresLoading = false;
+        // Set the first vehicle's fare as default
+        if (results.containsKey(_selectedVehicleType)) {
+          _estimatedFare = results[_selectedVehicleType]!['fare'] as double;
+          _estimatedDistance = results[_selectedVehicleType]!['distance'] as double;
+          _estimatedDuration = results[_selectedVehicleType]!['duration'] as int;
+        }
+      });
+    }
   }
 
   Future<void> _updateDriverMarker(double lat, double lng) async {
@@ -4830,88 +4901,6 @@ class _WhereToScreenState extends State<WhereToScreen>
                     ),
                   ),
                 ),
-                if (widget.service.category == 'ride') ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    height: 44,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                        color: const Color(0xFFFFF3E0),
-                        borderRadius: BorderRadius.circular(10)),
-                    child: Row(children: [
-                      ServiceIconWidget(icon: _selectedVehicleType, size: 22),
-                      const SizedBox(width: 8),
-                      const Text('Vehicle:',
-                          style: TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w600)),
-                      const SizedBox(width: 8),
-                      Expanded(
-                          child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                        value: _selectedVehicleType,
-                        items: [
-                          DropdownMenuItem(
-                            value: 'ac_cab',
-                            child: Row(
-                              children: [
-                                ServiceIconWidget(icon: 'ac_cab', size: 20),
-                                const SizedBox(width: 8),
-                                const Text('AC Cab', style: TextStyle(fontSize: 13)),
-                              ],
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'non_ac_cab',
-                            child: Row(
-                              children: [
-                                ServiceIconWidget(icon: 'non_ac_cab', size: 20),
-                                const SizedBox(width: 8),
-                                const Text('Non-AC Cab', style: TextStyle(fontSize: 13)),
-                              ],
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'bike',
-                            child: Row(
-                              children: [
-                                ServiceIconWidget(icon: 'bike', size: 20),
-                                const SizedBox(width: 8),
-                                const Text('Bike', style: TextStyle(fontSize: 13)),
-                              ],
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'auto',
-                            child: Row(
-                              children: [
-                                ServiceIconWidget(icon: 'auto', size: 20),
-                                const SizedBox(width: 8),
-                                const Text('Auto', style: TextStyle(fontSize: 13)),
-                              ],
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'toto',
-                            child: Row(
-                              children: [
-                                ServiceIconWidget(icon: 'toto', size: 20),
-                                const SizedBox(width: 8),
-                                const Text('Toto', style: TextStyle(fontSize: 13)),
-                              ],
-                            ),
-                          ),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() => _selectedVehicleType = val);
-                            _loadFare();
-                            _loadNearbyDriversOnMap();
-                          }
-                        },
-                      ))),
-                    ]),
-                  ),
-                ],
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -5095,118 +5084,16 @@ class _WhereToScreenState extends State<WhereToScreen>
                               );
                             },
                           )
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('SAVED PLACES',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: kMuted,
-                                      letterSpacing: 0.5)),
-                              const SizedBox(height: 6),
-                              ..._quickDests.map((d) {
-                                final full = '${d.label}, ${d.sub}';
-                                return StatefulBuilder(
-                                  builder: (_, ss) => GestureDetector(
-                                    onTap: () async {
-                                      setState(() => _destCtrl.text = full);
-                                      FocusScope.of(context).unfocus();
-                                      await _loadFare();
-                                      setState(() => _step = 'confirm');
-                                    },
-                                    child: Container(
-                                      margin: const EdgeInsets.only(bottom: 4),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 5),
-                                      decoration: BoxDecoration(
-                                          color: _destCtrl.text.startsWith(d.label)
-                                              ? kOrangeLight
-                                              : kGray,
-                                          borderRadius: BorderRadius.circular(10)),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                              width: 34,
-                                              height: 34,
-                                              decoration: BoxDecoration(
-                                                  color: kWhite,
-                                                  borderRadius: BorderRadius.circular(10),
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                        color: Colors.black.withOpacity(0.05),
-                                                        blurRadius: 6,
-                                                        offset: const Offset(0, 1.5))
-                                                  ]),
-                                              child: Center(
-                                                  child: Text(d.icon,
-                                                      style: const TextStyle(fontSize: 15)))),
-                                          const SizedBox(width: 10),
-                                          Expanded(
-                                              child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                Text(d.label,
-                                                    style: const TextStyle(
-                                                        fontSize: 13,
-                                                        fontWeight: FontWeight.w500,
-                                                        color: kDark)),
-                                                Text(d.sub,
-                                                    style: const TextStyle(
-                                                        fontSize: 11, color: kMuted)),
-                                              ])),
-                                          const SizedBox(width: 8),
-                                          GestureDetector(
-                                            onTap: () async {
-                                              final newAddress = await _showEditAddressDialog(d.label, d.sub);
-                                              if (newAddress != null && newAddress.trim().isNotEmpty) {
-                                                if (d.label == 'Home') {
-                                                  await AuthService.setHomeAddress(newAddress.trim());
-                                                } else {
-                                                  await AuthService.setOfficeAddress(newAddress.trim());
-                                                }
-                                                setState(() {});
-                                                ss(() {});
-                                              }
-                                            },
-                                            child: Container(
-                                              padding: const EdgeInsets.all(4),
-                                              decoration: BoxDecoration(
-                                                color: kWhite,
-                                                shape: BoxShape.circle,
-                                                border: Border.all(color: const Color(0xFFE4E7EC), width: 1),
-                                              ),
-                                              child: const Icon(
-                                                Icons.edit_rounded,
-                                                color: Color(0xFF667085),
-                                                size: 12,
-                                              ),
-                                            ),
-                                          ),
-                                          if (_destCtrl.text.startsWith(d.label)) ...[
-                                            const SizedBox(width: 6),
-                                            const Text('✓',
-                                                style:
-                                                    TextStyle(color: kOrange, fontSize: 14)),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }),
-                            ],
-                          ),
+                        : const SizedBox.shrink(),
                 const SizedBox(height: 20),
                 StatefulBuilder(
                   builder: (_, ss) {
                     final hasText = _destCtrl.text.isNotEmpty;
                     return ElevatedButton(
                       onPressed: hasText
-                          ? () async {
-                              await _loadFare();
+                          ? () {
                               setState(() => _step = 'confirm');
+                              _loadAllVehicleFares();
                             }
                           : null,
                       style: ElevatedButton.styleFrom(
@@ -5325,67 +5212,145 @@ class _WhereToScreenState extends State<WhereToScreen>
                       physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                              color: widget.service.color,
-                              borderRadius: BorderRadius.circular(10)),
-                          child: Row(
-                            children: [
-                              Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                      color: kWhite,
-                                      borderRadius: BorderRadius.circular(8),
-                                      boxShadow: [
-                                        BoxShadow(
-                                            color: Colors.black.withOpacity(0.05),
-                                            blurRadius: 4,
-                                            offset: const Offset(0, 2))
-                                      ]),
-                                  child: Center(
-                                      child: ServiceIconWidget(
-                                          icon: _selectedVehicleType, size: 18))),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                  child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                    Text(_getVehicleLabel(_selectedVehicleType),
-                                        style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w800,
-                                            color: kDark)),
-                                    const SizedBox(height: 1),
-                                    Text(_getVehicleTag(_selectedVehicleType),
-                                        style: TextStyle(
-                                            fontSize: 8,
-                                            fontWeight: FontWeight.w700,
-                                            color: widget.service.accent)),
-                                  ])),
-                              const SizedBox(width: 8),
-                              DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _selectedVehicleType,
-                                  dropdownColor: kWhite,
-                                  borderRadius: BorderRadius.circular(12),
-                                  items: _buildDropdownItems(widget.service),
-                                  onChanged: (val) {
-                                    if (val != null) {
-                                      setState(() {
-                                        _selectedVehicleType = val;
-                                        _fareLoading = true;
-                                      });
-                                      _loadEstimatedFare();
-                                      _loadNearbyDriversOnMap();
-                                    }
-                                  },
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.only(left: 4, bottom: 8),
+                              child: Text(
+                                'Choose a ride',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: kDark,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                            ...['ac_cab', 'bike', 'non_ac_cab', 'ambulance', 'auto', 'toto'].map((type) {
+                              final isSelected = _selectedVehicleType == type;
+                              final fareInfo = _allVehicleFares[type];
+                              final double fare = fareInfo != null ? (fareInfo['fare'] as double) : 0.0;
+                              final int duration = fareInfo != null ? (fareInfo['duration'] as int) : 0;
+                              
+                              String fareStr;
+                              if (_allFaresLoading) {
+                                fareStr = '...';
+                              } else if (fare > 0.0) {
+                                fareStr = '₹${fare.toStringAsFixed(0)}';
+                              } else {
+                                fareStr = 'N/A';
+                              }
+
+                              return GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedVehicleType = type;
+                                    if (fare > 0.0) {
+                                      _estimatedFare = fare;
+                                    }
+                                    if (duration > 0) {
+                                      _estimatedDuration = duration;
+                                    }
+                                  });
+                                  _loadNearbyDriversOnMap();
+                                },
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 6),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: isSelected ? const Color(0xFFFFF3E0) : kGray,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: isSelected ? kOrange : const Color(0xFFEEEEEE),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 38,
+                                        height: 38,
+                                        decoration: BoxDecoration(
+                                          color: kWhite,
+                                          borderRadius: BorderRadius.circular(8),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.05),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            )
+                                          ],
+                                        ),
+                                        child: Center(
+                                          child: ServiceIconWidget(
+                                            icon: type,
+                                            size: 22,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Text(
+                                                  _getVehicleLabel(type),
+                                                  style: const TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: kDark,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(
+                                                    horizontal: 5,
+                                                    vertical: 1,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: isSelected ? kOrangeLight : Colors.white,
+                                                    borderRadius: BorderRadius.circular(4),
+                                                  ),
+                                                  child: Text(
+                                                    _getVehicleTag(type),
+                                                    style: const TextStyle(
+                                                      fontSize: 8,
+                                                      fontWeight: FontWeight.w700,
+                                                      color: kOrange,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              duration > 0 ? '$duration mins away' : 'Nearby',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.grey.shade600,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        fareStr,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w800,
+                                          color: kDark,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         Container(
@@ -8775,13 +8740,7 @@ class _RiderActivityTabState extends State<_RiderActivityTab> {
         ]),
         const SizedBox(height: 4),
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Container(
-              width: 8,
-              height: 8,
-              margin: const EdgeInsets.only(top: 4),
-              decoration: BoxDecoration(
-                  color: kOrange,
-                  borderRadius: BorderRadius.circular(2))),
+          Container(),
           const SizedBox(width: 8),
           Expanded(
               child: Text(drop,

@@ -3893,7 +3893,7 @@ class _WhereToScreenState extends State<WhereToScreen>
 
   Future<void> _loadAllVehicleFares() async {
     setState(() => _allFaresLoading = true);
-    final types = ['ac_cab', 'non_ac_cab', 'bike', 'auto', 'toto'];
+    final types = ['ac_cab', 'non_ac_cab', 'bike', 'auto', 'toto', 'ambulance'];
     final Map<String, Map<String, dynamic>> results = {};
 
     // Geocode destination if needed
@@ -5369,11 +5369,11 @@ class _WhereToScreenState extends State<WhereToScreen>
                                   _loadNearbyDriversOnMap();
                                 },
                                 child: Container(
-                                  margin: const EdgeInsets.only(bottom: 6),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                   decoration: BoxDecoration(
                                     color: isSelected ? const Color(0xFFFFF3E0) : kGray,
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(99),
                                     border: Border.all(
                                       color: isSelected ? kOrange : const Color(0xFFEEEEEE),
                                       width: 1.5,
@@ -5382,11 +5382,11 @@ class _WhereToScreenState extends State<WhereToScreen>
                                   child: Row(
                                     children: [
                                       Container(
-                                        width: 38,
-                                        height: 38,
+                                        width: 50,
+                                        height: 50,
                                         decoration: BoxDecoration(
                                           color: kWhite,
-                                          borderRadius: BorderRadius.circular(8),
+                                          shape: BoxShape.circle,
                                           boxShadow: [
                                             BoxShadow(
                                               color: Colors.black.withOpacity(0.05),
@@ -5398,7 +5398,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                                         child: Center(
                                           child: ServiceIconWidget(
                                             icon: type,
-                                            size: 22,
+                                            size: 36,
                                           ),
                                         ),
                                       ),
@@ -6704,6 +6704,8 @@ class _WhereToScreenState extends State<WhereToScreen>
         return 'Auto';
       case 'toto':
         return 'Toto';
+      case 'ambulance':
+        return 'Ambulance';
       default:
         return 'Ride';
     }
@@ -6740,6 +6742,8 @@ class _WhereToScreenState extends State<WhereToScreen>
         return 'Eco';
       case 'toto':
         return 'Local';
+      case 'ambulance':
+        return 'Emergency';
       default:
         return 'Comfortable';
     }

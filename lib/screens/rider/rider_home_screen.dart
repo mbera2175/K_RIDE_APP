@@ -1946,8 +1946,9 @@ class _TripChatScreenState extends State<TripChatScreen> {
 class TripReceiptScreen extends StatefulWidget {
   final int tripId;
   final VoidCallback onClose;
+  final Map<String, dynamic>? initialReceiptData;
   const TripReceiptScreen(
-      {super.key, required this.tripId, required this.onClose});
+      {super.key, required this.tripId, required this.onClose, this.initialReceiptData});
 
   @override
   State<TripReceiptScreen> createState() => _TripReceiptScreenState();
@@ -1976,11 +1977,20 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
   }
 
   Future<void> _loadReceipt() async {
+    if (widget.initialReceiptData != null) {
+      setState(() {
+        _receipt = Map<String, dynamic>.from(widget.initialReceiptData!);
+        _loading = false;
+      });
+    }
     try {
       final res = await ApiService.getTripReceipt(widget.tripId);
       if (res['success'] == true) {
         setState(() {
-          _receipt = Map<String, dynamic>.from(res['data'] ?? {});
+          _receipt = {
+            ...?_receipt,
+            ...Map<String, dynamic>.from(res['data'] ?? {}),
+          };
           _loading = false;
         });
       }
@@ -2042,6 +2052,17 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final double netRiderFare = double.tryParse((_receipt?['net_rider_fare'] ?? _receipt?['actual_fare'] ?? 0).toString()) ?? 0.0;
+    final double promoDiscount = double.tryParse((_receipt?['promo_discount'] ?? 0).toString()) ?? 0.0;
+    final double kcoinDiscount = double.tryParse((_receipt?['kcoin_discount'] ?? 0).toString()) ?? 0.0;
+    final double dynamicRawFare = _receipt?['net_rider_fare'] != null 
+        ? (double.tryParse((_receipt?['actual_fare'] ?? 0).toString()) ?? 0.0)
+        : (netRiderFare + promoDiscount + kcoinDiscount);
+    final String paymentMethod = _receipt?['payment_method']?.toString().toLowerCase() ?? 'cash';
+    final bool isCash = !paymentMethod.contains('wallet');
+    final double cashToPayDriver = double.tryParse((_receipt?['cash_to_pay_driver'] ?? (isCash ? netRiderFare : 0)).toString()) ?? 0.0;
+    final double coinsEarned = double.tryParse((_receipt?['coins_earned'] ?? (netRiderFare ~/ 10)).toString()) ?? 0.0;
+
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
@@ -2111,31 +2132,29 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
                                     .toUpperCase() ??
                                 ''),
                         const Divider(height: 24),
-                        _receiptRow('Base Fare', '₹${_receipt!['base_fare'] ?? 0}'),
-                        if ((_receipt!['surge_multiplier'] ?? 1.0) > 1.0)
-                          _receiptRow(
-                              'Surge (${_receipt!['surge_multiplier']}x)', ''),
-                        if ((_receipt!['bonus_amount'] ?? 0) > 0)
-                          _receiptRow(
-                              'Bonus Added', '+₹${_receipt!['bonus_amount']}'),
-                        if ((_receipt!['promo_discount'] ?? 0) > 0)
-                          _receiptRow('Promo (${_receipt!['promo_code']})',
-                              '-₹${_receipt!['promo_discount']}',
+                        _receiptRow('Trip Fare', '₹${dynamicRawFare.toStringAsFixed(0)}'),
+                        if (kcoinDiscount > 0)
+                          _receiptRow('K-Coin Discount',
+                              '-₹${kcoinDiscount.toStringAsFixed(0)}',
                               color: Colors.green),
-                        if ((_receipt!['kcoin_discount'] ?? 0) > 0)
-                          _receiptRow('K Coins Used (${_receipt!['kcoin_used']})',
-                              '-₹${_receipt!['kcoin_discount']}',
+                        if (promoDiscount > 0)
+                          _receiptRow('Promo Discount (${_receipt!['promo_code'] ?? ""})',
+                              '-₹${promoDiscount.toStringAsFixed(0)}',
                               color: Colors.green),
+                        if (coinsEarned > 0)
+                          _receiptRow('K-Coins Earned',
+                              '+${coinsEarned.toStringAsFixed(0)} coins',
+                              color: Colors.orange[800]),
                         const Divider(height: 24),
                         Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('Total Paid',
-                                  style: TextStyle(
+                              Text(isCash ? 'You Pay Driver' : 'Paid via Wallet',
+                                  style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w800,
                                       color: Color(0xFF1A1A2E))),
-                              Text('₹${_receipt!['actual_fare'] ?? 0}',
+                              Text('₹${(isCash ? cashToPayDriver : netRiderFare).toStringAsFixed(0)}',
                                   style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w800,
@@ -2955,6 +2974,7 @@ class _WhereToScreenState extends State<WhereToScreen>
               MaterialPageRoute(
                 builder: (_) => TripReceiptScreen(
                   tripId: completedTripId,
+                  initialReceiptData: trip,
                   onClose: () {}, // navigation handled inside TripReceiptScreen
                 ),
               ),
@@ -3126,6 +3146,7 @@ class _WhereToScreenState extends State<WhereToScreen>
           MaterialPageRoute(
             builder: (_) => TripReceiptScreen(
               tripId: _tripId!,
+              initialReceiptData: res['data'],
               onClose: () {}, // navigation handled inside TripReceiptScreen
             ),
           ),
@@ -3996,6 +4017,7 @@ class _WhereToScreenState extends State<WhereToScreen>
             MaterialPageRoute(
               builder: (_) => TripReceiptScreen(
                 tripId: _tripId!,
+                initialReceiptData: data,
                 onClose: () {}, // navigation handled inside TripReceiptScreen
               ),
             ));
@@ -8643,9 +8665,16 @@ class _RiderActivityTabState extends State<_RiderActivityTab> {
       debugPrint('Rider history API response: $res');
       if (res['success'] == true) {
         final data = res['data'];
-        final tripsList = (data['trips'] ?? data['results'] ?? data ?? []) as List;
+        List rawList = [];
+        if (data is List) {
+          rawList = data;
+        } else if (data is Map) {
+          rawList = (data['trips'] ?? data['results'] ?? []) as List;
+        } else if (data != null) {
+          rawList = [data];
+        }
         setState(() {
-          _trips = tripsList.map((t) => Map<String, dynamic>.from(t)).toList();
+          _trips = rawList.map((t) => Map<String, dynamic>.from(t)).toList();
           _loading = false;
         });
       } else {

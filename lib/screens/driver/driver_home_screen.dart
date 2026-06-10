@@ -2655,6 +2655,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
           isError: true,
         );
       }
+
+      if (data['type'] == 'trip_completed') {
+        _handleSocketTripCompleted(data);
+      }
     };
 
     if (DriverSocketService.isConnected) return;
@@ -3198,6 +3202,387 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     );
   }
 
+  Future<void> _handleSocketTripCompleted(Map<String, dynamic> payload) async {
+    final tripId = payload['trip_id'] as int? ?? 0;
+    
+    // Safety check to ensure we only process if this was our active trip
+    if (_activeTrip == null || _activeTrip!.id != tripId) return;
+    
+    final paymentMethod = payload['payment_method']?.toString().toLowerCase() ?? 'cash';
+    final isCash = paymentMethod.contains('cash');
+    
+    bool confirmed = true;
+    if (isCash) {
+      confirmed = await _confirmCashCollectedPayload(payload);
+      if (confirmed) {
+        final cashRes = await ApiService.markCashCollected(tripId);
+        if (cashRes['success'] == true) {
+          final data = cashRes['data'] ?? cashRes;
+          await _showCashCollectedBreakdown(data);
+        } else {
+          _showSnack(cashRes['error'] ?? 'Cash confirmation failed', isError: true);
+        }
+      }
+    } else {
+      await _showWalletTripSummary(payload);
+    }
+    
+    _clearRoute();
+    _showSnack('Trip completed! 🎉', isError: false);
+    
+    final trip = _activeTrip!;
+    await _askDriverReview(trip);
+    if (mounted) {
+      setState(() {
+        _activeTrip = null;
+      });
+    }
+    _loadEarnings();
+  }
+
+  Future<bool> _confirmCashCollectedPayload(Map<String, dynamic> payload) async {
+    final double actualFare = double.tryParse((payload['actual_fare'] ?? 0).toString()) ?? 0.0;
+    final double kcoinDiscount = double.tryParse((payload['kcoin_discount'] ?? 0).toString()) ?? 0.0;
+    final double promoDiscount = double.tryParse((payload['promo_discount'] ?? 0).toString()) ?? 0.0;
+    final String promoCode = payload['promo_code']?.toString() ?? '';
+    final double totalDiscount = double.tryParse((payload['total_discount'] ?? 0).toString()) ?? 0.0;
+    final double cashToCollect = double.tryParse((payload['cash_to_collect'] ?? 0).toString()) ?? 0.0;
+    final double companyPaysDriver = double.tryParse((payload['company_pays_driver'] ?? 0).toString()) ?? 0.0;
+    final double yourEarnings = double.tryParse((payload['your_earnings'] ?? payload['driver_earnings'] ?? 0).toString()) ?? 0.0;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Confirm Cash Receipt',
+            style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w800)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Please collect cash from the rider and verify details below:',
+                style: GoogleFonts.sora(fontSize: 12, color: kMuted)),
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(
+                color: kOrangeLight,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: kOrange.withOpacity(0.3)),
+              ),
+              child: Column(
+                children: [
+                  Text('COLLECT FROM RIDER',
+                      style: GoogleFonts.sora(
+                          fontSize: 10,
+                          color: kOrangeDark,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1)),
+                  const SizedBox(height: 4),
+                  Text('₹${cashToCollect.toStringAsFixed(0)}',
+                      style: GoogleFonts.sora(
+                          fontSize: 32,
+                          color: kOrange,
+                          fontWeight: FontWeight.w900)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 8),
+            _buildDialogBreakdownRow('Trip Fare', '₹${actualFare.toStringAsFixed(0)}'),
+            if (kcoinDiscount > 0)
+              _buildDialogBreakdownRow(
+                'K-Coin Discount', 
+                '-₹${kcoinDiscount.toStringAsFixed(0)}',
+                valueColor: Colors.green[700],
+              ),
+            if (promoDiscount > 0)
+              _buildDialogBreakdownRow(
+                'Promo Discount (${promoCode.isNotEmpty ? promoCode : "Applied"})', 
+                '-₹${promoDiscount.toStringAsFixed(0)}',
+                valueColor: Colors.green[700],
+              ),
+            if (totalDiscount > 0)
+              _buildDialogBreakdownRow(
+                'Total Discount', 
+                '-₹${totalDiscount.toStringAsFixed(0)}',
+                valueColor: Colors.green[700],
+              ),
+            if (companyPaysDriver > 0)
+              _buildDialogBreakdownRow(
+                'Company Pays You', 
+                '+₹${companyPaysDriver.toStringAsFixed(0)}',
+                valueColor: kOrangeDark,
+                isBold: true,
+              ),
+            const SizedBox(height: 8),
+            const Divider(),
+            const SizedBox(height: 8),
+            _buildDialogBreakdownRow(
+              'Your Total Earnings', 
+              '₹${yourEarnings.toStringAsFixed(0)}',
+              isBold: true,
+              valueColor: kDark,
+            ),
+          ],
+        ),
+        actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kOrange,
+                    foregroundColor: kWhite,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: Text('Confirm Cash Received',
+                      style: GoogleFonts.sora(
+                          fontSize: 14, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
+  }
+
+  Future<void> _showWalletTripSummary(Map<String, dynamic> payload) async {
+    final double actualFare = double.tryParse((payload['actual_fare'] ?? 0).toString()) ?? 0.0;
+    final double kcoinDiscount = double.tryParse((payload['kcoin_discount'] ?? 0).toString()) ?? 0.0;
+    final double promoDiscount = double.tryParse((payload['promo_discount'] ?? 0).toString()) ?? 0.0;
+    final String promoCode = payload['promo_code']?.toString() ?? '';
+    final double totalDiscount = double.tryParse((payload['total_discount'] ?? 0).toString()) ?? 0.0;
+    final double netRiderFare = double.tryParse((payload['net_rider_fare'] ?? 0).toString()) ?? 0.0;
+    final double yourEarnings = double.tryParse((payload['your_earnings'] ?? payload['driver_earnings'] ?? 0).toString()) ?? 0.0;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Trip Completed',
+            style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w800)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Trip completed! Rider paid via wallet:',
+                style: GoogleFonts.sora(fontSize: 12, color: kMuted)),
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.green.withOpacity(0.3)),
+              ),
+              child: Column(
+                children: [
+                  Text('RIDER PAID VIA WALLET',
+                      style: GoogleFonts.sora(
+                          fontSize: 10,
+                          color: Colors.green[800],
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1)),
+                  const SizedBox(height: 4),
+                  Text('₹${netRiderFare.toStringAsFixed(0)}',
+                      style: GoogleFonts.sora(
+                          fontSize: 32,
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.w900)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 8),
+            _buildDialogBreakdownRow('Trip Fare', '₹${actualFare.toStringAsFixed(0)}'),
+            if (kcoinDiscount > 0)
+              _buildDialogBreakdownRow(
+                'K-Coin Discount', 
+                '-₹${kcoinDiscount.toStringAsFixed(0)}',
+                valueColor: Colors.green[700],
+              ),
+            if (promoDiscount > 0)
+              _buildDialogBreakdownRow(
+                'Promo Discount (${promoCode.isNotEmpty ? promoCode : "Applied"})', 
+                '-₹${promoDiscount.toStringAsFixed(0)}',
+                valueColor: Colors.green[700],
+              ),
+            if (totalDiscount > 0)
+              _buildDialogBreakdownRow(
+                'Total Discount', 
+                '-₹${totalDiscount.toStringAsFixed(0)}',
+                valueColor: Colors.green[700],
+              ),
+            const SizedBox(height: 8),
+            const Divider(),
+            const SizedBox(height: 8),
+            _buildDialogBreakdownRow(
+              'Your Total Earnings', 
+              '₹${yourEarnings.toStringAsFixed(0)}',
+              isBold: true,
+              valueColor: kDark,
+            ),
+          ],
+        ),
+        actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kOrange,
+                    foregroundColor: kWhite,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text('OK',
+                      style: GoogleFonts.sora(
+                          fontSize: 14, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showCashCollectedBreakdown(Map<String, dynamic> data) async {
+    final double cashCollected = double.tryParse((data['cash_collected'] ?? 0).toString()) ?? 0.0;
+    final double kcoinDiscount = double.tryParse((data['kcoin_discount'] ?? 0).toString()) ?? 0.0;
+    final double promoDiscount = double.tryParse((data['promo_discount'] ?? 0).toString()) ?? 0.0;
+    final double commissionDeducted = double.tryParse((data['commission_deducted'] ?? 0).toString()) ?? 0.0;
+    final double companyPaysYou = double.tryParse((data['company_pays_you'] ?? 0).toString()) ?? 0.0;
+    final double yourNetEarnings = double.tryParse((data['your_net_earnings'] ?? 0).toString()) ?? 0.0;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Cash Collection Details',
+            style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w800)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Cash collection summary from backend:',
+                style: GoogleFonts.sora(fontSize: 12, color: kMuted)),
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(
+                color: kSuccess.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: kSuccess.withOpacity(0.3)),
+              ),
+              child: Column(
+                children: [
+                  Text('CASH COLLECTED FROM RIDER',
+                      style: GoogleFonts.sora(
+                          fontSize: 10,
+                          color: kSuccess,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1)),
+                  const SizedBox(height: 4),
+                  Text('₹${cashCollected.toStringAsFixed(0)}',
+                      style: GoogleFonts.sora(
+                          fontSize: 32,
+                          color: kSuccess,
+                          fontWeight: FontWeight.w900)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 8),
+            if (kcoinDiscount > 0)
+              _buildDialogBreakdownRow(
+                'K-Coin Discount', 
+                '-₹${kcoinDiscount.toStringAsFixed(0)}',
+                valueColor: Colors.green[700],
+              ),
+            if (promoDiscount > 0)
+              _buildDialogBreakdownRow(
+                'Promo Discount', 
+                '-₹${promoDiscount.toStringAsFixed(0)}',
+                valueColor: Colors.green[700],
+              ),
+            if (commissionDeducted > 0)
+              _buildDialogBreakdownRow(
+                'Commission Deducted', 
+                '-₹${commissionDeducted.toStringAsFixed(0)}',
+                valueColor: Colors.red[700],
+              ),
+            const SizedBox(height: 8),
+            const Divider(),
+            const SizedBox(height: 8),
+            _buildDialogBreakdownRow(
+              'Company Pays You', 
+              '+₹${companyPaysYou.toStringAsFixed(0)}',
+              valueColor: kOrangeDark,
+              isBold: true,
+            ),
+            const SizedBox(height: 8),
+            const Divider(),
+            const SizedBox(height: 8),
+            _buildDialogBreakdownRow(
+              'Your Net Earnings', 
+              '₹${yourNetEarnings.toStringAsFixed(0)}',
+              isBold: true,
+              valueColor: kDark,
+            ),
+          ],
+        ),
+        actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kOrange,
+                    foregroundColor: kWhite,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text('Done',
+                      style: GoogleFonts.sora(
+                          fontSize: 14, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _askDriverReview(TripData trip) async {
     await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (_) => DriverTripReviewScreen(trip: trip)),
@@ -3233,27 +3618,23 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
           if (actualMinutes < 1) actualMinutes = 1;
         }
 
-        if (trip.payment.toLowerCase().contains('cash')) {
-          final confirmed = await _confirmCashCollected(trip);
-          if (!confirmed) return;
+        setState(() => _loadingActive = true);
+        res = await ApiService.completeTrip(tripId,
+            actualKm: actualKm, actualMinutes: actualMinutes);
+        setState(() => _loadingActive = false);
 
-          res = await ApiService.completeTrip(tripId,
-              actualKm: actualKm, actualMinutes: actualMinutes);
-          if (res['success']) {
-            final cashRes = await ApiService.markCashCollected(tripId);
-            if (!cashRes['success']) {
-              _showSnack(cashRes['error'] ?? 'Cash confirmation failed',
-                  isError: true);
-              res = cashRes;
-            }
-          }
-        } else {
-          res = await ApiService.completeTrip(tripId,
-              actualKm: actualKm, actualMinutes: actualMinutes);
+        if (!res['success']) {
+          _showSnack(res['error'] ?? 'Trip completion failed', isError: true);
         }
-        break;
+        return;
       case 'cash':
+        setState(() => _loadingActive = true);
         res = await ApiService.markCashCollected(tripId);
+        setState(() => _loadingActive = false);
+        if (res['success'] == true) {
+          final data = res['data'] ?? res;
+          await _showCashCollectedBreakdown(data);
+        }
         break;
       case 'cancel':
         final reason = await _askCancelReason();

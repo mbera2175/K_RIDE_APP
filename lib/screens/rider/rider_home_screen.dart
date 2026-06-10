@@ -3893,7 +3893,12 @@ class _WhereToScreenState extends State<WhereToScreen>
 
   Future<void> _loadAllVehicleFares() async {
     setState(() => _allFaresLoading = true);
-    final types = ['ac_cab', 'non_ac_cab', 'bike', 'auto', 'toto', 'ambulance'];
+    final List<String> types;
+    if (widget.service.id == 8) {
+      types = ['parcel'];
+    } else {
+      types = ['ac_cab', 'non_ac_cab', 'bike', 'auto', 'toto', 'ambulance'];
+    }
     final Map<String, Map<String, dynamic>> results = {};
 
     // Geocode destination if needed
@@ -3932,9 +3937,11 @@ class _WhereToScreenState extends State<WhereToScreen>
           dropLat: _dropLat,
           dropLng: _dropLng,
           vehicleType: type,
+          serviceType: (widget.service.id == 8) ? 'parcel' : 'ride',
         );
         if (res['success'] == true) {
-          results[type] = {
+          final String key = (widget.service.id == 8 && type == 'parcel') ? 'bike' : type;
+          results[key] = {
             'fare': (res['data']?['estimated_fare'] ?? 0.0).toDouble(),
             'distance': (res['data']?['distance_km'] ?? 0.0).toDouble(),
             'duration': (res['data']?['duration_min'] ?? 0).toInt(),
@@ -5334,6 +5341,9 @@ class _WhereToScreenState extends State<WhereToScreen>
                               ),
                             ),
                             ...(() {
+                              if (widget.service.id == 8) {
+                                return ['bike'];
+                              }
                               final list = ['ac_cab', 'bike', 'non_ac_cab', 'ambulance', 'auto', 'toto'];
                               if (list.contains(_initialVehicleType)) {
                                 list.remove(_initialVehicleType);
@@ -8405,7 +8415,11 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           fit: BoxFit.contain,
           errorBuilder: (c, e, s) => const Icon(Icons.medication, size: 28),
         ),
-        'onTap': () => _openService(services.firstWhere((s) => s.id == 9)),
+        'onTap': () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Medicine Delivery feature coming soon!')),
+          );
+        },
       },
       {
         'label': 'Food',
@@ -8416,7 +8430,11 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           fit: BoxFit.contain,
           errorBuilder: (c, e, s) => const Icon(Icons.fastfood, size: 28),
         ),
-        'onTap': () => _openService(services.firstWhere((s) => s.id == 7)),
+        'onTap': () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Food Delivery feature coming soon!')),
+          );
+        },
       },
     ]);
   }
@@ -8475,7 +8493,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
-        height: 125,
+        height: 138,
         decoration: BoxDecoration(
           color: kWhite,
           borderRadius: BorderRadius.circular(24),

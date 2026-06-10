@@ -2399,6 +2399,7 @@ class _WhereToScreenState extends State<WhereToScreen>
   bool _booked = false;
   bool _showPaymentModal = false;
   late String _selectedVehicleType;
+  late String _initialVehicleType;
   double _bonusAmount = 0.0;
   double _pickupLat = 22.5726;
   double _pickupLng = 88.3639;
@@ -2960,10 +2961,11 @@ class _WhereToScreenState extends State<WhereToScreen>
       }
     });
     final initialVehicle = widget.service.vehicleType;
-    _selectedVehicleType = ['ac_cab', 'non_ac_cab', 'bike', 'auto', 'toto']
+    _selectedVehicleType = ['ac_cab', 'non_ac_cab', 'bike', 'auto', 'toto', 'ambulance']
             .contains(initialVehicle)
         ? initialVehicle
         : 'ac_cab';
+    _initialVehicleType = _selectedVehicleType;
 
     if (widget.activeTripId != null) {
       _tripId = widget.activeTripId;
@@ -5305,7 +5307,14 @@ class _WhereToScreenState extends State<WhereToScreen>
                                 ),
                               ),
                             ),
-                            ...['ac_cab', 'bike', 'non_ac_cab', 'ambulance', 'auto', 'toto'].map((type) {
+                            ...(() {
+                              final list = ['ac_cab', 'bike', 'non_ac_cab', 'ambulance', 'auto', 'toto'];
+                              if (list.contains(_initialVehicleType)) {
+                                list.remove(_initialVehicleType);
+                                list.insert(0, _initialVehicleType);
+                              }
+                              return list;
+                            })().map((type) {
                               final isSelected = _selectedVehicleType == type;
                               final fareInfo = _allVehicleFares[type];
                               final double fare = fareInfo != null ? (fareInfo['fare'] as double) : 0.0;

@@ -514,7 +514,7 @@ class ServiceIconWidget extends StatelessWidget {
     
     if (cleanIcon == '🚖' || cleanIcon == '🚕' || cleanIcon == 'ac_cab' || cleanIcon == 'non_ac_cab') {
       return Image.asset(
-        'assets/images/car.png',
+        'assets/images/car final.png',
         width: size,
         height: size,
         fit: BoxFit.contain,
@@ -523,7 +523,7 @@ class ServiceIconWidget extends StatelessWidget {
     }
     if (cleanIcon == '🏍️' || cleanIcon == 'bike') {
       return Image.asset(
-        'assets/images/bike icon.png',
+        'assets/images/bike final.png',
         width: size,
         height: size,
         fit: BoxFit.contain,
@@ -532,7 +532,7 @@ class ServiceIconWidget extends StatelessWidget {
     }
     if (cleanIcon == '🛺' || cleanIcon == 'auto') {
       return Image.asset(
-        'assets/images/auto.png',
+        'assets/images/auto final.png',
         width: size,
         height: size,
         fit: BoxFit.contain,
@@ -541,16 +541,16 @@ class ServiceIconWidget extends StatelessWidget {
     }
     if (cleanIcon == '🛵' || cleanIcon == 'toto') {
       return Image.asset(
-        'assets/images/toto1.png',
-        width: size * 0.85,
-        height: size * 0.85,
+        'assets/images/toto final.png',
+        width: size,
+        height: size,
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) => Text('🛵', style: TextStyle(fontSize: size)),
       );
     }
     if (cleanIcon == '🚑' || cleanIcon == 'ambulance') {
       return Image.asset(
-        'assets/images/ambulance icon.png',
+        'assets/images/ambulance final.png',
         width: size,
         height: size,
         fit: BoxFit.contain,
@@ -1362,7 +1362,7 @@ class SeeAllModal extends StatelessWidget {
                                       ]),
                                   child: Center(
                                       child: ServiceIconWidget(
-                                          icon: s.icon, size: 30))),
+                                          icon: s.icon, size: 58))),
                               if (s.tag != null)
                                 Positioned(
                                     top: -6,
@@ -3542,11 +3542,11 @@ class _WhereToScreenState extends State<WhereToScreen>
 
   Future<void> _registerCustomIcons(MapplsMapController controller) async {
     final assets = {
-      'custom-bike': 'assets/images/bike icon.png',
-      'custom-car': 'assets/images/car.png',
-      'custom-auto': 'assets/images/auto.png',
-      'custom-toto': 'assets/images/toto1.png',
-      'custom-ambulance': 'assets/images/ambulance icon.png',
+      'custom-bike': 'assets/images/bike final.png',
+      'custom-car': 'assets/images/car final.png',
+      'custom-auto': 'assets/images/auto final.png',
+      'custom-toto': 'assets/images/toto final.png',
+      'custom-ambulance': 'assets/images/ambulance final.png',
     };
     for (final entry in assets.entries) {
       if (_registeredIcons.contains(entry.key)) continue;
@@ -8048,21 +8048,21 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                   clipBehavior: Clip.none,
                   children: [
                     Positioned(
-                      right: -6,
+                      right: -4,
                       bottom: 0,
                       child: Image.asset(
-                        'assets/images/bike icon.png',
-                        height: 65,
+                        'assets/images/bike final.png',
+                        height: 66,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
                             const ServiceIconWidget(icon: 'bike', size: 38),
                       ),
                     ),
                     Positioned(
-                      left: -6,
+                      left: -4,
                       bottom: 0,
                       child: Image.asset(
-                        'assets/images/car.png',
+                        'assets/images/car final.png',
                         height: 70,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
@@ -8091,21 +8091,21 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                   clipBehavior: Clip.none,
                   children: [
                     Positioned(
-                      right: -6,
+                      right: -4,
                       bottom: 0,
                       child: Image.asset(
-                        'assets/images/toto1.png',
-                        height: 65,
+                        'assets/images/toto final.png',
+                        height: 66,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
                             const ServiceIconWidget(icon: 'toto', size: 38),
                       ),
                     ),
                     Positioned(
-                      left: -6,
+                      left: -4,
                       bottom: 0,
                       child: Image.asset(
-                        'assets/images/auto.png',
+                        'assets/images/auto final.png',
                         height: 70,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
@@ -8128,7 +8128,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               bgColor: kPinkBg,
               arrowColor: kPinkArrow,
               vehicleImage: Image.asset(
-                'assets/images/ambulance icon.png',
+                'assets/images/ambulance final.png',
                 height: 70,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) => const ServiceIconWidget(icon: 'ambulance', size: 50),

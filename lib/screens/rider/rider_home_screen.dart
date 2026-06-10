@@ -549,9 +549,9 @@ class ServiceIconWidget extends StatelessWidget {
     }
     if (cleanIcon == '🛵' || cleanIcon == 'toto') {
       return Image.asset(
-        'assets/images/toto.png',
-        width: size,
-        height: size,
+        'assets/images/toto1.png',
+        width: size * 0.85,
+        height: size * 0.85,
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) => Text('🛵', style: TextStyle(fontSize: size)),
       );
@@ -3553,16 +3553,22 @@ class _WhereToScreenState extends State<WhereToScreen>
       'custom-bike': 'assets/images/bike.png',
       'custom-car': 'assets/images/car.png',
       'custom-auto': 'assets/images/auto.png',
-      'custom-toto': 'assets/images/toto.png',
+      'custom-toto': 'assets/images/toto1.png',
       'custom-ambulance': 'assets/images/ambulance.png',
     };
     for (final entry in assets.entries) {
       if (_registeredIcons.contains(entry.key)) continue;
       try {
         final ByteData data = await rootBundle.load(entry.value);
+        int targetWidth = 120;
+        if (entry.key == 'custom-toto') {
+          targetWidth = 85;
+        } else if (entry.key == 'custom-bike') {
+          targetWidth = 100;
+        }
         final ui.Codec codec = await ui.instantiateImageCodec(
           data.buffer.asUint8List(),
-          targetWidth: 120,
+          targetWidth: targetWidth,
         );
         final ui.FrameInfo fi = await codec.getNextFrame();
         final ByteData? pngBytes = await fi.image.toByteData(format: ui.ImageByteFormat.png);
@@ -8043,27 +8049,34 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               label: 'Car & Bike',
               bgColor: kOrangeBg,
               arrowColor: kOrange,
-              vehicleImage: Image.asset(
-                'assets/images/car_bike.png',
+              vehicleImage: SizedBox(
+                width: 95,
                 height: 70,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const SizedBox(
-                  width: 68,
-                  height: 54,
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: 0,
-                        bottom: 0,
-                        child: ServiceIconWidget(icon: 'ac_cab', size: 42),
+                child: Stack(
+                  children: [
+                    Positioned(
+                      right: 0,
+                      bottom: 2,
+                      child: Image.asset(
+                        'assets/images/bike.png',
+                        height: 52,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const ServiceIconWidget(icon: 'bike', size: 38),
                       ),
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: ServiceIconWidget(icon: 'bike', size: 42),
+                    ),
+                    Positioned(
+                      left: 0,
+                      bottom: 0,
+                      child: Image.asset(
+                        'assets/images/car.png',
+                        height: 62,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const ServiceIconWidget(icon: 'ac_cab', size: 38),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
               onTap: () {
@@ -8078,27 +8091,34 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               label: 'Auto & Toto',
               bgColor: kGreenBg,
               arrowColor: kGreenArrow,
-              vehicleImage: Image.asset(
-                'assets/images/auto_toto.png',
+              vehicleImage: SizedBox(
+                width: 95,
                 height: 70,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const SizedBox(
-                  width: 68,
-                  height: 54,
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: 0,
-                        bottom: 0,
-                        child: ServiceIconWidget(icon: 'auto', size: 42),
+                child: Stack(
+                  children: [
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Image.asset(
+                        'assets/images/toto1.png',
+                        height: 52,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const ServiceIconWidget(icon: 'toto', size: 38),
                       ),
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: ServiceIconWidget(icon: 'toto', size: 42),
+                    ),
+                    Positioned(
+                      left: 0,
+                      bottom: 0,
+                      child: Image.asset(
+                        'assets/images/auto rikswa.png',
+                        height: 60,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const ServiceIconWidget(icon: 'auto', size: 38),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
               onTap: () {

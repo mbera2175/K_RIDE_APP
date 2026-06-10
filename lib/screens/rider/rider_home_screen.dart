@@ -8640,6 +8640,7 @@ class _RiderActivityTabState extends State<_RiderActivityTab> {
     });
     try {
       final res = await ApiService.getRiderHistory(limit: 50);
+      debugPrint('Rider history API response: $res');
       if (res['success'] == true) {
         final data = res['data'];
         final tripsList = (data['trips'] ?? data['results'] ?? data ?? []) as List;
@@ -8648,12 +8649,15 @@ class _RiderActivityTabState extends State<_RiderActivityTab> {
           _loading = false;
         });
       } else {
+        debugPrint('Rider history API returned success false: ${res['error']}');
         setState(() {
           _hasError = true;
           _loading = false;
         });
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('Rider history load exception: $e');
+      debugPrint('Stack trace: $stack');
       setState(() {
         _hasError = true;
         _loading = false;
@@ -8684,12 +8688,12 @@ class _RiderActivityTabState extends State<_RiderActivityTab> {
 
   Widget _tripCard(Map<String, dynamic> trip) {
     final fare = trip['actual_fare'] ?? trip['estimated_fare'] ?? 0;
-    final dist = trip['distance_km'] ?? '';
-    final code = trip['trip_code'] ?? '';
-    final pickup = trip['pickup_address'] ?? '';
-    final drop = trip['drop_address'] ?? '';
+    final dist = trip['distance_km']?.toString() ?? '';
+    final code = trip['trip_code']?.toString() ?? '';
+    final pickup = trip['pickup_address']?.toString() ?? '';
+    final drop = trip['drop_address']?.toString() ?? '';
     final status = (trip['status'] ?? '').toString();
-    final rawDate = trip['created_at'] ?? trip['updated_at'] ?? '';
+    final rawDate = trip['requested_at']?.toString() ?? trip['created_at']?.toString() ?? trip['updated_at']?.toString() ?? '';
     String dateLabel = '';
     if (rawDate.isNotEmpty) {
       try {

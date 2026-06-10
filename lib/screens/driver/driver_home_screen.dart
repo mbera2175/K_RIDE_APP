@@ -2890,10 +2890,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
   void _openRiderChat() {
     final trip = _activeTrip;
     if (trip == null) return;
-    if (_isChatOpen) return;
+    if (_isChatOpen || DriverSocketService.isChatOpen) return;
 
     setState(() {
       _isChatOpen = true;
+      DriverSocketService.isChatOpen = true;
     });
 
     Navigator.of(context).push(
@@ -2910,6 +2911,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       if (mounted) {
         setState(() {
           _isChatOpen = false;
+          DriverSocketService.isChatOpen = false;
         });
       }
     });

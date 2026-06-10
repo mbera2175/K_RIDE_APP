@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
 import '../utils/constants.dart';
+import '../main.dart';
 
 class DriverSocketService {
   static WebSocketChannel? _channel;
@@ -12,6 +13,8 @@ class DriverSocketService {
   static bool _isConnected = false;
 
   static bool get isConnected => _isConnected;
+
+  static bool isChatOpen = false;
 
   static Future<void> connect(int driverId, String token) async {
     try {
@@ -30,6 +33,20 @@ class DriverSocketService {
         (message) {
           try {
             final data = jsonDecode(message);
+
+            if (data['type'] == 'chat_message') {
+              if (data['open_chat'] == true && !isChatOpen) {
+                isChatOpen = true;
+                navigatorKey.currentState?.pushNamed(
+                  '/chat',
+                  arguments: {
+                    'trip_id': data['trip_id'],
+                  },
+                ).then((_) {
+                  isChatOpen = false;
+                });
+              }
+            }
 
             if (onMessage != null) {
               onMessage!(data);

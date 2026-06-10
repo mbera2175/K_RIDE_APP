@@ -62,6 +62,19 @@ class KRideApp extends StatelessWidget {
           home: AuthService.isLoggedIn
               ? const _AutoLoginRedirect()
               : const RoleSelectionScreen(),
+          routes: {
+            '/chat': (context) {
+              final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+              final tripId = args?['trip_id'] as int?;
+              return DriverTripChatScreen(
+                tripId: tripId ?? 0,
+                riderName: args?['rider_name'] as String? ?? 'Rider',
+                onClose: () {
+                  Navigator.of(context).pop();
+                },
+              );
+            },
+          },
         );
       },
     );

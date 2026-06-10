@@ -4364,7 +4364,9 @@ class _WhereToScreenState extends State<WhereToScreen>
         },
       ),
     );
-    controller.dispose();
+    Future.delayed(const Duration(milliseconds: 500), () {
+      controller.dispose();
+    });
     return reason;
   }
 

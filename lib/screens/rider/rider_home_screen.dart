@@ -4855,34 +4855,34 @@ class _WhereToScreenState extends State<WhereToScreen>
                   children: [
                     if (widget.genericMode) ...[
                       Container(
-                          width: 32,
-                          height: 32,
+                          width: 64,
+                          height: 64,
                           decoration: BoxDecoration(
                               color: kOrangeLight,
-                              borderRadius: BorderRadius.circular(8)),
+                              borderRadius: BorderRadius.circular(16)),
                           child: const Center(
                               child: ServiceIconWidget(
-                                  icon: 'ac_cab', size: 18))),
-                      const SizedBox(width: 8),
-                      const Text('Book Ride',
+                                  icon: 'ac_cab', size: 44))),
+                      const SizedBox(width: 12),
+                      const Text('Book Your Ride',
                           style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 18,
                               fontWeight: FontWeight.w800,
                               color: kDark)),
                     ] else ...[
                       Container(
-                          width: 32,
-                          height: 32,
+                          width: 64,
+                          height: 64,
                           decoration: BoxDecoration(
-                              color: widget.service.color,
-                              borderRadius: BorderRadius.circular(8)),
+                              color: widget.service.color.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(16)),
                           child: Center(
                               child: ServiceIconWidget(
-                                  icon: widget.service.icon, size: 18))),
-                      const SizedBox(width: 8),
-                      Text(widget.service.name,
-                          style: const TextStyle(
-                              fontSize: 16,
+                                  icon: widget.service.icon, size: 44))),
+                      const SizedBox(width: 12),
+                      const Text('Book Your Ride',
+                          style: TextStyle(
+                              fontSize: 18,
                               fontWeight: FontWeight.w800,
                               color: kDark)),
                     ],
@@ -4905,13 +4905,13 @@ class _WhereToScreenState extends State<WhereToScreen>
                     ],
                   ],
                 ),
-                SizedBox(height: isKeyboardOpen ? 10 : 16),
+                SizedBox(height: isKeyboardOpen ? 16 : 28),
                 Container(
-                  height: 44,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  height: 54,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
                       color: kOrangeLight,
-                      borderRadius: BorderRadius.circular(10)),
+                      borderRadius: BorderRadius.circular(99)),
                   child: Row(
                     children: [
                       Container(
@@ -4919,7 +4919,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                           height: 8,
                           decoration: const BoxDecoration(
                               shape: BoxShape.circle, color: kOrange)),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 12),
                       Expanded(
                           child: TextField(
                               controller: _pickupCtrl,
@@ -4930,18 +4930,18 @@ class _WhereToScreenState extends State<WhereToScreen>
                                   contentPadding: EdgeInsets.zero,
                                   hintText: 'Pickup location'),
                               style:
-                                  const TextStyle(fontSize: 13, color: kDark))),
+                                  const TextStyle(fontSize: 14, color: kDark))),
                     ],
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 StatefulBuilder(
                   builder: (_, ss) => Container(
-                    height: 44,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    height: 54,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
                         color: kGray,
-                        borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(99)),
                     child: Row(
                       children: [
                         Container(
@@ -4950,7 +4950,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                             decoration: BoxDecoration(
                                 color: kDark,
                                 borderRadius: BorderRadius.circular(1.5))),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
                             controller: _destCtrl,
@@ -4964,7 +4964,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                                 hintText: widget.service.category == 'delivery'
                                     ? 'Delivery address...'
                                     : 'Where to?'),
-                            style: const TextStyle(fontSize: 13, color: kDark),
+                            style: const TextStyle(fontSize: 14, color: kDark),
                           ),
                         ),
                         if (_destCtrl.text.isNotEmpty)

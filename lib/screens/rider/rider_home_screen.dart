@@ -8152,180 +8152,103 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
   }
 
   Widget _buildNewRideCategoryRow() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildRideCategoryCard(
-              label: 'Car & Bike',
-              bgColor: kOrangeBg,
-              arrowColor: kOrange,
-              imageContainerHeight: 85,
-              vehicleImage: SizedBox(
-                width: 60,
-                height: 85,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned(
-                      right: -15,
-                      bottom: 0,
-                      child: Image.asset(
-                        'assets/images/bike final.png',
-                        height: 78,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const ServiceIconWidget(icon: 'bike', size: 38),
-                      ),
-                    ),
-                    Positioned(
-                      left: -15,
-                      bottom: 0,
-                      child: Image.asset(
-                        'assets/images/car final.png',
-                        height: 85,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const ServiceIconWidget(icon: 'ac_cab', size: 38),
-                      ),
-                    ),
-                  ],
+    return _buildUnifiedServiceCardRow([
+      {
+        'label': 'Car & Bike',
+        'subtitle': 'Quick & Easy',
+        'bgColor': kOrangeBg,
+        'imageWidget': SizedBox(
+          width: 60,
+          height: 85,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                right: -15,
+                bottom: 0,
+                child: Image.asset(
+                  'assets/images/bike final.png',
+                  height: 78,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const ServiceIconWidget(icon: 'bike', size: 38),
                 ),
               ),
-              onTap: () {
-                final items = _rideServices.where((s) => [1, 2, 3].contains(s.id)).toList();
-                setState(() => _seeAll = (title: 'Car & Bike', items: items));
-              },
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _buildRideCategoryCard(
-              label: 'Auto & Toto',
-              bgColor: kGreenBg,
-              arrowColor: kGreenArrow,
-              vehicleImage: SizedBox(
-                width: 82,
-                height: 78,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned(
-                      right: -4,
-                      bottom: 0,
-                      child: Image.asset(
-                        'assets/images/toto final.png',
-                        height: 72,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const ServiceIconWidget(icon: 'toto', size: 38),
-                      ),
-                    ),
-                    Positioned(
-                      left: -4,
-                      bottom: 0,
-                      child: Image.asset(
-                        'assets/images/auto final.png',
-                        height: 78,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const ServiceIconWidget(icon: 'auto', size: 38),
-                      ),
-                    ),
-                  ],
+              Positioned(
+                left: -15,
+                bottom: 0,
+                child: Image.asset(
+                  'assets/images/car final.png',
+                  height: 85,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const ServiceIconWidget(icon: 'ac_cab', size: 38),
                 ),
               ),
-              onTap: () {
-                final items = _rideServices.where((s) => [4, 5].contains(s.id)).toList();
-                setState(() => _seeAll = (title: 'Auto & Toto', items: items));
-              },
-            ),
+            ],
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _buildRideCategoryCard(
-              label: 'Ambulance',
-              bgColor: kPinkBg,
-              arrowColor: kPinkArrow,
-              vehicleImage: Image.asset(
-                'assets/images/ambulance final.png',
-                height: 60,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const ServiceIconWidget(icon: 'ambulance', size: 42),
-              ),
-              onTap: () {
-                final service = services.firstWhere((s) => s.id == 6);
-                _openService(service);
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRideCategoryCard({
-    required String label,
-    required Color bgColor,
-    required Color arrowColor,
-    required Widget vehicleImage,
-    required VoidCallback onTap,
-    double imageContainerHeight = 70,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 125,
-        padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(18),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Center(
-              child: Container(
-                height: imageContainerHeight,
-                alignment: Alignment.center,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: vehicleImage,
+        'onTap': () {
+          final items = _rideServices.where((s) => [1, 2, 3].contains(s.id)).toList();
+          setState(() => _seeAll = (title: 'Car & Bike', items: items));
+        },
+      },
+      {
+        'label': 'Auto & Toto',
+        'subtitle': 'Budget Rides',
+        'bgColor': kGreenBg,
+        'imageWidget': SizedBox(
+          width: 82,
+          height: 78,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                right: -4,
+                bottom: 0,
+                child: Image.asset(
+                  'assets/images/toto final.png',
+                  height: 72,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const ServiceIconWidget(icon: 'toto', size: 38),
                 ),
               ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black87,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+              Positioned(
+                left: -4,
+                bottom: 0,
+                child: Image.asset(
+                  'assets/images/auto final.png',
+                  height: 78,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const ServiceIconWidget(icon: 'auto', size: 38),
                 ),
-                Container(
-                  width: 26,
-                  height: 26,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.arrow_forward_rounded, size: 15, color: arrowColor),
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+        'onTap': () {
+          final items = _rideServices.where((s) => [4, 5].contains(s.id)).toList();
+          setState(() => _seeAll = (title: 'Auto & Toto', items: items));
+        },
+      },
+      {
+        'label': 'Ambulance',
+        'subtitle': 'Emergency Care',
+        'bgColor': kPinkBg,
+        'imageWidget': Image.asset(
+          'assets/images/ambulance final.png',
+          height: 60,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => const ServiceIconWidget(icon: 'ambulance', size: 42),
+        ),
+        'onTap': () {
+          final service = services.firstWhere((s) => s.id == 6);
+          _openService(service);
+        },
+      },
+    ]);
   }
 
   Widget _buildUnifiedServiceCardRow(List<Map<String, dynamic>> items) {

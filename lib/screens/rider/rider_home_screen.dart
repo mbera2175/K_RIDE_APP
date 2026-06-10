@@ -3482,11 +3482,6 @@ class _WhereToScreenState extends State<WhereToScreen>
     setState(() {
       _suggestions = [];
     });
-    
-    if (_destCtrl.text.isNotEmpty && _pickupCtrl.text.isNotEmpty) {
-      setState(() => _step = 'confirm');
-      _loadAllVehicleFares();
-    }
   }
 
   double _calculateBearing(double lat1, double lng1, double lat2, double lng2) {

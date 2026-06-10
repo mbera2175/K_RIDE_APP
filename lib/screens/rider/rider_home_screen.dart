@@ -779,19 +779,54 @@ class _LocationModalState extends State<LocationModal> {
         final placemarks = await geo.placemarkFromCoordinates(pos.latitude, pos.longitude);
         if (placemarks.isNotEmpty) {
           final pm = placemarks.first;
+          
           final String name = pm.name ?? '';
           final String subLocality = pm.subLocality ?? '';
           final String locality = pm.locality ?? '';
           final String street = pm.street ?? '';
+          final String thoroughfare = pm.thoroughfare ?? '';
+          final String subThoroughfare = pm.subThoroughfare ?? '';
+          final String subAdministrativeArea = pm.subAdministrativeArea ?? '';
+          final String administrativeArea = pm.administrativeArea ?? '';
+          final String postalCode = pm.postalCode ?? '';
           
-          String address = "";
-          if (street.isNotEmpty && !street.contains("+") && !street.contains("Unnamed")) {
-            address += "$street, ";
-          } else if (name.isNotEmpty && !name.contains("+") && !name.contains("Unnamed")) {
-            address += "$name, ";
+          final List<String> parts = [];
+          
+          String streetPart = '';
+          if (street.isNotEmpty && !street.contains("+") && !street.toLowerCase().contains("unnamed")) {
+            streetPart = street;
+          } else if (name.isNotEmpty && !name.contains("+") && !name.toLowerCase().contains("unnamed")) {
+            streetPart = name;
+          } else if (thoroughfare.isNotEmpty && !thoroughfare.contains("+") && !thoroughfare.toLowerCase().contains("unnamed")) {
+            streetPart = thoroughfare;
+            if (subThoroughfare.isNotEmpty) {
+              streetPart = "$subThoroughfare, $streetPart";
+            }
           }
-          if (subLocality.isNotEmpty) address += "$subLocality, ";
-          if (locality.isNotEmpty) address += locality;
+          if (streetPart.isNotEmpty) {
+            parts.add(streetPart);
+          }
+          
+          if (subLocality.isNotEmpty) {
+            parts.add(subLocality);
+          }
+          if (locality.isNotEmpty) {
+            parts.add(locality);
+          }
+          if (subAdministrativeArea.isNotEmpty) {
+            parts.add(subAdministrativeArea);
+          } else if (administrativeArea.isNotEmpty) {
+            parts.add(administrativeArea);
+          }
+          if (postalCode.isNotEmpty) {
+            parts.add(postalCode);
+          }
+          
+          String address = parts.join(", ");
+          
+          if (address.isEmpty) {
+            address = pm.subAdministrativeArea ?? pm.administrativeArea ?? "Current Location";
+          }
           
           final finalAddress = address.trim().endsWith(",") 
               ? address.trim().substring(0, address.trim().length - 1) 
@@ -2345,6 +2380,20 @@ class _WhereToScreenState extends State<WhereToScreen>
 
   final _pickupCtrl = TextEditingController(text: 'Fetching current location...');
   late TextEditingController _destCtrl;
+  bool _disableSearchListener = false;
+
+  void _setPickupText(String text) {
+    _disableSearchListener = true;
+    _pickupCtrl.text = text;
+    _disableSearchListener = false;
+  }
+
+  void _setDestText(String text) {
+    _disableSearchListener = true;
+    _destCtrl.text = text;
+    _disableSearchListener = false;
+  }
+
   String _step = 'input';
   PaymentMethod _paymentMethod = paymentMethods[0];
   bool _booked = false;
@@ -2888,11 +2937,11 @@ class _WhereToScreenState extends State<WhereToScreen>
     _pickupFocus.addListener(() {
       if (_pickupFocus.hasFocus) {
         if (_pickupCtrl.text == 'Fetching current location...' || _pickupCtrl.text == 'Current Location') {
-          _pickupCtrl.clear();
+          _setPickupText('');
         }
       } else {
         if (_pickupCtrl.text.isEmpty) {
-          _pickupCtrl.text = 'Current Location';
+          _setPickupText('Current Location');
         }
         Future.delayed(const Duration(milliseconds: 200), () {
           if (mounted && !_pickupFocus.hasFocus && !_destFocus.hasFocus) {
@@ -3164,7 +3213,7 @@ class _WhereToScreenState extends State<WhereToScreen>
       final permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         setState(() {
-          _pickupCtrl.text = 'Current Location';
+          _setPickupText('Current Location');
         });
         return;
       }
@@ -3177,42 +3226,73 @@ class _WhereToScreenState extends State<WhereToScreen>
         final placemarks = await geo.placemarkFromCoordinates(pos.latitude, pos.longitude);
         if (placemarks.isNotEmpty) {
           final pm = placemarks.first;
+          
           final String name = pm.name ?? '';
           final String subLocality = pm.subLocality ?? '';
           final String locality = pm.locality ?? '';
           final String street = pm.street ?? '';
+          final String thoroughfare = pm.thoroughfare ?? '';
+          final String subThoroughfare = pm.subThoroughfare ?? '';
+          final String subAdministrativeArea = pm.subAdministrativeArea ?? '';
+          final String administrativeArea = pm.administrativeArea ?? '';
+          final String postalCode = pm.postalCode ?? '';
           
-          String address = "";
-          if (street.isNotEmpty && !street.contains("+") && !street.contains("Unnamed")) {
-            address += "$street, ";
-          } else if (name.isNotEmpty && !name.contains("+") && !name.contains("Unnamed")) {
-            address += "$name, ";
+          final List<String> parts = [];
+          
+          String streetPart = '';
+          if (street.isNotEmpty && !street.contains("+") && !street.toLowerCase().contains("unnamed")) {
+            streetPart = street;
+          } else if (name.isNotEmpty && !name.contains("+") && !name.toLowerCase().contains("unnamed")) {
+            streetPart = name;
+          } else if (thoroughfare.isNotEmpty && !thoroughfare.contains("+") && !thoroughfare.toLowerCase().contains("unnamed")) {
+            streetPart = thoroughfare;
+            if (subThoroughfare.isNotEmpty) {
+              streetPart = "$subThoroughfare, $streetPart";
+            }
           }
-          if (subLocality.isNotEmpty) address += "$subLocality, ";
-          if (locality.isNotEmpty) address += locality;
+          if (streetPart.isNotEmpty) {
+            parts.add(streetPart);
+          }
+          
+          if (subLocality.isNotEmpty) {
+            parts.add(subLocality);
+          }
+          if (locality.isNotEmpty) {
+            parts.add(locality);
+          }
+          if (subAdministrativeArea.isNotEmpty) {
+            parts.add(subAdministrativeArea);
+          } else if (administrativeArea.isNotEmpty) {
+            parts.add(administrativeArea);
+          }
+          if (postalCode.isNotEmpty) {
+            parts.add(postalCode);
+          }
+          
+          String address = parts.join(", ");
           
           if (address.isEmpty) {
             address = pm.subAdministrativeArea ?? pm.administrativeArea ?? "Current Location";
           }
           
           setState(() {
-            _pickupCtrl.text = address.trim().endsWith(",") 
+            _setPickupText(address.trim().endsWith(",") 
                 ? address.trim().substring(0, address.trim().length - 1) 
-                : address.trim();
+                : address.trim());
           });
         } else {
           setState(() {
-            _pickupCtrl.text = 'Current Location';
+            _setPickupText('Current Location');
           });
         }
       } catch (_) {
         setState(() {
-          _pickupCtrl.text = 'Current Location';
+          _setPickupText('Current Location');
         });
       }
     } catch (e) {
       setState(() {
-        _pickupCtrl.text = 'Current Location';
+        _setPickupText('Current Location');
       });
     }
   }
@@ -3299,6 +3379,7 @@ class _WhereToScreenState extends State<WhereToScreen>
   double? _lastDriverLng;
 
   void _onSearchTextChanged() {
+    if (_disableSearchListener) return;
     if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 400), () async {
       if (!mounted) return;
@@ -3339,7 +3420,7 @@ class _WhereToScreenState extends State<WhereToScreen>
     final isPickup = _pickupFocus.hasFocus;
     
     if (isPickup) {
-      _pickupCtrl.text = suggestion.placeName;
+      _setPickupText(suggestion.placeName);
       if (suggestion.latitude != null && suggestion.longitude != null) {
         _pickupLat = suggestion.latitude!;
         _pickupLng = suggestion.longitude!;
@@ -3358,7 +3439,7 @@ class _WhereToScreenState extends State<WhereToScreen>
         }
       });
     } else {
-      _destCtrl.text = suggestion.placeName;
+      _setDestText(suggestion.placeName);
       if (suggestion.latitude != null && suggestion.longitude != null) {
         _dropLat = suggestion.latitude!;
         _dropLng = suggestion.longitude!;
@@ -3884,7 +3965,7 @@ class _WhereToScreenState extends State<WhereToScreen>
         setState(() {
           _tripId = (trip['id'] as num?)?.toInt() ?? _tripId;
           _tripStatus = _normalizeTripStatus(trip['status']);
-          _pickupCtrl.text = trip['pickup_address'] ?? '';
+          _setPickupText(trip['pickup_address'] ?? '');
           _pickupLat = (trip['pickup_lat'] as num?)?.toDouble() ?? 22.5726;
           _pickupLng = (trip['pickup_lng'] as num?)?.toDouble() ?? 88.3639;
           _dropLat = (trip['drop_lat'] as num?)?.toDouble() ?? 22.5850;
@@ -4906,7 +4987,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                       child: GestureDetector(
                         onTap: () {
                           if (_destCtrl.text.isEmpty) {
-                            _destCtrl.text = "Map Selected Location";
+                            _setDestText("Map Selected Location");
                           }
                           setState(() {
                             _dropLat = 22.5850;

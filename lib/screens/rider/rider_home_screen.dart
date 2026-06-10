@@ -5382,8 +5382,8 @@ class _WhereToScreenState extends State<WhereToScreen>
                                   child: Row(
                                     children: [
                                       Container(
-                                        width: 50,
-                                        height: 50,
+                                        width: 60,
+                                        height: 60,
                                         decoration: BoxDecoration(
                                           color: kWhite,
                                           shape: BoxShape.circle,
@@ -5398,11 +5398,11 @@ class _WhereToScreenState extends State<WhereToScreen>
                                         child: Center(
                                           child: ServiceIconWidget(
                                             icon: type,
-                                            size: 36,
+                                            size: 48,
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(width: 10),
+                                      const SizedBox(width: 14),
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,

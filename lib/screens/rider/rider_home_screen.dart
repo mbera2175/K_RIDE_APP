@@ -8130,9 +8130,9 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               arrowColor: kPinkArrow,
               vehicleImage: Image.asset(
                 'assets/images/ambulance final.png',
-                height: 78,
+                height: 60,
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const ServiceIconWidget(icon: 'ambulance', size: 50),
+                errorBuilder: (context, error, stackTrace) => const ServiceIconWidget(icon: 'ambulance', size: 42),
               ),
               onTap: () {
                 final service = services.firstWhere((s) => s.id == 6);

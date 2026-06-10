@@ -8328,174 +8328,214 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     );
   }
 
-  Widget _buildNewServicesRow() {
+  Widget _buildUnifiedServiceCardRow(List<Map<String, dynamic>> items) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildServiceCard(
-              iconKey: 'parcel',
-              label: 'Parcel',
-              onTap: () => _openService(services.firstWhere((s) => s.id == 8)),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+        decoration: BoxDecoration(
+          color: kWhite,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFF2F4F7), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(child: _buildUnifiedServiceItem(items[0])),
+            Container(
+              width: 1,
+              height: 110,
+              color: const Color(0xFFF2F4F7),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _buildServiceCard(
-              iconKey: 'medicine',
-              label: 'Medicine',
-              onTap: () => _openService(services.firstWhere((s) => s.id == 9)),
+            Expanded(child: _buildUnifiedServiceItem(items[1])),
+            Container(
+              width: 1,
+              height: 110,
+              color: const Color(0xFFF2F4F7),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _buildServiceCard(
-              iconKey: 'food',
-              label: 'Food',
-              onTap: () => _openService(services.firstWhere((s) => s.id == 7)),
-            ),
-          ),
-        ],
+            Expanded(child: _buildUnifiedServiceItem(items[2])),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildServiceCard({
-    required String iconKey,
-    required String label,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildUnifiedServiceItem(Map<String, dynamic> item) {
+    final String label = item['label'] as String;
+    final String subtitle = item['subtitle'] as String;
+    final Color bgColor = item['bgColor'] as Color;
+    final Widget imageWidget = item['imageWidget'] as Widget;
+    final VoidCallback onTap = item['onTap'] as VoidCallback;
+
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-        decoration: BoxDecoration(
-          color: kOrangeBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: kOrange, width: 1.2),
-        ),
-        child: Row(
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ServiceIconWidget(icon: iconKey, size: 28),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            Container(
+              height: 76,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(16),
               ),
+              child: Center(
+                child: SizedBox(
+                  height: 48,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: imageWidget,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w800,
+                color: kDark,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: kMuted,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Container(
+                  width: 22,
+                  height: 22,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF9EBE1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 11,
+                      color: Color(0xFFD4552A),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildNewServicesRow() {
+    return _buildUnifiedServiceCardRow([
+      {
+        'label': 'Parcel',
+        'subtitle': 'Safe & Fast',
+        'bgColor': const Color(0xFFFFEAD2),
+        'imageWidget': Image.asset(
+          'assets/images/parcel.png',
+          fit: BoxFit.contain,
+          errorBuilder: (c, e, s) => const Icon(Icons.inventory_2, size: 28),
+        ),
+        'onTap': () => _openService(services.firstWhere((s) => s.id == 8)),
+      },
+      {
+        'label': 'Medicine',
+        'subtitle': 'On-time Delivery',
+        'bgColor': const Color(0xFFD0E1FD),
+        'imageWidget': Image.asset(
+          'assets/images/medicine.png',
+          fit: BoxFit.contain,
+          errorBuilder: (c, e, s) => const Icon(Icons.medication, size: 28),
+        ),
+        'onTap': () => _openService(services.firstWhere((s) => s.id == 9)),
+      },
+      {
+        'label': 'Food',
+        'subtitle': 'Fresh & Tasty',
+        'bgColor': const Color(0xFFFFEAD2),
+        'imageWidget': Image.asset(
+          'assets/images/food.png',
+          fit: BoxFit.contain,
+          errorBuilder: (c, e, s) => const Icon(Icons.fastfood, size: 28),
+        ),
+        'onTap': () => _openService(services.firstWhere((s) => s.id == 7)),
+      },
+    ]);
   }
 
   Widget _buildNewOtherOptionsRow() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildOtherOptionCard(
-              iconWidget: Image.asset(
-                'assets/images/schdule ride.png',
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.calendar_month_outlined, color: kOrange, size: 28),
-              ),
-              label: 'Schedule',
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Schedule Ride feature coming soon!')),
-                );
-              },
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _buildOtherOptionCard(
-              iconWidget: Image.asset(
-                'assets/images/intercity.png',
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.route_rounded, color: kOrange, size: 28),
-              ),
-              label: 'Intercity',
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Intercity rides coming soon!')),
-                );
-              },
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _buildOtherOptionCard(
-              iconWidget: Image.asset(
-                'assets/images/corporate.png',
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.business_outlined, color: Colors.grey, size: 28),
-              ),
-              label: 'Corporate',
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Corporate profile feature coming soon!')),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOtherOptionCard({
-    required Widget iconWidget,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-        decoration: BoxDecoration(
-          color: kOrangeBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: kOrange, width: 1.2),
+    return _buildUnifiedServiceCardRow([
+      {
+        'label': 'Schedule',
+        'subtitle': 'Book in Advance',
+        'bgColor': const Color(0xFFFFEAD2),
+        'imageWidget': Image.asset(
+          'assets/images/schdule ride.png',
+          fit: BoxFit.contain,
+          errorBuilder: (c, e, s) => const Icon(Icons.calendar_month, size: 28),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              alignment: Alignment.center,
-              child: iconWidget,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+        'onTap': () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Schedule Ride feature coming soon!')),
+          );
+        },
+      },
+      {
+        'label': 'Intercity',
+        'subtitle': 'Go out of Station',
+        'bgColor': const Color(0xFFD0E1FD),
+        'imageWidget': Image.asset(
+          'assets/images/intercity.png',
+          fit: BoxFit.contain,
+          errorBuilder: (c, e, s) => const Icon(Icons.route_rounded, size: 28),
         ),
-      ),
-    );
+        'onTap': () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Intercity rides coming soon!')),
+          );
+        },
+      },
+      {
+        'label': 'Corporate',
+        'subtitle': 'Business Travels',
+        'bgColor': const Color(0xFFFFEAD2),
+        'imageWidget': Image.asset(
+          'assets/images/corporate.png',
+          fit: BoxFit.contain,
+          errorBuilder: (c, e, s) => const Icon(Icons.business_outlined, size: 28),
+        ),
+        'onTap': () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Corporate profile feature coming soon!')),
+          );
+        },
+      },
+    ]);
   }
 
   Widget _buildNewEVBanner() {

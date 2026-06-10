@@ -2932,8 +2932,8 @@ class _WhereToScreenState extends State<WhereToScreen>
     WidgetsBinding.instance.addObserver(this);
     _destCtrl = TextEditingController(text: widget.prefilledDest);
     
-    _destCtrl.addListener(_onSearchTextChanged);
-    _pickupCtrl.addListener(_onSearchTextChanged);
+    _destCtrl.addListener(_onDestTextChanged);
+    _pickupCtrl.addListener(_onPickupTextChanged);
     
     _pickupFocus.addListener(() {
       if (_pickupFocus.hasFocus) {
@@ -3379,6 +3379,18 @@ class _WhereToScreenState extends State<WhereToScreen>
   Timer? _driverAnimTimer;
   double? _lastDriverLat;
   double? _lastDriverLng;
+
+  void _onPickupTextChanged() {
+    if (_disableSearchListener) return;
+    if (!_pickupFocus.hasFocus) return;
+    _onSearchTextChanged();
+  }
+
+  void _onDestTextChanged() {
+    if (_disableSearchListener) return;
+    if (!_destFocus.hasFocus) return;
+    _onSearchTextChanged();
+  }
 
   void _onSearchTextChanged() {
     if (_disableSearchListener) return;

@@ -2381,16 +2381,20 @@ class _WhereToScreenState extends State<WhereToScreen>
   final _pickupCtrl = TextEditingController(text: 'Fetching current location...');
   late TextEditingController _destCtrl;
   bool _disableSearchListener = false;
+  String _lastPickupText = 'Fetching current location...';
+  String _lastDestText = '';
 
   void _setPickupText(String text) {
     _disableSearchListener = true;
     _pickupCtrl.text = text;
+    _lastPickupText = text;
     _disableSearchListener = false;
   }
 
   void _setDestText(String text) {
     _disableSearchListener = true;
     _destCtrl.text = text;
+    _lastDestText = text;
     _disableSearchListener = false;
   }
 
@@ -2931,6 +2935,8 @@ class _WhereToScreenState extends State<WhereToScreen>
     _loadActivePromos();
     WidgetsBinding.instance.addObserver(this);
     _destCtrl = TextEditingController(text: widget.prefilledDest);
+    _lastDestText = widget.prefilledDest;
+    _lastPickupText = _pickupCtrl.text;
     
     _destCtrl.addListener(_onDestTextChanged);
     _pickupCtrl.addListener(_onPickupTextChanged);
@@ -3383,12 +3389,18 @@ class _WhereToScreenState extends State<WhereToScreen>
   void _onPickupTextChanged() {
     if (_disableSearchListener) return;
     if (!_pickupFocus.hasFocus) return;
+    final text = _pickupCtrl.text;
+    if (text == _lastPickupText) return;
+    _lastPickupText = text;
     _onSearchTextChanged();
   }
 
   void _onDestTextChanged() {
     if (_disableSearchListener) return;
     if (!_destFocus.hasFocus) return;
+    final text = _destCtrl.text;
+    if (text == _lastDestText) return;
+    _lastDestText = text;
     _onSearchTextChanged();
   }
 
@@ -3429,9 +3441,8 @@ class _WhereToScreenState extends State<WhereToScreen>
   }
 
   Future<void> _selectSuggestion(MapplsPlaceSuggestion suggestion) async {
-    FocusScope.of(context).unfocus();
-    
     final isPickup = _pickupFocus.hasFocus;
+    FocusScope.of(context).unfocus();
     
     if (isPickup) {
       _setPickupText(suggestion.placeName);
@@ -4984,7 +4995,10 @@ class _WhereToScreenState extends State<WhereToScreen>
                         if (_destCtrl.text.isNotEmpty)
                           GestureDetector(
                               onTap: () {
-                                _destCtrl.clear();
+                                _setDestText('');
+                                setState(() {
+                                  _suggestions = [];
+                                });
                                 ss(() {});
                               },
                               child: const Text('✕',

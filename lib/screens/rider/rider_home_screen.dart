@@ -5461,7 +5461,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                                         child: Center(
                                           child: ServiceIconWidget(
                                             icon: type,
-                                            size: 65,
+                                            size: ['ac_cab', 'bike', 'non_ac_cab', 'auto'].contains(type) ? 80 : 65,
                                           ),
                                         ),
                                       ),

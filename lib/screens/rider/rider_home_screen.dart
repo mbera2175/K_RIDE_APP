@@ -1065,11 +1065,15 @@ class _LocationModalState extends State<LocationModal> {
 class PaymentModal extends StatelessWidget {
   final PaymentMethod selected;
   final ValueChanged<PaymentMethod> onSelect;
+  final bool useKCoins;
+  final ValueChanged<bool> onUseKCoinsChanged;
   final VoidCallback onClose;
   const PaymentModal(
       {super.key,
       required this.selected,
       required this.onSelect,
+      required this.useKCoins,
+      required this.onUseKCoinsChanged,
       required this.onClose});
 
   @override
@@ -1174,6 +1178,89 @@ class PaymentModal extends StatelessWidget {
                     ),
                   );
                 }),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () => onUseKCoinsChanged(!useKCoins),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: useKCoins ? kOrangeLight : kGray,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                          color: useKCoins ? kOrange : Colors.transparent,
+                          width: 2),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: kWhite,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.07),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Center(
+                            child: Text('🪙', style: TextStyle(fontSize: 22)),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Use K Coins',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: kDark,
+                                ),
+                              ),
+                              Text(
+                                '100 coins = ₹10 discount',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: kMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          width: 44,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: useKCoins ? kOrange : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: AnimatedAlign(
+                            duration: const Duration(milliseconds: 200),
+                            alignment: useKCoins
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            child: Container(
+                              margin: const EdgeInsets.all(3),
+                              width: 18,
+                              height: 18,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -5344,9 +5431,9 @@ class _WhereToScreenState extends State<WhereToScreen>
         DraggableScrollableSheet(
           initialChildSize: 0.38,
           minChildSize: 0.18,
-          maxChildSize: 0.70,
+          maxChildSize: 0.90,
           snap: true,
-          snapSizes: const [0.18, 0.38, 0.70],
+          snapSizes: const [0.18, 0.38, 0.90],
           builder: (sheetCtx, scrollController) {
             return Container(
               decoration: const BoxDecoration(
@@ -5538,154 +5625,129 @@ class _WhereToScreenState extends State<WhereToScreen>
                             }).toList(),
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        GestureDetector(
-                          onTap: () => setState(() => _useKCoins = !_useKCoins),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: _useKCoins
-                                  ? const Color(0xFFFFF3E0)
-                                  : const Color(0xFFF5F5F5),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                  color: _useKCoins
-                                      ? const Color(0xFFFF6B35)
-                                      : const Color(0xFFEEEEEE),
-                                  width: 1.5),
-                            ),
-                            child: Row(children: [
-                              const Text('🪙', style: TextStyle(fontSize: 16)),
-                              const SizedBox(width: 6),
-                              const Expanded(
-                                  child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: kGray,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFEEEEEE), width: 1.5),
+                          ),
+                          child: Row(
+                            children: [
+                              // Left side: Payment Method
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () => setState(() => _showPaymentModal = true),
+                                  behavior: HitTestBehavior.opaque,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    child: Row(
                                       children: [
-                                    Text('Use K Coins',
-                                        style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w700)),
-                                    Text('100 coins = ₹10 discount',
-                                        style: TextStyle(
-                                            fontSize: 9, color: Colors.grey)),
-                                  ])),
-                              Container(
-                                width: 32,
-                                height: 18,
-                                decoration: BoxDecoration(
-                                    color: _useKCoins
-                                        ? const Color(0xFFFF6B35)
-                                        : Colors.grey[300],
-                                    borderRadius: BorderRadius.circular(10)),
-                                child: AnimatedAlign(
-                                    duration: const Duration(milliseconds: 200),
-                                    alignment: _useKCoins
-                                        ? Alignment.centerRight
-                                        : Alignment.centerLeft,
-                                    child: Container(
-                                        margin: const EdgeInsets.all(2),
-                                        width: 12,
-                                        height: 12,
-                                        decoration: const BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle)),
+                                        Text(_paymentMethod.icon, style: const TextStyle(fontSize: 18)),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Flexible(
+                                                    child: Text(
+                                                      _paymentMethod.label,
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.w800,
+                                                        color: kDark,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  if (_useKCoins) ...[
+                                                    const SizedBox(width: 4),
+                                                    const Text('🪙', style: TextStyle(fontSize: 12)),
+                                                  ],
+                                                  const SizedBox(width: 2),
+                                                  const Icon(Icons.keyboard_arrow_right_rounded, size: 14, color: kMuted),
+                                                ],
+                                              ),
+                                              Text(
+                                                _useKCoins ? 'K Coins applied' : _paymentMethod.sub,
+                                                style: const TextStyle(
+                                                  fontSize: 9.5,
+                                                  color: kMuted,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ]),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        GestureDetector(
-                          onTap: _showPromoCodeModal,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 5),
-                            decoration: BoxDecoration(
-                                color: kGray,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                    color: const Color(0xFFEEEEEE), width: 1.5)),
-                            child: Row(
-                              children: [
-                                const Text('🎟️',
-                                    style: TextStyle(fontSize: 14)),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                    child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                        _appliedPromoCode != null
-                                            ? 'Promo Applied: $_appliedPromoCode'
-                                            : 'Apply Coupon',
-                                        style: const TextStyle(
-                                            fontSize: 10.5,
-                                            fontWeight: FontWeight.w700,
-                                            color: kDark)),
-                                    Text(
-                                        _appliedPromoCode != null && _promoDiscount > 0
-                                            ? 'Saved ₹${_promoDiscount.toStringAsFixed(2)} on this ride'
-                                            : 'Get discounts on your fare',
-                                        style: TextStyle(
-                                            fontSize: 8.5,
-                                            color: _appliedPromoCode != null
-                                                ? const Color(0xFF4CAF50)
-                                                : kMuted,
-                                            fontWeight: _appliedPromoCode != null
-                                                ? FontWeight.w600
-                                                : FontWeight.normal)),
-                                  ],
-                                )),
-                                Text(_appliedPromoCode != null ? 'Remove' : 'Apply',
-                                    style: TextStyle(
-                                        fontSize: 10.5,
-                                        color: _appliedPromoCode != null
-                                            ? Colors.red[700]
-                                            : kOrange,
-                                        fontWeight: FontWeight.w700)),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        GestureDetector(
-                          onTap: () => setState(() => _showPaymentModal = true),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 5),
-                            decoration: BoxDecoration(
-                                color: kGray,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                    color: const Color(0xFFEEEEEE), width: 1.5)),
-                            child: Row(
-                              children: [
-                                Text(_paymentMethod.icon,
-                                    style: const TextStyle(fontSize: 14)),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                    child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                      Text(_paymentMethod.label,
-                                          style: const TextStyle(
-                                              fontSize: 10.5,
-                                              fontWeight: FontWeight.w700,
-                                              color: kDark)),
-                                      Text(_paymentMethod.sub,
-                                          style: const TextStyle(
-                                              fontSize: 8.5, color: kMuted)),
-                                    ])),
-                                const Text('Change →',
-                                    style: TextStyle(
-                                        fontSize: 9.5,
-                                        color: kOrange,
-                                        fontWeight: FontWeight.w700)),
-                              ],
-                            ),
+                              // Divider
+                              Container(
+                                width: 1,
+                                height: 32,
+                                color: const Color(0xFFDDDDDD),
+                              ),
+                              // Right side: Coupon / Promo
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: _showPromoCodeModal,
+                                  behavior: HitTestBehavior.opaque,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    child: Row(
+                                      children: [
+                                        const Text('🎟️', style: TextStyle(fontSize: 18)),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Flexible(
+                                                    child: Text(
+                                                      _appliedPromoCode != null ? 'Coupon Applied' : 'Apply Coupon',
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.w800,
+                                                        color: kDark,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 2),
+                                                  const Icon(Icons.keyboard_arrow_right_rounded, size: 14, color: kMuted),
+                                                ],
+                                              ),
+                                              Text(
+                                                _appliedPromoCode != null
+                                                    ? 'Saved ₹${_promoDiscount.toStringAsFixed(0)} (${_appliedPromoCode})'
+                                                    : 'Get discounts',
+                                                style: TextStyle(
+                                                  fontSize: 9.5,
+                                                  color: _appliedPromoCode != null ? const Color(0xFF4CAF50) : kMuted,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         if (widget.service.tag == 'Emergency') ...[
@@ -5800,6 +5862,8 @@ class _WhereToScreenState extends State<WhereToScreen>
             child: PaymentModal(
               selected: _paymentMethod,
               onSelect: (pm) => setState(() => _paymentMethod = pm),
+              useKCoins: _useKCoins,
+              onUseKCoinsChanged: (val) => setState(() => _useKCoins = val),
               onClose: () => setState(() => _showPaymentModal = false),
             ),
           ),

@@ -5477,12 +5477,16 @@ class _WhereToScreenState extends State<WhereToScreen>
                                           children: [
                                             Row(
                                               children: [
-                                                Text(
-                                                  _getVehicleLabel(type),
-                                                  style: const TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w800,
-                                                    color: kDark,
+                                                Flexible(
+                                                  child: Text(
+                                                    _getVehicleLabel(type),
+                                                    style: const TextStyle(
+                                                      fontSize: 15,
+                                                      fontWeight: FontWeight.w800,
+                                                      color: kDark,
+                                                    ),
+                                                    overflow: TextOverflow.ellipsis,
+                                                    maxLines: 1,
                                                   ),
                                                 ),
                                                 const SizedBox(width: 6),
@@ -5522,7 +5526,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                                       Text(
                                         fareStr,
                                         style: const TextStyle(
-                                          fontSize: 18,
+                                          fontSize: 15,
                                           fontWeight: FontWeight.w800,
                                           color: kDark,
                                         ),

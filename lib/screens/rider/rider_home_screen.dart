@@ -5480,7 +5480,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                                                 Text(
                                                   _getVehicleLabel(type),
                                                   style: const TextStyle(
-                                                    fontSize: 13,
+                                                    fontSize: 16,
                                                     fontWeight: FontWeight.w800,
                                                     color: kDark,
                                                   ),
@@ -5522,7 +5522,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                                       Text(
                                         fareStr,
                                         style: const TextStyle(
-                                          fontSize: 14,
+                                          fontSize: 18,
                                           fontWeight: FontWeight.w800,
                                           color: kDark,
                                         ),

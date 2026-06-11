@@ -5529,62 +5529,6 @@ class _WhereToScreenState extends State<WhereToScreen>
                             }).toList(),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                          decoration: BoxDecoration(
-                              color: kGray,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                  color: const Color(0xFFEEEEEE), width: 1.5)),
-                          child: Column(
-                            children: [
-                              Row(children: [
-                                Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: const BoxDecoration(
-                                        shape: BoxShape.circle, color: kOrange)),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                    child: Text(_pickupCtrl.text,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w600,
-                                            color: kDark)))
-                              ]),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 2),
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Container(
-                                    margin: const EdgeInsets.only(left: 17),
-                                    width: 1.2,
-                                    height: 12,
-                                    color: Colors.grey.shade300,
-                                  ),
-                                ),
-                              ),
-                              Row(children: [
-                                Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(1.5),
-                                        color: Colors.red.shade400)),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                    child: Text(_destCtrl.text,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                            fontSize: 11, color: kDark)))
-                              ]),
-                            ],
-                          ),
-                        ),
                         const SizedBox(height: 4),
                         GestureDetector(
                           onTap: () => setState(() => _useKCoins = !_useKCoins),

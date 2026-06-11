@@ -5461,7 +5461,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                                         child: Center(
                                           child: ServiceIconWidget(
                                             icon: type,
-                                            size: 48,
+                                            size: 65,
                                           ),
                                         ),
                                       ),

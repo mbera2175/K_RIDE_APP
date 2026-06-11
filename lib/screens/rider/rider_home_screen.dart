@@ -5459,9 +5459,14 @@ class _WhereToScreenState extends State<WhereToScreen>
                                           ],
                                         ),
                                         child: Center(
-                                          child: ServiceIconWidget(
-                                            icon: type,
-                                            size: ['ac_cab', 'bike', 'non_ac_cab', 'auto'].contains(type) ? 80 : 65,
+                                          child: OverflowBox(
+                                            alignment: Alignment.center,
+                                            maxWidth: ['ac_cab', 'bike', 'non_ac_cab', 'auto'].contains(type) ? 88 : 65,
+                                            maxHeight: ['ac_cab', 'bike', 'non_ac_cab', 'auto'].contains(type) ? 88 : 65,
+                                            child: ServiceIconWidget(
+                                              icon: type,
+                                              size: ['ac_cab', 'bike', 'non_ac_cab', 'auto'].contains(type) ? 88 : 52,
+                                            ),
                                           ),
                                         ),
                                       ),

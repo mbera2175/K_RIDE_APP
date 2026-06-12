@@ -4533,11 +4533,11 @@ class _WhereToScreenState extends State<WhereToScreen>
 
           // Bottom Sheet Panel - Draggable
           DraggableScrollableSheet(
-            initialChildSize: 0.90,
+            initialChildSize: 0.60,
             minChildSize: 0.15,
-            maxChildSize: 0.90,
+            maxChildSize: 0.60,
             snap: true,
-            snapSizes: const [0.15, 0.32, 0.90],
+            snapSizes: const [0.15, 0.32, 0.60],
             builder: (sheetCtx, scrollController) {
               return Container(
                 decoration: const BoxDecoration(

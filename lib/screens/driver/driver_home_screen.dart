@@ -71,7 +71,6 @@ class TripData {
 
   final String? promoCode;
   final double promoDiscount;
-  final double kcoinDiscount;
   final double actualFare;
 
   TripData({
@@ -102,7 +101,6 @@ class TripData {
     required this.status,
     this.promoCode,
     required this.promoDiscount,
-    required this.kcoinDiscount,
     required this.actualFare,
   });
 
@@ -139,7 +137,6 @@ class TripData {
         status: status ?? this.status,
         promoCode: promoCode,
         promoDiscount: promoDiscount,
-        kcoinDiscount: kcoinDiscount,
         actualFare: actualFare,
       );
 }
@@ -393,12 +390,10 @@ TripData _mapToTripData(dynamic raw) {
         fallback: 'requested'),
     promoCode: _asText(_firstValue(data, const ['promo_code', 'coupon_code'])),
     promoDiscount: _asDouble(_firstValue(data, const ['promo_discount', 'discount'])),
-    kcoinDiscount: _asDouble(_firstValue(data, const ['kcoin_discount', 'coins_discount'])),
     actualFare: _asDouble(
       _firstValue(data, const ['actual_fare', 'rider_payable', 'net_fare']),
       fallback: (fare.toDouble() -
-          _asDouble(_firstValue(data, const ['promo_discount', 'discount'])) -
-          _asDouble(_firstValue(data, const ['kcoin_discount', 'coins_discount']))),
+          _asDouble(_firstValue(data, const ['promo_discount', 'discount']))),
     ),
   );
 }
@@ -3090,8 +3085,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
   Future<bool> _confirmCashCollected(TripData trip) async {
     final riderPayable = trip.actualFare;
     final promoDiscount = trip.promoDiscount;
-    final kcoinDiscount = trip.kcoinDiscount;
-    final companySettlement = promoDiscount + kcoinDiscount;
+    final companySettlement = promoDiscount;
     final driverEarnings = trip.driverEarnings.toDouble();
     final bonusAmount = trip.bonusAmount;
     final totalDriverSettlement = driverEarnings + bonusAmount;
@@ -3143,12 +3137,6 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
               _buildDialogBreakdownRow(
                 'Coupon Discount (${trip.promoCode ?? "Applied"})', 
                 '-₹${promoDiscount.toStringAsFixed(0)}',
-                valueColor: Colors.green[700],
-              ),
-            if (kcoinDiscount > 0)
-              _buildDialogBreakdownRow(
-                'K Coin Discount', 
-                '-₹${kcoinDiscount.toStringAsFixed(0)}',
                 valueColor: Colors.green[700],
               ),
             if (companySettlement > 0) ...[
@@ -3228,7 +3216,6 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             ...payload,
             ...?cashRes['data'],
             'cash_collected': payload['cash_to_collect'] ?? payload['net_rider_fare'] ?? cashRes['amount'],
-            'kcoin_discount': payload['kcoin_discount'],
             'promo_discount': payload['promo_discount'],
             'commission_deducted': payload['commission'],
             'company_pays_you': payload['company_pays_driver'],
@@ -3258,7 +3245,6 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
 
   Future<bool> _confirmCashCollectedPayload(Map<String, dynamic> payload) async {
     final double actualFare = double.tryParse((payload['actual_fare'] ?? 0).toString()) ?? 0.0;
-    final double kcoinDiscount = double.tryParse((payload['kcoin_discount'] ?? 0).toString()) ?? 0.0;
     final double promoDiscount = double.tryParse((payload['promo_discount'] ?? 0).toString()) ?? 0.0;
     final String promoCode = payload['promo_code']?.toString() ?? '';
     final double totalDiscount = double.tryParse((payload['total_discount'] ?? 0).toString()) ?? 0.0;
@@ -3310,12 +3296,6 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             const Divider(),
             const SizedBox(height: 8),
             _buildDialogBreakdownRow('Trip Fare', '₹${actualFare.toStringAsFixed(0)}'),
-            if (kcoinDiscount > 0)
-              _buildDialogBreakdownRow(
-                'K-Coin Discount', 
-                '-₹${kcoinDiscount.toStringAsFixed(0)}',
-                valueColor: Colors.green[700],
-              ),
             if (promoDiscount > 0)
               _buildDialogBreakdownRow(
                 'Promo Discount (${promoCode.isNotEmpty ? promoCode : "Applied"})', 
@@ -3390,7 +3370,6 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
 
   Future<void> _showWalletTripSummary(Map<String, dynamic> payload) async {
     final double actualFare = double.tryParse((payload['actual_fare'] ?? 0).toString()) ?? 0.0;
-    final double kcoinDiscount = double.tryParse((payload['kcoin_discount'] ?? 0).toString()) ?? 0.0;
     final double promoDiscount = double.tryParse((payload['promo_discount'] ?? 0).toString()) ?? 0.0;
     final String promoCode = payload['promo_code']?.toString() ?? '';
     final double totalDiscount = double.tryParse((payload['total_discount'] ?? 0).toString()) ?? 0.0;
@@ -3441,12 +3420,6 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             const Divider(),
             const SizedBox(height: 8),
             _buildDialogBreakdownRow('Trip Fare', '₹${actualFare.toStringAsFixed(0)}'),
-            if (kcoinDiscount > 0)
-              _buildDialogBreakdownRow(
-                'K-Coin Discount', 
-                '-₹${kcoinDiscount.toStringAsFixed(0)}',
-                valueColor: Colors.green[700],
-              ),
             if (promoDiscount > 0)
               _buildDialogBreakdownRow(
                 'Promo Discount (${promoCode.isNotEmpty ? promoCode : "Applied"})', 
@@ -3513,12 +3486,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
 
   Future<void> _showCashCollectedBreakdown(Map<String, dynamic> data) async {
     final double cashCollected = double.tryParse((data['cash_collected'] ?? 0).toString()) ?? 0.0;
-    final double kcoinDiscount = double.tryParse((data['kcoin_discount'] ?? 0).toString()) ?? 0.0;
     final double promoDiscount = double.tryParse((data['promo_discount'] ?? 0).toString()) ?? 0.0;
     final double commissionDeducted = double.tryParse((data['commission_deducted'] ?? data['commission'] ?? data['platform_fee'] ?? 0).toString()) ?? 0.0;
     final double companyPaysYou = double.tryParse((data['company_pays_you'] ?? data['company_payable'] ?? 0).toString()) ?? 0.0;
     final double yourNetEarnings = double.tryParse((data['your_net_earnings'] ?? data['driver_earnings'] ?? 0).toString()) ?? 0.0;
-    final double actualFare = double.tryParse((data['actual_fare'] ?? (cashCollected + kcoinDiscount + promoDiscount)).toString()) ?? 0.0;
+    final double actualFare = double.tryParse((data['actual_fare'] ?? (cashCollected + promoDiscount)).toString()) ?? 0.0;
     final String promoCode = data['promo_code']?.toString() ?? '';
 
     await showDialog(
@@ -3564,12 +3536,6 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             const Divider(),
             const SizedBox(height: 8),
             _buildDialogBreakdownRow('Trip Fare', '₹${actualFare.toStringAsFixed(0)}'),
-            if (kcoinDiscount > 0)
-              _buildDialogBreakdownRow(
-                'K-Coin Discount', 
-                '-₹${kcoinDiscount.toStringAsFixed(0)}',
-                valueColor: Colors.green[700],
-              ),
             if (promoDiscount > 0)
               _buildDialogBreakdownRow(
                 'Promo Discount (${promoCode.isNotEmpty ? promoCode : "Applied"})', 
@@ -3690,7 +3656,6 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             ...earningsData,
             ...res['data'] ?? res,
             'cash_collected': earningsData['actual_fare'] ?? res['amount'],
-            'kcoin_discount': earningsData['kcoin_discount'],
             'promo_discount': earningsData['promo_discount'],
             'commission_deducted': earningsData['platform_fee'],
             'company_pays_you': earningsData['company_payable'],
@@ -5265,7 +5230,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                     const SizedBox(height: 10),
 
                     Text(
-                      'Share your unique referral code with friends. When they register and take their first ride, both of you will receive bonus coins! 🪙',
+                      'Share your unique referral code with friends. When they register and take their first ride, both of you will receive bonus rewards! 🎁',
                       style: GoogleFonts.sora(
                         fontSize: 13.5,
                         color: kMuted,

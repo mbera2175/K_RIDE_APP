@@ -2081,14 +2081,12 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
   Widget build(BuildContext context) {
     final double netRiderFare = double.tryParse((_receipt?['net_rider_fare'] ?? _receipt?['actual_fare'] ?? 0).toString()) ?? 0.0;
     final double promoDiscount = double.tryParse((_receipt?['promo_discount'] ?? 0).toString()) ?? 0.0;
-    final double kcoinDiscount = double.tryParse((_receipt?['kcoin_discount'] ?? 0).toString()) ?? 0.0;
     final double dynamicRawFare = _receipt?['net_rider_fare'] != null 
         ? (double.tryParse((_receipt?['actual_fare'] ?? 0).toString()) ?? 0.0)
-        : (netRiderFare + promoDiscount + kcoinDiscount);
+        : (netRiderFare + promoDiscount);
     final String paymentMethod = _receipt?['payment_method']?.toString().toLowerCase() ?? 'cash';
     final bool isCash = !paymentMethod.contains('wallet');
     final double cashToPayDriver = double.tryParse((_receipt?['cash_to_pay_driver'] ?? (isCash ? netRiderFare : 0)).toString()) ?? 0.0;
-    final double coinsEarned = double.tryParse((_receipt?['coins_earned'] ?? (netRiderFare ~/ 10)).toString()) ?? 0.0;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -2160,18 +2158,10 @@ class _TripReceiptScreenState extends State<TripReceiptScreen> {
                                 ''),
                         const Divider(height: 24),
                         _receiptRow('Trip Fare', '₹${dynamicRawFare.toStringAsFixed(0)}'),
-                        if (kcoinDiscount > 0)
-                          _receiptRow('K-Coin Discount',
-                              '-₹${kcoinDiscount.toStringAsFixed(0)}',
-                              color: Colors.green),
                         if (promoDiscount > 0)
                           _receiptRow('Promo Discount (${_receipt!['promo_code'] ?? ""})',
                               '-₹${promoDiscount.toStringAsFixed(0)}',
                               color: Colors.green),
-                        if (coinsEarned > 0)
-                          _receiptRow('K-Coins Earned',
-                              '+${coinsEarned.toStringAsFixed(0)} coins',
-                              color: Colors.orange[800]),
                         const Divider(height: 24),
                         Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2426,7 +2416,6 @@ class _WhereToScreenState extends State<WhereToScreen>
   double _pickupLng = 88.3639;
   double _dropLat = 22.5850;
   double _dropLng = 88.3950;
-  bool _useKCoins = false;
   int? _tripId;
 
   bool _searchingVal = false;
@@ -6184,7 +6173,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                                         ? widget.service.name.toLowerCase()
                                         : 'ride',
                                 "payment_method": _paymentMethod.id,
-                                "use_kcoins": _useKCoins,
+
                                 "is_ev_request": widget.service.isEV,
                                 "promo_code": _appliedPromoCode,
                               };
@@ -7307,7 +7296,6 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
             'phone': data['phone'] ?? AuthService.phone,
             'user_id': data['user_id'] ?? AuthService.userId,
             'wallet_balance': data['wallet_balance'] ?? AuthService.walletBalance,
-            'kcoin_balance': data['kcoin_balance'] ?? AuthService.kcoinBalance,
             'rider_id': data['rider_id'] ?? AuthService.riderId,
             'profile_pic': picUrl.isNotEmpty ? picUrl : AuthService.profilePic,
           });
@@ -7830,80 +7818,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               ),
             ]),
           ),
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF3E0),
-              borderRadius: BorderRadius.circular(20),
-              border:
-                  Border.all(color: const Color(0xFFFF6B35).withOpacity(0.3)),
-            ),
-            child: Row(children: [
-              const Text('🪙', style: TextStyle(fontSize: 36)),
-              const SizedBox(width: 16),
-              Expanded(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                    const Text('K Coins',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1A1A2E))),
-                    const SizedBox(height: 4),
-                    FutureBuilder<Map<String, dynamic>>(
-                      future: ApiService.getMe(),
-                      builder: (ctx, snap) {
-                        final coins = snap.data?['kcoin_balance'] ??
-                            AuthService.kcoinBalance;
-                        return Text('$coins coins',
-                            style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFFFF6B35)));
-                      },
-                    ),
-                    const SizedBox(height: 4),
-                    const Text('100 coins = ₹10 discount on next ride',
-                        style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  ])),
-            ]),
-          ),
-          const SizedBox(height: 24),
-          const Text('How to earn K Coins?',
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A1A2E))),
-          const SizedBox(height: 12),
-          _coinTip('🚗', 'Complete a ride', 'Every ₹10 = 1 K Coin'),
-          _coinTip('🎁', 'Special offers', 'Watch for bonus events'),
         ],
       ),
-    );
-  }
-
-  Widget _coinTip(String icon, String title, String sub) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(14)),
-      child: Row(children: [
-        Text(icon, style: const TextStyle(fontSize: 24)),
-        const SizedBox(width: 12),
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title,
-              style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A1A2E))),
-          Text(sub, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        ]),
-      ]),
     );
   }
 
@@ -8039,7 +7955,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                     const SizedBox(height: 10),
 
                     const Text(
-                      'Share your unique referral code with friends. When they register and take their first ride, both of you will receive bonus coins! 🪙',
+                      'Share your unique referral code with friends. When they register and take their first ride, both of you will receive bonus rewards! 🎁',
                       style: TextStyle(
                         fontSize: 13.5,
                         color: kMuted,
@@ -8255,7 +8171,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 _profileOptionTile(
                   icon: '👥',
                   title: 'Refer a Friend',
-                  subtitle: 'Get bonus coins on every successful referral',
+                  subtitle: 'Get bonus rewards on every successful referral',
                   onTap: _showReferralBottomSheet,
                 ),
                 _profileOptionTile(

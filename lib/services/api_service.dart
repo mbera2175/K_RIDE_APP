@@ -400,15 +400,7 @@ class ApiService {
     return _handle(res);
   }
 
-  // ═══════════════════════════════════════════════════════
-  //  K COINS
-  // ═══════════════════════════════════════════════════════
 
-  static Future<Map<String, dynamic>> getKCoinConfig() async {
-    final res = await http.get(Uri.parse('$_base/wallet/kcoin-config'),
-      headers: _authHeaders).timeout(_timeout);
-    return _handle(res);
-  }
 
   // ═══════════════════════════════════════════════════════
   //  SOS

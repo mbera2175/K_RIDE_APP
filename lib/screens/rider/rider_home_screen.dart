@@ -5470,6 +5470,9 @@ class _WhereToScreenState extends State<WhereToScreen>
                                 return ['bike'];
                               }
                               final list = ['ac_cab', 'bike', 'non_ac_cab', 'ambulance', 'auto', 'toto'];
+                              if (widget.service.isEV) {
+                                list.remove('ambulance');
+                              }
                               if (list.contains(_initialVehicleType)) {
                                 list.remove(_initialVehicleType);
                                 list.insert(0, _initialVehicleType);

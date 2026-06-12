@@ -2435,6 +2435,11 @@ class _WhereToScreenState extends State<WhereToScreen>
   double? _driverLat;
   double? _driverLng;
   MapplsMapController? _mapController;
+  final DraggableScrollableController _inputSheetController = DraggableScrollableController();
+  double _inputSheetSize = 0.90;
+  LatLng? _tempCameraTarget;
+  bool _isMapMoving = false;
+  bool _isReverseGeocoding = false;
   Symbol? _driverSymbol;
   final Set<String> _registeredIcons = {};
   final List<Symbol> _driverSymbols = [];
@@ -2932,6 +2937,7 @@ class _WhereToScreenState extends State<WhereToScreen>
   @override
   void initState() {
     super.initState();
+    _inputSheetController.addListener(_onInputSheetSizeChanged);
     _loadActivePromos();
     WidgetsBinding.instance.addObserver(this);
     _destCtrl = TextEditingController(text: widget.prefilledDest);
@@ -3230,6 +3236,13 @@ class _WhereToScreenState extends State<WhereToScreen>
         _pickupLat = pos.latitude;
         _pickupLng = pos.longitude;
       });
+      if (_mapController != null) {
+        try {
+          _mapController!.animateCamera(
+            CameraUpdate.newLatLng(LatLng(pos.latitude, pos.longitude)),
+          );
+        } catch (_) {}
+      }
       try {
         final placemarks = await geo.placemarkFromCoordinates(pos.latitude, pos.longitude);
         if (placemarks.isNotEmpty) {
@@ -4226,6 +4239,13 @@ class _WhereToScreenState extends State<WhereToScreen>
 
   @override
   void dispose() {
+    if (_mapController != null) {
+      try {
+        _mapController!.removeListener(_onMapCameraChanged);
+      } catch (_) {}
+    }
+    _inputSheetController.removeListener(_onInputSheetSizeChanged);
+    _inputSheetController.dispose();
     _stopSearchPolling();
     RiderSocketService.onMessage = null;
     RiderSocketService.onDisconnect = null;
@@ -4238,6 +4258,65 @@ class _WhereToScreenState extends State<WhereToScreen>
     _debounceTimer?.cancel();
     _driverAnimTimer?.cancel();
     super.dispose();
+  }
+
+  void _onInputSheetSizeChanged() {
+    if (mounted) {
+      setState(() {
+        _inputSheetSize = _inputSheetController.size;
+      });
+    }
+  }
+
+  void _onMapCameraChanged() {
+    if (_mapController == null) return;
+    final moving = _mapController!.isCameraMoving;
+    final target = _mapController!.cameraPosition?.target;
+    if (mounted) {
+      setState(() {
+        _isMapMoving = moving;
+        if (target != null) {
+          _tempCameraTarget = target;
+        }
+      });
+    }
+  }
+
+  void _updateMapController(MapplsMapController controller, {bool listenCamera = false}) {
+    if (_mapController != null) {
+      try {
+        _mapController!.removeListener(_onMapCameraChanged);
+      } catch (_) {}
+    }
+    _mapController = controller;
+    if (listenCamera) {
+      _mapController!.addListener(_onMapCameraChanged);
+    }
+  }
+
+  Future<void> _updatePickupFromLatLng(LatLng latLng) async {
+    if (!mounted) return;
+    setState(() {
+      _pickupLat = latLng.latitude;
+      _pickupLng = latLng.longitude;
+      _isReverseGeocoding = true;
+    });
+    try {
+      final address = await MapplsPlaceService.reverseGeocode(latLng.latitude, latLng.longitude);
+      if (address != null && address.isNotEmpty) {
+        _setPickupText(address.trim().endsWith(",") 
+            ? address.trim().substring(0, address.trim().length - 1) 
+            : address.trim());
+      }
+    } catch (e) {
+      debugPrint("Reverse geocode error: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isReverseGeocoding = false;
+        });
+      }
+    }
   }
 
   void _showNoDriverDialog() {
@@ -4482,7 +4561,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                 zoom: 14.2,
               ),
               onMapCreated: (MapplsMapController controller) {
-                _mapController = controller;
+                _updateMapController(controller);
               },
               onStyleLoadedCallback: () async {
                 if (_mapController == null) return;
@@ -4933,30 +5012,128 @@ class _WhereToScreenState extends State<WhereToScreen>
               target: LatLng(_pickupLat, _pickupLng),
               zoom: 15.0,
             ),
+            trackCameraPosition: true,
             onMapCreated: (MapplsMapController controller) {
-              _mapController = controller;
+              _updateMapController(controller, listenCamera: true);
             },
             onStyleLoadedCallback: () async {
               if (_mapController == null) return;
               try {
                 await _registerCustomIcons(_mapController!);
-                // Add Pickup marker
-                await _mapController!.addSymbol(SymbolOptions(
-                  geometry: LatLng(_pickupLat, _pickupLng),
-                  iconImage: 'marker-15',
-                  iconSize: 2.0,
-                  iconColor: '#FF6B00',
-                  textField: 'Pickup',
-                  textOffset: const Offset(0, 1.5),
-                  textColor: '#FF6B00',
-                  textSize: 12.0,
-                ));
               } catch (_) {}
+            },
+            onCameraIdle: () async {
+              setState(() {
+                _isMapMoving = false;
+              });
+              if (_tempCameraTarget != null) {
+                await _updatePickupFromLatLng(_tempCameraTarget!);
+              }
             },
             myLocationEnabled: true,
           ),
         ),
+
+        // Center Pin Overlay
+        Align(
+          alignment: Alignment.center,
+          child: FractionalTranslation(
+            translation: const Offset(0.0, -0.5),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Green "Pickup point" bubble
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2E7D32),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  child: const Text(
+                    'Pickup point',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                // Small stem pointing down
+                Container(
+                  width: 2,
+                  height: 4,
+                  color: const Color(0xFF2E7D32),
+                ),
+                // Blue Pin with lift micro-animation
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  transform: Matrix4.translationValues(0.0, _isMapMoving ? -15.0 : 0.0, 0.0),
+                  child: const Icon(
+                    Icons.location_on_rounded,
+                    size: 38,
+                    color: Color(0xFF1E88E5), // Blue pin
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Floating Address Capsule Overlay
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: MediaQuery.of(context).size.height * _inputSheetSize + 12,
+          child: AnimatedOpacity(
+            opacity: _inputSheetSize > 0.85 ? 0.0 : 1.0,
+            duration: const Duration(milliseconds: 200),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(99),
+                border: Border.all(color: const Color(0xFFC8E6C9), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.circle, color: Color(0xFF2E7D32), size: 10),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _isReverseGeocoding
+                          ? "Locating..."
+                          : (_pickupCtrl.text.isNotEmpty ? _pickupCtrl.text : "Resolving location..."),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2E7D32),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
         DraggableScrollableSheet(
+          controller: _inputSheetController,
           initialChildSize: 0.90,
           minChildSize: 0.28,
           maxChildSize: 0.90,
@@ -5377,7 +5554,7 @@ class _WhereToScreenState extends State<WhereToScreen>
               zoom: 13,
             ),
             onMapCreated: (MapplsMapController controller) {
-              _mapController = controller;
+              _updateMapController(controller);
             },
             onStyleLoadedCallback: () async {
               if (_mapController == null) return;
@@ -5991,7 +6168,7 @@ class _WhereToScreenState extends State<WhereToScreen>
               zoom: 14,
             ),
             onMapCreated: (MapplsMapController controller) {
-              _mapController = controller;
+              _updateMapController(controller);
             },
             onStyleLoadedCallback: () async {
               if (_mapController == null) return;

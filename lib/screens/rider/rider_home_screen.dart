@@ -5218,7 +5218,10 @@ class _WhereToScreenState extends State<WhereToScreen>
                                     itemBuilder: (context, index) {
                                       final suggestion = _suggestions[index];
                                       String? distanceStr;
-                                      if (suggestion.latitude != null && suggestion.longitude != null) {
+                                      if (suggestion.distance != null) {
+                                        final distKm = suggestion.distance! / 1000.0;
+                                        distanceStr = "${distKm.toStringAsFixed(1)} km";
+                                      } else if (suggestion.latitude != null && suggestion.longitude != null) {
                                         try {
                                           final distMeters = Geolocator.distanceBetween(
                                             _pickupLat,
@@ -5230,7 +5233,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                                           distanceStr = "${distKm.toStringAsFixed(1)} km";
                                         } catch (_) {}
                                       } else {
-                                        distanceStr = "${(8.0 + index * 1.2).toStringAsFixed(1)} km";
+                                        distanceStr = null;
                                       }
 
                                       return GestureDetector(

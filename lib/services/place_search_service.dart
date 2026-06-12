@@ -11,6 +11,7 @@ class MapplsPlaceSuggestion {
   final String placeAddress;
   final double? latitude;
   final double? longitude;
+  final double? distance;
 
   const MapplsPlaceSuggestion({
     required this.eLoc,
@@ -18,6 +19,7 @@ class MapplsPlaceSuggestion {
     required this.placeAddress,
     this.latitude,
     this.longitude,
+    this.distance,
   });
 
   /// Display label shown in the dropdown row
@@ -72,6 +74,7 @@ class MapplsPlaceService {
                     (item['lat'] as num?)?.toDouble();
         final lng = (item['longitude'] as num?)?.toDouble() ??
                     (item['lng'] as num?)?.toDouble();
+        final dist = (item['distance'] as num?)?.toDouble();
         suggestions.add(MapplsPlaceSuggestion(
           eLoc: item['eLoc']?.toString() ?? '',
           placeName: item['placeName']?.toString() ??
@@ -80,6 +83,7 @@ class MapplsPlaceService {
               item['detailedAddress']?.toString() ?? '',
           latitude: lat,
           longitude: lng,
+          distance: dist,
         ));
       }
       return suggestions;

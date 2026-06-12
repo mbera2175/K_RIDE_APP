@@ -2650,10 +2650,13 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             _activeTrip = null;
           });
         }
-        _showSnack(
-          'Rider cancelled this ride for: ${data['reason'] ?? 'No reason given'}',
-          isError: true,
-        );
+        final cancelledBy = data['cancelled_by']?.toString();
+        if (cancelledBy != 'driver') {
+          _showSnack(
+            'Rider cancelled this ride for: ${data['reason'] ?? 'No reason given'}',
+            isError: true,
+          );
+        }
       }
 
       if (data['type'] == 'trip_completed') {

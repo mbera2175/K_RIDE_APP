@@ -4209,10 +4209,13 @@ class _WhereToScreenState extends State<WhereToScreen>
           _tripId = null;
           _otpCode = null;
         });
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(
-                "Driver cancelled this ride for: ${data["reason"] ?? 'No reason given'}"),
-            backgroundColor: Colors.red));
+        final cancelledBy = data["cancelled_by"]?.toString();
+        if (cancelledBy != "rider") {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(
+                  "Driver cancelled this ride for: ${data["reason"] ?? 'No reason given'}"),
+              backgroundColor: Colors.red));
+        }
       } else if (type == "chat_message") {
         if (_tripId != null && !_isChatScreenOpen) {
           _openChatScreen();

@@ -14,6 +14,7 @@ import 'screens/driver/incoming_ride_overlay.dart';
 
 // Global navigator key for force logout
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +47,7 @@ class KRideApp extends StatelessWidget {
         return MaterialApp(
           title: 'KRide',
           navigatorKey: navigatorKey,
+          scaffoldMessengerKey: scaffoldMessengerKey,
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),

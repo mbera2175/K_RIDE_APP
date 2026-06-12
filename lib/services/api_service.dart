@@ -33,10 +33,19 @@ class ApiService {
     if (res.statusCode >= 200 && res.statusCode < 300) {
       return {'success': true, 'data': data, 'status': res.statusCode};
     }
+    if (res.statusCode == 401) {
+      await AuthService.logout(forced: true, message: 'Session expired. Please log in again.');
+      return {
+        'success': false,
+        'error': 'Session expired. Please log in again.',
+        'status': 401,
+        'force_logout': true
+      };
+    }
     if (res.statusCode == 403) {
       final detail = data is Map ? data['detail'] : '';
       if (detail != null && detail.toString().contains('another device')) {
-        await AuthService.logout(forced: true);
+        await AuthService.logout(forced: true, message: 'Your account was logged in on another device.');
         return {
           'success': false,
           'error': 'You have been logged out because your account was accessed from another device.',
@@ -248,6 +257,9 @@ class ApiService {
 
   static Future<Map<String, dynamic>> updateLocation(
       double lat, double lng) async {
+    if (lat != 0.0 && lng != 0.0) {
+      await AuthService.saveLastLocation(lat, lng);
+    }
     final res = await http.patch(
       Uri.parse('$_base/auth/driver/location?lat=$lat&lng=$lng'),
       headers: _authHeaders).timeout(_timeout);
@@ -571,6 +583,18 @@ class ApiService {
         }
       } catch (_) {}
     }
+
+    // Fallback to coordinates cached in SharedPreferences if geolocation fails
+    if (lat == 0.0 || lng == 0.0) {
+      lat = AuthService.lastLat;
+      lng = AuthService.lastLng;
+    }
+
+    // Never overwrite the database with (0.0, 0.0) coordinates
+    if (lat == 0.0 || lng == 0.0) {
+      return {'success': false, 'error': 'No valid location available'};
+    }
+
     return updateLocation(lat, lng);
   }
 

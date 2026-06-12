@@ -2564,6 +2564,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
           desiredAccuracy: LocationAccuracy.high);
       _currentLat = pos.latitude;
       _currentLng = pos.longitude;
+      await AuthService.saveLastLocation(_currentLat, _currentLng);
       await ApiService.updateLocation(_currentLat, _currentLng);
       if (_isOnline) {
         _connectDriverSocket();
@@ -2574,6 +2575,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       ).listen((pos) async {
         _currentLat = pos.latitude;
         _currentLng = pos.longitude;
+        await AuthService.saveLastLocation(_currentLat, _currentLng);
         if (mounted) {
           setState(() {});
         }
@@ -2597,10 +2599,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
 
       if (data['type'] == 'kicked') {
         DriverSocketService.disconnect();
-        AuthService.logout(forced: true);
-        _showSnack(
-          data['message'] ?? 'Logged in on another device',
-          isError: true,
+        AuthService.logout(
+          forced: true,
+          message: data['message'] ?? 'Your account was logged in on another device.',
         );
         return;
       }
@@ -2659,7 +2660,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       }
 
       if (data['type'] == 'trip_completed') {
-        _handleSocketTripCompleted(data);
+        _processTripCompletion(data);
       }
     };
 
@@ -3197,7 +3198,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     );
   }
 
-  Future<void> _handleSocketTripCompleted(Map<String, dynamic> payload) async {
+  Future<void> _processTripCompletion(Map<String, dynamic> payload) async {
     final tripId = payload['trip_id'] as int? ?? 0;
     
     // Safety check to ensure we only process if this was our active trip
@@ -3641,7 +3642,13 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             actualKm: actualKm, actualMinutes: actualMinutes);
         setState(() => _loadingActive = false);
 
-        if (!res['success']) {
+        if (res['success'] == true) {
+          final data = Map<String, dynamic>.from(res['data'] ?? res);
+          if (data['trip_id'] == null) {
+            data['trip_id'] = tripId;
+          }
+          await _processTripCompletion(data);
+        } else {
           _showSnack(res['error'] ?? 'Trip completion failed', isError: true);
         }
         return;
@@ -3842,8 +3849,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     }
 
     if (source != null && destination != null) {
-      final points = await MapService.getRoute(source, destination);
-      if (points.isNotEmpty) {
+      List<LatLng> points = await MapService.getRoute(source, destination);
+      if (points.isEmpty) {
+        points = [source, destination];
+      }
+      if (points.isNotEmpty && _mapController != null) {
         _mapController!.clearLines();
         _mapController!.addLine(LineOptions(
           geometry: points,
@@ -4799,6 +4809,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             myLocationEnabled: true,
             onMapCreated: (MapplsMapController controller) {
               _mapController = controller;
+              _registeredIcons.clear();
               _drawTripRoute();
             },
           ),
@@ -4832,6 +4843,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                   myLocationEnabled: true,
                   onMapCreated: (MapplsMapController controller) {
                     _mapController = controller;
+                    _registeredIcons.clear();
                   },
                 ),
                 // Floating AppBar with rounded corners

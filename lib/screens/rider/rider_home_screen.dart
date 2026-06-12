@@ -3255,6 +3255,7 @@ class _WhereToScreenState extends State<WhereToScreen>
         return;
       }
       final pos = await Geolocator.getCurrentPosition();
+      await AuthService.saveLastLocation(pos.latitude, pos.longitude);
       setState(() {
         _pickupLat = pos.latitude;
         _pickupLng = pos.longitude;
@@ -3659,7 +3660,10 @@ class _WhereToScreenState extends State<WhereToScreen>
     
     if (source != null && destination != null) {
       try {
-        final points = await MapService.getRoute(source, destination);
+        List<LatLng> points = await MapService.getRoute(source, destination);
+        if (points.isEmpty) {
+          points = [source, destination];
+        }
         if (points.isNotEmpty && mounted) {
           _mapController!.clearLines();
           await _mapController!.addLine(LineOptions(
@@ -4226,12 +4230,9 @@ class _WhereToScreenState extends State<WhereToScreen>
       final type = data["type"];
       if (type == "kicked") {
         RiderSocketService.disconnect();
-        AuthService.logout(forced: true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(data["message"] ?? "Logged in on another device"),
-            backgroundColor: Colors.red,
-          ),
+        AuthService.logout(
+          forced: true,
+          message: data["message"] ?? "Logged in on another device",
         );
         return;
       }
@@ -4412,6 +4413,7 @@ class _WhereToScreenState extends State<WhereToScreen>
       } catch (_) {}
     }
     _mapController = controller;
+    _registeredIcons.clear();
     if (listenCamera) {
       _mapController!.addListener(_onMapCameraChanged);
     }
@@ -4593,6 +4595,7 @@ class _WhereToScreenState extends State<WhereToScreen>
 
   Future<void> _updatePickupFromLatLng(LatLng latLng) async {
     if (!mounted) return;
+    await AuthService.saveLastLocation(latLng.latitude, latLng.longitude);
     setState(() {
       _pickupLat = latLng.latitude;
       _pickupLng = latLng.longitude;
@@ -4876,6 +4879,19 @@ class _WhereToScreenState extends State<WhereToScreen>
               myLocationEnabled: true,
             ),
           ),
+          if (_step == 'input' && !_booked)
+            IgnorePointer(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 30),
+                  child: Icon(
+                    Icons.location_on,
+                    color: Colors.green[700],
+                    size: 40,
+                  ),
+                ),
+              ),
+            ),
           body,
         ],
       ),

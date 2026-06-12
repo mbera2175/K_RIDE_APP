@@ -106,13 +106,29 @@ class AuthService {
     await _prefs?.setString('office_address', address);
   }
 
+  // ── Coordinates caching (safeguard for background service) ──
+  static double get lastLat => _prefs?.getDouble('last_lat') ?? 0.0;
+  static double get lastLng => _prefs?.getDouble('last_lng') ?? 0.0;
+  static Future<void> saveLastLocation(double lat, double lng) async {
+    if (lat != 0.0 && lng != 0.0) {
+      await _prefs?.setDouble('last_lat', lat);
+      await _prefs?.setDouble('last_lng', lng);
+    }
+  }
+
   // ── Logout ───────────────────────────────────────────────
-  static Future<void> logout({bool forced = false}) async {
+  static Future<void> logout({bool forced = false, String? message}) async {
     await _prefs?.clear();
     if (forced) {
       navigatorKey.currentState?.pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
         (route) => false,
+      );
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(message ?? 'Your account was logged in on another device.'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }

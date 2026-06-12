@@ -2398,9 +2398,26 @@ class _WhereToScreenState extends State<WhereToScreen>
     _disableSearchListener = false;
   }
 
-  String _step = 'input';
+  String _stepVal = 'input';
+  String get _step => _stepVal;
+  set _step(String val) {
+    if (_stepVal != val) {
+      _stepVal = val;
+      _onStateOrStepChanged();
+    }
+  }
+
   PaymentMethod _paymentMethod = paymentMethods[0];
-  bool _booked = false;
+  
+  bool _bookedVal = false;
+  bool get _booked => _bookedVal;
+  set _booked(bool val) {
+    if (_bookedVal != val) {
+      _bookedVal = val;
+      _onStateOrStepChanged();
+    }
+  }
+
   bool _showPaymentModal = false;
   late String _selectedVehicleType;
   late String _initialVehicleType;
@@ -2411,7 +2428,15 @@ class _WhereToScreenState extends State<WhereToScreen>
   double _dropLng = 88.3950;
   bool _useKCoins = false;
   int? _tripId;
-  bool _searching = false;
+
+  bool _searchingVal = false;
+  bool get _searching => _searchingVal;
+  set _searching(bool val) {
+    if (_searchingVal != val) {
+      _searchingVal = val;
+      _onStateOrStepChanged();
+    }
+  }
   bool _socketDisconnected = false;
   bool _isChatScreenOpen = false;
   Timer? _searchPollTimer;
@@ -2441,6 +2466,9 @@ class _WhereToScreenState extends State<WhereToScreen>
   bool _isMapMoving = false;
   bool _isReverseGeocoding = false;
   Symbol? _driverSymbol;
+  Symbol? _pickupSymbol;
+  Symbol? _dropSymbol;
+  final List<Symbol> _mockSearchSymbols = [];
   final Set<String> _registeredIcons = {};
   final List<Symbol> _driverSymbols = [];
   Timer? _searchingTimer;
@@ -4309,6 +4337,186 @@ class _WhereToScreenState extends State<WhereToScreen>
     }
   }
 
+  void _onStateOrStepChanged() {
+    _refreshMapMarkersAndRoute();
+  }
+
+  Future<void> _refreshMapMarkersAndRoute() async {
+    if (_mapController == null) return;
+
+    // 1. Manage camera changed listener
+    try {
+      _mapController!.removeListener(_onMapCameraChanged);
+    } catch (_) {}
+    if (_step == 'input' && !_booked) {
+      _mapController!.addListener(_onMapCameraChanged);
+    }
+
+    // 2. Clear old lines
+    try {
+      _mapController!.clearLines();
+    } catch (_) {}
+
+    // 3. Clear all old symbols/markers
+    if (_pickupSymbol != null) {
+      try {
+        await _mapController!.removeSymbol(_pickupSymbol!);
+      } catch (_) {}
+      _pickupSymbol = null;
+    }
+    if (_dropSymbol != null) {
+      try {
+        await _mapController!.removeSymbol(_dropSymbol!);
+      } catch (_) {}
+      _dropSymbol = null;
+    }
+    if (_driverSymbol != null) {
+      try {
+        await _mapController!.removeSymbol(_driverSymbol!);
+      } catch (_) {}
+      _driverSymbol = null;
+    }
+    for (final sym in _driverSymbols) {
+      try {
+        await _mapController!.removeSymbol(sym);
+      } catch (_) {}
+    }
+    _driverSymbols.clear();
+
+    for (final sym in _mockSearchSymbols) {
+      try {
+        await _mapController!.removeSymbol(sym);
+      } catch (_) {}
+    }
+    _mockSearchSymbols.clear();
+
+    // 4. Draw step-specific elements dynamically
+    if (_step == 'input' && !_booked) {
+      _mapController!.animateCamera(CameraUpdate.newLatLngZoom(LatLng(_pickupLat, _pickupLng), 15.0));
+    } else if (_step == 'confirm' && !_booked) {
+      try {
+        _pickupSymbol = await _mapController!.addSymbol(SymbolOptions(
+          geometry: LatLng(_pickupLat, _pickupLng),
+          iconImage: 'marker-15',
+          iconSize: 2.0,
+          iconColor: '#FF6B00',
+          textField: 'Pickup',
+          textOffset: const Offset(0, 1.5),
+          textColor: '#FF6B00',
+          textSize: 12.0,
+        ));
+      } catch (_) {}
+
+      try {
+        _dropSymbol = await _mapController!.addSymbol(SymbolOptions(
+          geometry: LatLng(_dropLat, _dropLng),
+          iconImage: 'marker-15',
+          iconSize: 2.0,
+          iconColor: '#1A1A1A',
+          textField: 'Drop',
+          textOffset: const Offset(0, 1.5),
+          textColor: '#1A1A1A',
+          textSize: 12.0,
+        ));
+      } catch (_) {}
+
+      await _loadNearbyDriversOnMap();
+      await _drawRiderTripRoute();
+    } else if (_booked && _searching) {
+      try {
+        _pickupSymbol = await _mapController!.addSymbol(SymbolOptions(
+          geometry: LatLng(_pickupLat, _pickupLng),
+          iconImage: 'marker-15',
+          iconSize: 2.0,
+          iconColor: '#FF6B00',
+          textField: 'Pickup',
+          textOffset: const Offset(0, 1.5),
+          textColor: '#FF6B00',
+          textSize: 12.0,
+        ));
+      } catch (_) {}
+
+      try {
+        _dropSymbol = await _mapController!.addSymbol(SymbolOptions(
+          geometry: LatLng(_dropLat, _dropLng),
+          iconImage: 'marker-15',
+          iconSize: 2.0,
+          iconColor: '#1A1A1A',
+          textField: 'Drop',
+          textOffset: const Offset(0, 1.5),
+          textColor: '#1A1A1A',
+          textSize: 12.0,
+        ));
+      } catch (_) {}
+
+      await _drawRiderTripRoute();
+
+      final iconName = _getVehicleIconName();
+      final useIcon = _registeredIcons.contains(iconName);
+      final emoji = _getVehicleEmoji(_selectedVehicleType);
+
+      try {
+        final sym1 = await _mapController!.addSymbol(SymbolOptions(
+          geometry: LatLng(_pickupLat + 0.0035, _pickupLng - 0.0025),
+          iconImage: useIcon ? iconName : null,
+          iconSize: useIcon ? 0.9 : null,
+          textField: useIcon ? null : emoji,
+          textSize: useIcon ? null : 32.0,
+        ));
+        _mockSearchSymbols.add(sym1);
+
+        final sym2 = await _mapController!.addSymbol(SymbolOptions(
+          geometry: LatLng(_pickupLat - 0.0018, _pickupLng + 0.0042),
+          iconImage: useIcon ? iconName : null,
+          iconSize: useIcon ? 0.9 : null,
+          textField: useIcon ? null : emoji,
+          textSize: useIcon ? null : 32.0,
+        ));
+        _mockSearchSymbols.add(sym2);
+
+        final sym3 = await _mapController!.addSymbol(SymbolOptions(
+          geometry: LatLng(_pickupLat + 0.0022, _pickupLng + 0.0031),
+          iconImage: useIcon ? iconName : null,
+          iconSize: useIcon ? 0.9 : null,
+          textField: useIcon ? null : emoji,
+          textSize: useIcon ? null : 32.0,
+        ));
+        _mockSearchSymbols.add(sym3);
+      } catch (_) {}
+    } else if (_step == 'tracking') {
+      try {
+        _pickupSymbol = await _mapController!.addSymbol(SymbolOptions(
+          geometry: LatLng(_pickupLat, _pickupLng),
+          iconImage: 'marker-15',
+          iconSize: 2.0,
+          iconColor: '#FF6B00',
+          textField: 'Pickup',
+          textOffset: const Offset(0, 1.5),
+          textColor: '#FF6B00',
+          textSize: 12.0,
+        ));
+      } catch (_) {}
+
+      try {
+        _dropSymbol = await _mapController!.addSymbol(SymbolOptions(
+          geometry: LatLng(_dropLat, _dropLng),
+          iconImage: 'marker-15',
+          iconSize: 2.0,
+          iconColor: '#1A1A1A',
+          textField: 'Drop',
+          textOffset: const Offset(0, 1.5),
+          textColor: '#1A1A1A',
+          textSize: 12.0,
+        ));
+      } catch (_) {}
+
+      if (_driverLat != null && _driverLng != null) {
+        await _updateDriverMarkerAnimated(_driverLat!, _driverLng!);
+      }
+      await _drawRiderTripRoute();
+    }
+  }
+
   Future<void> _updatePickupFromLatLng(LatLng latLng) async {
     if (!mounted) return;
     setState(() {
@@ -4518,7 +4726,6 @@ class _WhereToScreenState extends State<WhereToScreen>
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     Widget body;
     if (_step == 'tracking') {
@@ -4559,7 +4766,42 @@ class _WhereToScreenState extends State<WhereToScreen>
         widget.onBack();
         return false;
       },
-      child: body,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: MapplsMap(
+              key: const ValueKey('rider_persistent_map'),
+              initialCameraPosition: CameraPosition(
+                target: LatLng(_pickupLat, _pickupLng),
+                zoom: 15.0,
+              ),
+              trackCameraPosition: true,
+              onMapCreated: (MapplsMapController controller) {
+                _updateMapController(controller);
+              },
+              onStyleLoadedCallback: () async {
+                if (_mapController == null) return;
+                try {
+                  await _registerCustomIcons(_mapController!);
+                } catch (_) {}
+                await _refreshMapMarkersAndRoute();
+              },
+              onCameraIdle: () async {
+                if (_step == 'input' && !_booked) {
+                  setState(() {
+                    _isMapMoving = false;
+                  });
+                  if (_tempCameraTarget != null) {
+                    await _updatePickupFromLatLng(_tempCameraTarget!);
+                  }
+                }
+              },
+              myLocationEnabled: true,
+            ),
+          ),
+          body,
+        ],
+      ),
     );
   }
 
@@ -4569,79 +4811,6 @@ class _WhereToScreenState extends State<WhereToScreen>
 
     return Stack(
       children: [
-          Positioned.fill(
-            child: MapplsMap(
-              initialCameraPosition: CameraPosition(
-                target: LatLng(_pickupLat, _pickupLng),
-                zoom: 14.2,
-              ),
-              onMapCreated: (MapplsMapController controller) {
-                _updateMapController(controller);
-              },
-              onStyleLoadedCallback: () async {
-                if (_mapController == null) return;
-              try {
-                await _registerCustomIcons(_mapController!);
-                // Add Pickup marker
-                await _mapController!.addSymbol(SymbolOptions(
-                  geometry: LatLng(_pickupLat, _pickupLng),
-                  iconImage: 'marker-15',
-                  iconSize: 2.0,
-                  iconColor: '#FF6B00',
-                  textField: 'Pickup',
-                  textOffset: const Offset(0, 1.5),
-                  textColor: '#FF6B00',
-                  textSize: 12.0,
-                ));
-
-                // Add Drop marker
-                try {
-                  await _mapController!.addSymbol(SymbolOptions(
-                    geometry: LatLng(_dropLat, _dropLng),
-                    iconImage: 'marker-15',
-                    iconSize: 2.0,
-                    iconColor: '#1A1A1A',
-                    textField: 'Drop',
-                    textOffset: const Offset(0, 1.5),
-                    textColor: '#1A1A1A',
-                    textSize: 12.0,
-                  ));
-                } catch (_) {}
-
-                // Draw route line and fit camera bounds
-                await _drawRiderTripRoute();
-                
-                final iconName = _getVehicleIconName();
-                final useIcon = _registeredIcons.contains(iconName);
-                final emoji = _getVehicleEmoji(_selectedVehicleType);
-
-                 // Add 3 mock nearby driver icons to represent active search using correct icon or emoji fallback
-                await _mapController!.addSymbol(SymbolOptions(
-                  geometry: LatLng(_pickupLat + 0.0035, _pickupLng - 0.0025),
-                  iconImage: useIcon ? iconName : null,
-                  iconSize: useIcon ? 0.9 : null,
-                  textField: useIcon ? null : emoji,
-                  textSize: useIcon ? null : 32.0,
-                ));
-                await _mapController!.addSymbol(SymbolOptions(
-                  geometry: LatLng(_pickupLat - 0.0018, _pickupLng + 0.0042),
-                  iconImage: useIcon ? iconName : null,
-                  iconSize: useIcon ? 0.9 : null,
-                  textField: useIcon ? null : emoji,
-                  textSize: useIcon ? null : 32.0,
-                ));
-                await _mapController!.addSymbol(SymbolOptions(
-                  geometry: LatLng(_pickupLat + 0.0022, _pickupLng + 0.0031),
-                  iconImage: useIcon ? iconName : null,
-                  iconSize: useIcon ? 0.9 : null,
-                  textField: useIcon ? null : emoji,
-                  textSize: useIcon ? null : 32.0,
-                ));
-              } catch (_) {}
-            },
-            myLocationEnabled: true,
-          ),
-          ),
 
 
 
@@ -5038,33 +5207,6 @@ class _WhereToScreenState extends State<WhereToScreen>
   Widget _buildInputStep() {
     return Stack(
       children: [
-        Positioned.fill(
-          child: MapplsMap(
-            initialCameraPosition: CameraPosition(
-              target: LatLng(_pickupLat, _pickupLng),
-              zoom: 15.0,
-            ),
-            trackCameraPosition: true,
-            onMapCreated: (MapplsMapController controller) {
-              _updateMapController(controller, listenCamera: true);
-            },
-            onStyleLoadedCallback: () async {
-              if (_mapController == null) return;
-              try {
-                await _registerCustomIcons(_mapController!);
-              } catch (_) {}
-            },
-            onCameraIdle: () async {
-              setState(() {
-                _isMapMoving = false;
-              });
-              if (_tempCameraTarget != null) {
-                await _updatePickupFromLatLng(_tempCameraTarget!);
-              }
-            },
-            myLocationEnabled: true,
-          ),
-        ),
 
         // Center Pin Overlay
         Align(
@@ -5579,49 +5721,6 @@ class _WhereToScreenState extends State<WhereToScreen>
   Widget _buildConfirmStep() {
     return Stack(
       children: [
-        Positioned.fill(
-          child: MapplsMap(
-            initialCameraPosition: CameraPosition(
-              target: LatLng(_pickupLat, _pickupLng),
-              zoom: 13,
-            ),
-            onMapCreated: (MapplsMapController controller) {
-              _updateMapController(controller);
-            },
-            onStyleLoadedCallback: () async {
-              if (_mapController == null) return;
-              await _registerCustomIcons(_mapController!);
-              
-              try {
-                await _mapController!.addSymbol(SymbolOptions(
-                  geometry: LatLng(_pickupLat, _pickupLng),
-                  iconImage: 'marker-15',
-                  iconSize: 2.0,
-                  iconColor: '#FF6B00',
-                  textField: 'Pickup',
-                  textOffset: const Offset(0, 1.5),
-                  textColor: '#FF6B00',
-                ));
-              } catch (_) {}
-
-              try {
-                await _mapController!.addSymbol(SymbolOptions(
-                  geometry: LatLng(_dropLat, _dropLng),
-                  iconImage: 'marker-15',
-                  iconSize: 2.0,
-                  iconColor: '#1A1A1A',
-                  textField: 'Drop',
-                  textOffset: const Offset(0, 1.5),
-                  textColor: '#1A1A1A',
-                ));
-              } catch (_) {}
-
-              await _loadNearbyDriversOnMap();
-              await _drawRiderTripRoute();
-            },
-            myLocationEnabled: true,
-          ),
-        ),
         DraggableScrollableSheet(
           initialChildSize: 0.90,
           minChildSize: 0.18,
@@ -6193,54 +6292,6 @@ class _WhereToScreenState extends State<WhereToScreen>
 
     return Stack(
       children: [
-        Positioned.fill(
-          child: MapplsMap(
-            initialCameraPosition: CameraPosition(
-              target: LatLng(_pickupLat, _pickupLng),
-              zoom: 14,
-            ),
-            onMapCreated: (MapplsMapController controller) {
-              _updateMapController(controller);
-            },
-            onStyleLoadedCallback: () async {
-              if (_mapController == null) return;
-              await _registerCustomIcons(_mapController!);
-              
-              try {
-                await _mapController!.addSymbol(SymbolOptions(
-                  geometry: LatLng(_pickupLat, _pickupLng),
-                  iconImage: 'marker-15',
-                  iconSize: 2.0,
-                  iconColor: '#FF6B00',
-                  textField: 'Pickup',
-                  textOffset: const Offset(0, 1.5),
-                  textColor: '#FF6B00',
-                ));
-              } catch (_) {}
-
-              try {
-                await _mapController!.addSymbol(SymbolOptions(
-                  geometry: LatLng(_dropLat, _dropLng),
-                  iconImage: 'marker-15',
-                  iconSize: 2.0,
-                  iconColor: '#1A1A1A',
-                  textField: 'Drop',
-                  textOffset: const Offset(0, 1.5),
-                  textColor: '#1A1A1A',
-                ));
-              } catch (_) {}
-
-              try {
-                if (_driverLat != null && _driverLng != null) {
-                  await _updateDriverMarkerAnimated(_driverLat!, _driverLng!);
-                }
-              } catch (_) {}
-
-              await _drawRiderTripRoute();
-            },
-            myLocationEnabled: true,
-          ),
-        ),
           Positioned(
             top: MediaQuery.of(context).padding.top + 12,
             left: 16,

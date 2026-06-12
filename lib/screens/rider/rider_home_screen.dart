@@ -5408,7 +5408,7 @@ class _WhereToScreenState extends State<WhereToScreen>
           ),
         ),
         DraggableScrollableSheet(
-          initialChildSize: 0.38,
+          initialChildSize: 0.90,
           minChildSize: 0.18,
           maxChildSize: 0.90,
           snap: true,
@@ -5606,11 +5606,11 @@ class _WhereToScreenState extends State<WhereToScreen>
                         ),
                         const SizedBox(height: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color: kGray,
+                            color: kOrangeLight,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFEEEEEE), width: 1.5),
+                            border: Border.all(color: kOrange, width: 2.0),
                           ),
                           child: Row(
                             children: [
@@ -5667,152 +5667,138 @@ class _WhereToScreenState extends State<WhereToScreen>
                               // Divider
                               Container(
                                 width: 1,
-                                height: 32,
+                                height: 52,
                                 color: const Color(0xFFDDDDDD),
                               ),
-                              // Right side: Coupon / Promo
+                              // Right side: Coupon / Promo & K Coins
                               Expanded(
-                                child: GestureDetector(
-                                  onTap: _showPromoCodeModal,
-                                  behavior: HitTestBehavior.opaque,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                                    child: Row(
-                                      children: [
-                                        const Text('🎟️', style: TextStyle(fontSize: 18)),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Flexible(
-                                                    child: Text(
-                                                      _appliedPromoCode != null ? 'Coupon Applied' : 'Apply Coupon',
-                                                      style: const TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.w800,
-                                                        color: kDark,
-                                                      ),
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 2),
-                                                  const Icon(Icons.keyboard_arrow_right_rounded, size: 14, color: kMuted),
-                                                ],
-                                              ),
-                                              Text(
-                                                _appliedPromoCode != null
-                                                    ? 'Saved ₹${_promoDiscount.toStringAsFixed(0)} (${_appliedPromoCode})'
-                                                    : 'Get discounts',
-                                                style: TextStyle(
-                                                  fontSize: 9.5,
-                                                  color: _appliedPromoCode != null ? const Color(0xFF4CAF50) : kMuted,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Spacer(),
-                            const SizedBox(width: 1),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _useKCoins = !_useKCoins;
-                                  });
-                                },
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                                  decoration: BoxDecoration(
-                                    color: _useKCoins ? kOrange : kOrangeLight,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: kOrange,
-                                      width: 2.0,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: kOrange.withOpacity(0.08),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Text('🪙', style: TextStyle(fontSize: 20)),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
+                                      // Coupon Selection
+                                      GestureDetector(
+                                        onTap: _showPromoCodeModal,
+                                        behavior: HitTestBehavior.opaque,
+                                        child: Row(
                                           children: [
-                                            Text(
-                                              'K Coins',
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w800,
-                                                color: _useKCoins ? Colors.white : kOrangeDark,
-                                              ),
-                                            ),
-                                            Text(
-                                              'Use for discount',
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w600,
-                                                color: _useKCoins ? Colors.white.withOpacity(0.9) : kMuted,
+                                            const Text('🎟️', style: TextStyle(fontSize: 18)),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Flexible(
+                                                        child: Text(
+                                                          _appliedPromoCode != null ? 'Coupon Applied' : 'Apply Coupon',
+                                                          style: const TextStyle(
+                                                            fontSize: 12,
+                                                            fontWeight: FontWeight.w800,
+                                                            color: kDark,
+                                                          ),
+                                                          overflow: TextOverflow.ellipsis,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 2),
+                                                      const Icon(Icons.keyboard_arrow_right_rounded, size: 14, color: kMuted),
+                                                    ],
+                                                  ),
+                                                  Text(
+                                                    _appliedPromoCode != null
+                                                        ? 'Saved ₹${_promoDiscount.toStringAsFixed(0)} (${_appliedPromoCode})'
+                                                        : 'Get discounts',
+                                                    style: TextStyle(
+                                                      fontSize: 9.5,
+                                                      color: _appliedPromoCode != null ? const Color(0xFF4CAF50) : kMuted,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ],
                                         ),
                                       ),
-                                      const SizedBox(width: 4),
-                                      Container(
-                                        width: 38,
-                                        height: 20,
-                                        decoration: BoxDecoration(
-                                          color: _useKCoins ? Colors.white : Colors.grey[300],
-                                          borderRadius: BorderRadius.circular(10),
-                                        ),
-                                        child: AnimatedAlign(
-                                          duration: const Duration(milliseconds: 200),
-                                          alignment: _useKCoins
-                                              ? Alignment.centerRight
-                                              : Alignment.centerLeft,
-                                          child: Container(
-                                            margin: const EdgeInsets.all(2),
-                                            width: 16,
-                                            height: 16,
-                                            decoration: BoxDecoration(
-                                              color: _useKCoins ? kOrange : Colors.white,
-                                              shape: BoxShape.circle,
+                                      const SizedBox(height: 6),
+                                      const Divider(height: 1, color: Color(0xFFE0E0E0)),
+                                      const SizedBox(height: 6),
+                                      // K Coins Toggle
+                                      GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            _useKCoins = !_useKCoins;
+                                          });
+                                        },
+                                        behavior: HitTestBehavior.opaque,
+                                        child: Row(
+                                          children: [
+                                            const Text('🪙', style: TextStyle(fontSize: 16)),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Text(
+                                                    'K Coins',
+                                                    style: TextStyle(
+                                                      fontSize: 11.5,
+                                                      fontWeight: FontWeight.w800,
+                                                      color: kDark,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    'Use for discount',
+                                                    style: TextStyle(
+                                                      fontSize: 8.5,
+                                                      color: kMuted,
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
+                                            // Small Switch
+                                            SizedBox(
+                                              width: 32,
+                                              height: 18,
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  color: _useKCoins ? kOrange : Colors.grey[300],
+                                                  borderRadius: BorderRadius.circular(9),
+                                                ),
+                                                child: AnimatedAlign(
+                                                  duration: const Duration(milliseconds: 150),
+                                                  alignment: _useKCoins
+                                                      ? Alignment.centerRight
+                                                      : Alignment.centerLeft,
+                                                  child: Container(
+                                                    margin: const EdgeInsets.all(1.5),
+                                                    width: 15,
+                                                    height: 15,
+                                                    decoration: const BoxDecoration(
+                                                      color: Colors.white,
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         if (widget.service.tag == 'Emergency') ...[
                           const SizedBox(height: 4),

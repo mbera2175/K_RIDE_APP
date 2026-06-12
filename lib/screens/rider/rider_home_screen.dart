@@ -5943,7 +5943,36 @@ class _WhereToScreenState extends State<WhereToScreen>
                             }).toList(),
                           ],
                         ),
-                        const SizedBox(height: 6),
+                        if (widget.service.tag == 'Emergency') ...[
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 5),
+                            decoration: BoxDecoration(
+                                color: const Color(0xFFFFF0F0),
+                                borderRadius: BorderRadius.circular(10)),
+                            child: const Row(children: [
+                              Text('🚨', style: TextStyle(fontSize: 10)),
+                              SizedBox(width: 4),
+                              Expanded(
+                                  child: Text(
+                                      'Nearest ambulance will be dispatched immediately',
+                                      style: TextStyle(
+                                          fontSize: 9.5,
+                                          color: Color(0xFFE53935),
+                                          fontWeight: FontWeight.w600))),
+                            ]),
+                          ),
+                        ],
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16, 8, 16, MediaQuery.of(sheetCtx).padding.bottom > 0 ? MediaQuery.of(sheetCtx).padding.bottom + 8 : 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                         Container(
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
@@ -6006,10 +6035,10 @@ class _WhereToScreenState extends State<WhereToScreen>
                               // Divider
                               Container(
                                 width: 1,
-                                height: 52,
+                                height: 40,
                                 color: const Color(0xFFDDDDDD),
                               ),
-                              // Right side: Coupon / Promo & K Coins
+                              // Right side: Coupon / Promo
                               Expanded(
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -6064,74 +6093,6 @@ class _WhereToScreenState extends State<WhereToScreen>
                                           ],
                                         ),
                                       ),
-                                      const SizedBox(height: 6),
-                                      const Divider(height: 1, color: Color(0xFFE0E0E0)),
-                                      const SizedBox(height: 6),
-                                      // K Coins Toggle
-                                      GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            _useKCoins = !_useKCoins;
-                                          });
-                                        },
-                                        behavior: HitTestBehavior.opaque,
-                                        child: Row(
-                                          children: [
-                                            const Text('🪙', style: TextStyle(fontSize: 16)),
-                                            const SizedBox(width: 6),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  const Text(
-                                                    'K Coins',
-                                                    style: TextStyle(
-                                                      fontSize: 11.5,
-                                                      fontWeight: FontWeight.w800,
-                                                      color: kDark,
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    'Use for discount',
-                                                    style: TextStyle(
-                                                      fontSize: 8.5,
-                                                      color: kMuted,
-                                                      fontWeight: FontWeight.w500,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            // Small Switch
-                                            SizedBox(
-                                              width: 32,
-                                              height: 18,
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  color: _useKCoins ? kOrange : Colors.grey[300],
-                                                  borderRadius: BorderRadius.circular(9),
-                                                ),
-                                                child: AnimatedAlign(
-                                                  duration: const Duration(milliseconds: 150),
-                                                  alignment: _useKCoins
-                                                      ? Alignment.centerRight
-                                                      : Alignment.centerLeft,
-                                                  child: Container(
-                                                    margin: const EdgeInsets.all(1.5),
-                                                    width: 15,
-                                                    height: 15,
-                                                    decoration: const BoxDecoration(
-                                                      color: Colors.white,
-                                                      shape: BoxShape.circle,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
                                     ],
                                   ),
                                 ),
@@ -6139,101 +6100,77 @@ class _WhereToScreenState extends State<WhereToScreen>
                             ],
                           ),
                         ),
-                        if (widget.service.tag == 'Emergency') ...[
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 5),
-                            decoration: BoxDecoration(
-                                color: const Color(0xFFFFF0F0),
-                                borderRadius: BorderRadius.circular(10)),
-                            child: const Row(children: [
-                              Text('🚨', style: TextStyle(fontSize: 10)),
-                              SizedBox(width: 4),
-                              Expanded(
-                                  child: Text(
-                                      'Nearest ambulance will be dispatched immediately',
-                                      style: TextStyle(
-                                          fontSize: 9.5,
-                                          color: Color(0xFFE53935),
-                                          fontWeight: FontWeight.w600))),
-                            ]),
-                          ),
-                        ],
-                        const SizedBox(height: 8),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(16, 8, 16, MediaQuery.of(sheetCtx).padding.bottom > 0 ? MediaQuery.of(sheetCtx).padding.bottom + 8 : 16),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          final body = {
-                            "pickup_address": _pickupCtrl.text,
-                            "drop_address": _destCtrl.text,
-                            "pickup_lat": _pickupLat,
-                            "pickup_lng": _pickupLng,
-                            "drop_lat": _dropLat,
-                            "drop_lng": _dropLng,
-                            "vehicle_type": _selectedVehicleType,
-                            "service_type":
-                                widget.service.category == 'delivery'
-                                    ? widget.service.name.toLowerCase()
-                                    : 'ride',
-                            "payment_method": _paymentMethod.id,
-                            "use_kcoins": _useKCoins,
-                            "is_ev_request": widget.service.isEV,
-                            "promo_code": _appliedPromoCode,
-                          };
-                          try {
-                            final result = await ApiService.bookTrip(body);
-                            if (result["success"] == true) {
-                              final bookedTrip =
-                                  result["data"] as Map<String, dynamic>? ??
-                                      const {};
-                              final tripId =
-                                  (bookedTrip["trip_id"] as num?)?.toInt() ??
-                                      (result["trip_id"] as num?)?.toInt();
-                              setState(() {
-                                _booked = true;
-                                _searching = true;
-                                _tripId = tripId;
-                              });
-                              _startSearchPolling();
-                              final riderId = AuthService.riderId;
-                              final token = AuthService.token;
-                              if (riderId != null && token != null) {
-                                _connectSocket(riderId, token);
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              final body = {
+                                "pickup_address": _pickupCtrl.text,
+                                "drop_address": _destCtrl.text,
+                                "pickup_lat": _pickupLat,
+                                "pickup_lng": _pickupLng,
+                                "drop_lat": _dropLat,
+                                "drop_lng": _dropLng,
+                                "vehicle_type": _selectedVehicleType,
+                                "service_type":
+                                    widget.service.category == 'delivery'
+                                        ? widget.service.name.toLowerCase()
+                                        : 'ride',
+                                "payment_method": _paymentMethod.id,
+                                "use_kcoins": _useKCoins,
+                                "is_ev_request": widget.service.isEV,
+                                "promo_code": _appliedPromoCode,
+                              };
+                              try {
+                                final result = await ApiService.bookTrip(body);
+                                if (result["success"] == true) {
+                                  final bookedTrip =
+                                      result["data"] as Map<String, dynamic>? ??
+                                          const {};
+                                  final tripId =
+                                      (bookedTrip["trip_id"] as num?)?.toInt() ??
+                                          (result["trip_id"] as num?)?.toInt();
+                                  setState(() {
+                                    _booked = true;
+                                    _searching = true;
+                                    _tripId = tripId;
+                                  });
+                                  _startSearchPolling();
+                                  final riderId = AuthService.riderId;
+                                  final token = AuthService.token;
+                                  if (riderId != null && token != null) {
+                                    _connectSocket(riderId, token);
+                                  }
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text(result["error"] ??
+                                              "Booking failed")));
+                                }
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text("Booking error: $e")));
                               }
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(result["error"] ??
-                                          "Booking failed")));
-                            }
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Booking error: $e")));
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: widget.service.accent,
-                            foregroundColor: kWhite,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
-                            elevation: 8,
-                            shadowColor:
-                                widget.service.accent.withOpacity(0.27)),
-                        child: Text(
-                            _fareLoading
-                                ? 'Getting fare...'
-                                : 'Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹${(_estimatedFare - _promoDiscount).toStringAsFixed(0)}',
-                            style: const TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w700)),
-                      ),
+                            },
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: widget.service.accent,
+                                foregroundColor: kWhite,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14)),
+                                elevation: 8,
+                                shadowColor:
+                                    widget.service.accent.withOpacity(0.27)),
+                            child: Text(
+                                _fareLoading
+                                    ? 'Getting fare...'
+                                    : 'Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹${(_estimatedFare - _promoDiscount).toStringAsFixed(0)}',
+                                style: const TextStyle(
+                                    fontSize: 15, fontWeight: FontWeight.w700)),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

@@ -3426,6 +3426,7 @@ class _WhereToScreenState extends State<WhereToScreen>
   Timer? _driverAnimTimer;
   double? _lastDriverLat;
   double? _lastDriverLng;
+  double? _lastDriverBearing;
 
   void _onPickupTextChanged() {
     if (_disableSearchListener) return;
@@ -3546,10 +3547,22 @@ class _WhereToScreenState extends State<WhereToScreen>
     _lastDriverLat = newLat;
     _lastDriverLng = newLng;
 
+    final distance = Geolocator.distanceBetween(prevLat, prevLng, newLat, newLng);
     final bearing = _calculateBearing(prevLat, prevLng, newLat, newLng);
 
-    final distance = Geolocator.distanceBetween(prevLat, prevLng, newLat, newLng);
-    if (distance == 0 || distance > 2000) {
+    if (_lastDriverBearing == null) {
+      _lastDriverBearing = bearing;
+    }
+
+    if (distance < 5.0) {
+      // Small coordinate shift / GPS noise. Do not animate or rotate.
+      await _updateDriverSymbol(newLat, newLng, _lastDriverBearing);
+      return;
+    }
+
+    _lastDriverBearing = bearing;
+
+    if (distance > 2000) {
       await _updateDriverSymbol(newLat, newLng, bearing);
       _mapController?.animateCamera(CameraUpdate.newLatLng(LatLng(newLat, newLng)));
       return;
@@ -4208,6 +4221,9 @@ class _WhereToScreenState extends State<WhereToScreen>
           _driverLat = null;
           _driverLng = null;
           _bonusAmount = 0;
+          _lastDriverLat = null;
+          _lastDriverLng = null;
+          _lastDriverBearing = null;
         });
         _showNoDriverDialog();
       } else if (type == "driver_location") {
@@ -4264,6 +4280,9 @@ class _WhereToScreenState extends State<WhereToScreen>
           _step = 'input';
           _tripId = null;
           _otpCode = null;
+          _lastDriverLat = null;
+          _lastDriverLng = null;
+          _lastDriverBearing = null;
         });
         final cancelledBy = data["cancelled_by"]?.toString();
         if (cancelledBy != "rider") {
@@ -4706,6 +4725,9 @@ class _WhereToScreenState extends State<WhereToScreen>
         _appliedPromoCode = null;
         _promoDiscount = 0.0;
         _isManualPromoApplied = false;
+        _lastDriverLat = null;
+        _lastDriverLng = null;
+        _lastDriverBearing = null;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Ride request cancelled')),

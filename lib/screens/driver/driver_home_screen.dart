@@ -3212,7 +3212,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       if (confirmed) {
         final cashRes = await ApiService.markCashCollected(tripId);
         if (cashRes['success'] == true) {
-          final data = {
+          final Map<String, dynamic> data = Map<String, dynamic>.from({
             ...payload,
             ...?cashRes['data'],
             'cash_collected': payload['cash_to_collect'] ?? payload['net_rider_fare'] ?? cashRes['amount'],
@@ -3220,7 +3220,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             'commission_deducted': payload['commission'],
             'company_pays_you': payload['company_pays_driver'],
             'your_net_earnings': payload['your_earnings'],
-          };
+          });
           await _showCashCollectedBreakdown(data);
         } else {
           _showSnack(cashRes['error'] ?? 'Cash confirmation failed', isError: true);
@@ -3652,7 +3652,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         setState(() => _loadingActive = false);
         if (res['success'] == true) {
           final earningsData = earningsRes['success'] == true ? (earningsRes['data'] ?? earningsRes) : {};
-          final data = {
+          final Map<String, dynamic> data = Map<String, dynamic>.from({
             ...earningsData,
             ...res['data'] ?? res,
             'cash_collected': earningsData['actual_fare'] ?? res['amount'],
@@ -3660,7 +3660,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             'commission_deducted': earningsData['platform_fee'],
             'company_pays_you': earningsData['company_payable'],
             'your_net_earnings': earningsData['driver_earnings'],
-          };
+          });
           await _showCashCollectedBreakdown(data);
         }
         break;

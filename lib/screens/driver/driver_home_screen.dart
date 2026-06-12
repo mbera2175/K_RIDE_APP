@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:math';
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/scheduler.dart';
@@ -2482,6 +2483,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
   TripData? _activeTrip;
   DateTime? _tripStartedAt;
   MapplsMapController? _mapController;
+  Symbol? _pickupSymbol;
+  Symbol? _dropSymbol;
+  final Set<String> _registeredIcons = {};
   int _navIndex = 0;
   final Offset _driverPos = const Offset(0.5, 0.42);
   String _greeting = 'Good morning';
@@ -3736,11 +3740,80 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
   void _clearRoute() {
     if (_mapController != null) {
       _mapController!.clearLines();
+      if (_pickupSymbol != null) {
+        try {
+          _mapController!.removeSymbol(_pickupSymbol!);
+        } catch (_) {}
+        _pickupSymbol = null;
+      }
+      if (_dropSymbol != null) {
+        try {
+          _mapController!.removeSymbol(_dropSymbol!);
+        } catch (_) {}
+        _dropSymbol = null;
+      }
+    }
+  }
+
+  Future<void> _registerCustomIcons(MapplsMapController controller) async {
+    // Register dynamic pins
+    Future<Uint8List> drawMarker(Color color) async {
+      final ui.PictureRecorder recorder = ui.PictureRecorder();
+      final Canvas canvas = Canvas(recorder);
+      const double size = 64.0;
+      
+      // Draw outer shadow/border
+      final Paint shadowPaint = Paint()
+        ..color = Colors.black.withOpacity(0.25)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(const Offset(size / 2, size / 2 + 2), 26.0, shadowPaint);
+
+      // Draw outer white circle
+      final Paint whitePaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(const Offset(size / 2, size / 2), 24.0, whitePaint);
+      
+      // Draw inner colored circle
+      final Paint colorPaint = Paint()
+        ..color = color
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(const Offset(size / 2, size / 2), 18.0, colorPaint);
+
+      // Draw center white dot
+      final Paint dotPaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(const Offset(size / 2, size / 2), 6.0, dotPaint);
+
+      final ui.Picture picture = recorder.endRecording();
+      final ui.Image img = await picture.toImage(size.toInt(), size.toInt());
+      final ByteData? byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+      return byteData!.buffer.asUint8List();
+    }
+
+    try {
+      if (!_registeredIcons.contains('pickup-pin')) {
+        final bytes = await drawMarker(const Color(0xFF4CAF50)); // Green
+        await controller.addImage('pickup-pin', bytes);
+        _registeredIcons.add('pickup-pin');
+        debugPrint("Successfully registered dynamic map icon: pickup-pin");
+      }
+      if (!_registeredIcons.contains('drop-pin')) {
+        final bytes = await drawMarker(const Color(0xFFE53935)); // Red
+        await controller.addImage('drop-pin', bytes);
+        _registeredIcons.add('drop-pin');
+        debugPrint("Successfully registered dynamic map icon: drop-pin");
+      }
+    } catch (e) {
+      debugPrint("Failed to register dynamic marker pins: $e");
     }
   }
 
   Future<void> _drawTripRoute() async {
     if (_activeTrip == null || _mapController == null) return;
+
+    await _registerCustomIcons(_mapController!);
     
     final status = _normalizeTripStatus(_activeTrip!.status);
     LatLng? source;
@@ -3758,6 +3831,49 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         source = LatLng(_activeTrip!.pickupLat!, _activeTrip!.pickupLng!);
         destination = LatLng(_activeTrip!.dropLat!, _activeTrip!.dropLng!);
       }
+    }
+
+    // Clear old symbols
+    if (_pickupSymbol != null) {
+      try {
+        await _mapController!.removeSymbol(_pickupSymbol!);
+      } catch (_) {}
+      _pickupSymbol = null;
+    }
+    if (_dropSymbol != null) {
+      try {
+        await _mapController!.removeSymbol(_dropSymbol!);
+      } catch (_) {}
+      _dropSymbol = null;
+    }
+
+    // Add symbols if active trip has valid lat/lngs
+    if (_activeTrip!.pickupLat != null && _activeTrip!.pickupLng != null) {
+      try {
+        _pickupSymbol = await _mapController!.addSymbol(SymbolOptions(
+          geometry: LatLng(_activeTrip!.pickupLat!, _activeTrip!.pickupLng!),
+          iconImage: 'pickup-pin',
+          iconSize: 0.6,
+          textField: 'Pickup',
+          textOffset: const Offset(0, 1.8),
+          textColor: '#4CAF50',
+          textSize: 11.0,
+        ));
+      } catch (_) {}
+    }
+
+    if (_activeTrip!.dropLat != null && _activeTrip!.dropLng != null) {
+      try {
+        _dropSymbol = await _mapController!.addSymbol(SymbolOptions(
+          geometry: LatLng(_activeTrip!.dropLat!, _activeTrip!.dropLng!),
+          iconImage: 'drop-pin',
+          iconSize: 0.6,
+          textField: 'Drop',
+          textOffset: const Offset(0, 1.8),
+          textColor: '#E53935',
+          textSize: 11.0,
+        ));
+      } catch (_) {}
     }
 
     if (source != null && destination != null) {

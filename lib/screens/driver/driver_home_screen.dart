@@ -3220,7 +3220,16 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       if (confirmed) {
         final cashRes = await ApiService.markCashCollected(tripId);
         if (cashRes['success'] == true) {
-          final data = cashRes['data'] ?? cashRes;
+          final data = {
+            ...payload,
+            ...?cashRes['data'],
+            'cash_collected': payload['cash_to_collect'] ?? payload['net_rider_fare'] ?? cashRes['amount'],
+            'kcoin_discount': payload['kcoin_discount'],
+            'promo_discount': payload['promo_discount'],
+            'commission_deducted': payload['commission'],
+            'company_pays_you': payload['company_pays_driver'],
+            'your_net_earnings': payload['your_earnings'],
+          };
           await _showCashCollectedBreakdown(data);
         } else {
           _showSnack(cashRes['error'] ?? 'Cash confirmation failed', isError: true);
@@ -3252,6 +3261,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     final double cashToCollect = double.tryParse((payload['cash_to_collect'] ?? 0).toString()) ?? 0.0;
     final double companyPaysDriver = double.tryParse((payload['company_pays_driver'] ?? 0).toString()) ?? 0.0;
     final double yourEarnings = double.tryParse((payload['your_earnings'] ?? payload['driver_earnings'] ?? 0).toString()) ?? 0.0;
+    final double commission = double.tryParse((payload['commission'] ?? payload['platform_fee'] ?? 0).toString()) ?? 0.0;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -3314,6 +3324,12 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                 '-₹${totalDiscount.toStringAsFixed(0)}',
                 valueColor: Colors.green[700],
               ),
+            if (commission > 0)
+              _buildDialogBreakdownRow(
+                'Commission to Company', 
+                '-₹${commission.toStringAsFixed(0)}',
+                valueColor: Colors.red[700],
+              ),
             if (companyPaysDriver > 0)
               _buildDialogBreakdownRow(
                 'Company Pays You', 
@@ -3330,6 +3346,13 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
               isBold: true,
               valueColor: kDark,
             ),
+            if (commission > 0) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Note: Since you take cash, the company commission of ₹${commission.toStringAsFixed(0)} will be deducted from your wallet balance.',
+                style: GoogleFonts.sora(fontSize: 10, color: Colors.red[800], fontStyle: FontStyle.italic),
+              ),
+            ],
           ],
         ),
         actions: [
@@ -3369,6 +3392,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     final double totalDiscount = double.tryParse((payload['total_discount'] ?? 0).toString()) ?? 0.0;
     final double netRiderFare = double.tryParse((payload['net_rider_fare'] ?? 0).toString()) ?? 0.0;
     final double yourEarnings = double.tryParse((payload['your_earnings'] ?? payload['driver_earnings'] ?? 0).toString()) ?? 0.0;
+    final double commission = double.tryParse((payload['commission'] ?? payload['platform_fee'] ?? 0).toString()) ?? 0.0;
 
     await showDialog(
       context: context,
@@ -3431,6 +3455,12 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                 '-₹${totalDiscount.toStringAsFixed(0)}',
                 valueColor: Colors.green[700],
               ),
+            if (commission > 0)
+              _buildDialogBreakdownRow(
+                'Commission (Automatically Cut)', 
+                '-₹${commission.toStringAsFixed(0)}',
+                valueColor: Colors.red[700],
+              ),
             const SizedBox(height: 8),
             const Divider(),
             const SizedBox(height: 8),
@@ -3440,6 +3470,13 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
               isBold: true,
               valueColor: kDark,
             ),
+            if (commission > 0) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Note: Since payment was online, the company commission of ₹${commission.toStringAsFixed(0)} was automatically cut from the fare.',
+                style: GoogleFonts.sora(fontSize: 10, color: Colors.green[800], fontStyle: FontStyle.italic),
+              ),
+            ],
           ],
         ),
         actions: [
@@ -3474,9 +3511,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     final double cashCollected = double.tryParse((data['cash_collected'] ?? 0).toString()) ?? 0.0;
     final double kcoinDiscount = double.tryParse((data['kcoin_discount'] ?? 0).toString()) ?? 0.0;
     final double promoDiscount = double.tryParse((data['promo_discount'] ?? 0).toString()) ?? 0.0;
-    final double commissionDeducted = double.tryParse((data['commission_deducted'] ?? 0).toString()) ?? 0.0;
-    final double companyPaysYou = double.tryParse((data['company_pays_you'] ?? 0).toString()) ?? 0.0;
-    final double yourNetEarnings = double.tryParse((data['your_net_earnings'] ?? 0).toString()) ?? 0.0;
+    final double commissionDeducted = double.tryParse((data['commission_deducted'] ?? data['commission'] ?? data['platform_fee'] ?? 0).toString()) ?? 0.0;
+    final double companyPaysYou = double.tryParse((data['company_pays_you'] ?? data['company_payable'] ?? 0).toString()) ?? 0.0;
+    final double yourNetEarnings = double.tryParse((data['your_net_earnings'] ?? data['driver_earnings'] ?? 0).toString()) ?? 0.0;
+    final double actualFare = double.tryParse((data['actual_fare'] ?? (cashCollected + kcoinDiscount + promoDiscount)).toString()) ?? 0.0;
+    final String promoCode = data['promo_code']?.toString() ?? '';
 
     await showDialog(
       context: context,
@@ -3520,6 +3559,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 8),
+            _buildDialogBreakdownRow('Trip Fare', '₹${actualFare.toStringAsFixed(0)}'),
             if (kcoinDiscount > 0)
               _buildDialogBreakdownRow(
                 'K-Coin Discount', 
@@ -3528,25 +3568,23 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
               ),
             if (promoDiscount > 0)
               _buildDialogBreakdownRow(
-                'Promo Discount', 
+                'Promo Discount (${promoCode.isNotEmpty ? promoCode : "Applied"})', 
                 '-₹${promoDiscount.toStringAsFixed(0)}',
                 valueColor: Colors.green[700],
               ),
             if (commissionDeducted > 0)
               _buildDialogBreakdownRow(
-                'Commission Deducted', 
+                'Commission Owed to Company', 
                 '-₹${commissionDeducted.toStringAsFixed(0)}',
                 valueColor: Colors.red[700],
               ),
-            const SizedBox(height: 8),
-            const Divider(),
-            const SizedBox(height: 8),
-            _buildDialogBreakdownRow(
-              'Company Pays You', 
-              '+₹${companyPaysYou.toStringAsFixed(0)}',
-              valueColor: kOrangeDark,
-              isBold: true,
-            ),
+            if (companyPaysYou > 0)
+              _buildDialogBreakdownRow(
+                'Company Pays You', 
+                '+₹${companyPaysYou.toStringAsFixed(0)}',
+                valueColor: kOrangeDark,
+                isBold: true,
+              ),
             const SizedBox(height: 8),
             const Divider(),
             const SizedBox(height: 8),
@@ -3556,6 +3594,13 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
               isBold: true,
               valueColor: kDark,
             ),
+            if (commissionDeducted > 0) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Note: Since this is a cash trip, the company commission of ₹${commissionDeducted.toStringAsFixed(0)} will be deducted from your wallet balance.',
+                style: GoogleFonts.sora(fontSize: 10, color: Colors.red[800], fontStyle: FontStyle.italic),
+              ),
+            ],
           ],
         ),
         actions: [
@@ -3632,10 +3677,21 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
         return;
       case 'cash':
         setState(() => _loadingActive = true);
+        final earningsRes = await ApiService.getTripEarnings(tripId);
         res = await ApiService.markCashCollected(tripId);
         setState(() => _loadingActive = false);
         if (res['success'] == true) {
-          final data = res['data'] ?? res;
+          final earningsData = earningsRes['success'] == true ? (earningsRes['data'] ?? earningsRes) : {};
+          final data = {
+            ...earningsData,
+            ...res['data'] ?? res,
+            'cash_collected': earningsData['actual_fare'] ?? res['amount'],
+            'kcoin_discount': earningsData['kcoin_discount'],
+            'promo_discount': earningsData['promo_discount'],
+            'commission_deducted': earningsData['platform_fee'],
+            'company_pays_you': earningsData['company_payable'],
+            'your_net_earnings': earningsData['driver_earnings'],
+          };
           await _showCashCollectedBreakdown(data);
         }
         break;

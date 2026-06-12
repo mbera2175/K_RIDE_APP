@@ -4813,7 +4813,7 @@ class _WhereToScreenState extends State<WhereToScreen>
                   setState(() {
                     _isMapMoving = false;
                   });
-                  if (_tempCameraTarget != null) {
+                  if (_tempCameraTarget != null && !_pickupFocus.hasFocus && !_destFocus.hasFocus) {
                     await _updatePickupFromLatLng(_tempCameraTarget!);
                   }
                 }

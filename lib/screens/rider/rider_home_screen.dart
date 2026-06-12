@@ -4954,7 +4954,7 @@ class _WhereToScreenState extends State<WhereToScreen>
           ),
         ),
         DraggableScrollableSheet(
-          initialChildSize: 0.52,
+          initialChildSize: 0.90,
           minChildSize: 0.28,
           maxChildSize: 0.90,
           snap: true,

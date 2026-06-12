@@ -3184,10 +3184,16 @@ class _WhereToScreenState extends State<WhereToScreen>
                     content: Text("Trip started! Have a safe journey. 🚗"),
                     backgroundColor: Colors.green));
                 _openNavigation(_dropLat, _dropLng);
+                if (mounted) {
+                  _refreshMapMarkersAndRoute();
+                }
               } else if (oldStatus != 'arrived' && status == 'arrived') {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text("Driver has arrived at pickup location! 📍"),
                     backgroundColor: kOrange));
+                if (mounted) {
+                  _refreshMapMarkersAndRoute();
+                }
               }
 
               if (status == 'completed') {
@@ -3743,6 +3749,59 @@ class _WhereToScreenState extends State<WhereToScreen>
         debugPrint("Failed to register custom map icon ${entry.key}: $e");
       }
     }
+
+    // Register dynamic pins
+    Future<Uint8List> drawMarker(Color color) async {
+      final ui.PictureRecorder recorder = ui.PictureRecorder();
+      final Canvas canvas = Canvas(recorder);
+      const double size = 64.0;
+      
+      // Draw outer shadow/border
+      final Paint shadowPaint = Paint()
+        ..color = Colors.black.withOpacity(0.25)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(const Offset(size / 2, size / 2 + 2), 26.0, shadowPaint);
+
+      // Draw outer white circle
+      final Paint whitePaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(const Offset(size / 2, size / 2), 24.0, whitePaint);
+      
+      // Draw inner colored circle
+      final Paint colorPaint = Paint()
+        ..color = color
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(const Offset(size / 2, size / 2), 18.0, colorPaint);
+
+      // Draw center white dot
+      final Paint dotPaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(const Offset(size / 2, size / 2), 6.0, dotPaint);
+
+      final ui.Picture picture = recorder.endRecording();
+      final ui.Image img = await picture.toImage(size.toInt(), size.toInt());
+      final ByteData? byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+      return byteData!.buffer.asUint8List();
+    }
+
+    try {
+      if (!_registeredIcons.contains('pickup-pin')) {
+        final bytes = await drawMarker(const Color(0xFF4CAF50)); // Green
+        await controller.addImage('pickup-pin', bytes);
+        _registeredIcons.add('pickup-pin');
+        debugPrint("Successfully registered dynamic map icon: pickup-pin");
+      }
+      if (!_registeredIcons.contains('drop-pin')) {
+        final bytes = await drawMarker(const Color(0xFFE53935)); // Red
+        await controller.addImage('drop-pin', bytes);
+        _registeredIcons.add('drop-pin');
+        debugPrint("Successfully registered dynamic map icon: drop-pin");
+      }
+    } catch (e) {
+      debugPrint("Failed to register dynamic marker pins: $e");
+    }
   }
 
   Future<void> _loadNearbyDriversOnMap() async {
@@ -3953,6 +4012,9 @@ class _WhereToScreenState extends State<WhereToScreen>
       });
     }
     setState(() => _fareLoading = false);
+    if (mounted) {
+      _refreshMapMarkersAndRoute();
+    }
   }
 
   Future<void> _loadAllVehicleFares() async {
@@ -4028,6 +4090,7 @@ class _WhereToScreenState extends State<WhereToScreen>
           _estimatedDuration = results[_selectedVehicleType]!['duration'] as int;
         }
       });
+      _refreshMapMarkersAndRoute();
     }
   }
 
@@ -4082,6 +4145,9 @@ class _WhereToScreenState extends State<WhereToScreen>
             _connectSocket(riderId, token);
           }
         });
+        if (mounted) {
+          _refreshMapMarkersAndRoute();
+        }
       }
     } catch (e) {
       debugPrint('Load active trip details error: $e');
@@ -4241,6 +4307,9 @@ class _WhereToScreenState extends State<WhereToScreen>
         setState(() {
           _tripStatus = 'arrived';
         });
+        if (mounted) {
+          _refreshMapMarkersAndRoute();
+        }
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Driver has arrived at pickup location! 📍"),
             backgroundColor: kOrange));
@@ -4249,6 +4318,9 @@ class _WhereToScreenState extends State<WhereToScreen>
           _tripStatus = 'started';
           _otpCode = null;
         });
+        if (mounted) {
+          _refreshMapMarkersAndRoute();
+        }
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Trip started! Have a safe journey. 🚗"),
             backgroundColor: Colors.green));
@@ -4416,26 +4488,24 @@ class _WhereToScreenState extends State<WhereToScreen>
       try {
         _pickupSymbol = await _mapController!.addSymbol(SymbolOptions(
           geometry: LatLng(_pickupLat, _pickupLng),
-          iconImage: 'marker-15',
-          iconSize: 2.0,
-          iconColor: '#FF6B00',
+          iconImage: 'pickup-pin',
+          iconSize: 0.6,
           textField: 'Pickup',
-          textOffset: const Offset(0, 1.5),
-          textColor: '#FF6B00',
-          textSize: 12.0,
+          textOffset: const Offset(0, 1.8),
+          textColor: '#4CAF50',
+          textSize: 11.0,
         ));
       } catch (_) {}
 
       try {
         _dropSymbol = await _mapController!.addSymbol(SymbolOptions(
           geometry: LatLng(_dropLat, _dropLng),
-          iconImage: 'marker-15',
-          iconSize: 2.0,
-          iconColor: '#1A1A1A',
+          iconImage: 'drop-pin',
+          iconSize: 0.6,
           textField: 'Drop',
-          textOffset: const Offset(0, 1.5),
-          textColor: '#1A1A1A',
-          textSize: 12.0,
+          textOffset: const Offset(0, 1.8),
+          textColor: '#E53935',
+          textSize: 11.0,
         ));
       } catch (_) {}
 
@@ -4445,26 +4515,24 @@ class _WhereToScreenState extends State<WhereToScreen>
       try {
         _pickupSymbol = await _mapController!.addSymbol(SymbolOptions(
           geometry: LatLng(_pickupLat, _pickupLng),
-          iconImage: 'marker-15',
-          iconSize: 2.0,
-          iconColor: '#FF6B00',
+          iconImage: 'pickup-pin',
+          iconSize: 0.6,
           textField: 'Pickup',
-          textOffset: const Offset(0, 1.5),
-          textColor: '#FF6B00',
-          textSize: 12.0,
+          textOffset: const Offset(0, 1.8),
+          textColor: '#4CAF50',
+          textSize: 11.0,
         ));
       } catch (_) {}
 
       try {
         _dropSymbol = await _mapController!.addSymbol(SymbolOptions(
           geometry: LatLng(_dropLat, _dropLng),
-          iconImage: 'marker-15',
-          iconSize: 2.0,
-          iconColor: '#1A1A1A',
+          iconImage: 'drop-pin',
+          iconSize: 0.6,
           textField: 'Drop',
-          textOffset: const Offset(0, 1.5),
-          textColor: '#1A1A1A',
-          textSize: 12.0,
+          textOffset: const Offset(0, 1.8),
+          textColor: '#E53935',
+          textSize: 11.0,
         ));
       } catch (_) {}
 
@@ -4506,26 +4574,24 @@ class _WhereToScreenState extends State<WhereToScreen>
       try {
         _pickupSymbol = await _mapController!.addSymbol(SymbolOptions(
           geometry: LatLng(_pickupLat, _pickupLng),
-          iconImage: 'marker-15',
-          iconSize: 2.0,
-          iconColor: '#FF6B00',
+          iconImage: 'pickup-pin',
+          iconSize: 0.6,
           textField: 'Pickup',
-          textOffset: const Offset(0, 1.5),
-          textColor: '#FF6B00',
-          textSize: 12.0,
+          textOffset: const Offset(0, 1.8),
+          textColor: '#4CAF50',
+          textSize: 11.0,
         ));
       } catch (_) {}
 
       try {
         _dropSymbol = await _mapController!.addSymbol(SymbolOptions(
           geometry: LatLng(_dropLat, _dropLng),
-          iconImage: 'marker-15',
-          iconSize: 2.0,
-          iconColor: '#1A1A1A',
+          iconImage: 'drop-pin',
+          iconSize: 0.6,
           textField: 'Drop',
-          textOffset: const Offset(0, 1.5),
-          textColor: '#1A1A1A',
-          textSize: 12.0,
+          textOffset: const Offset(0, 1.8),
+          textColor: '#E53935',
+          textSize: 11.0,
         ));
       } catch (_) {}
 

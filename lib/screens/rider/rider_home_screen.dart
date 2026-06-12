@@ -1065,15 +1065,11 @@ class _LocationModalState extends State<LocationModal> {
 class PaymentModal extends StatelessWidget {
   final PaymentMethod selected;
   final ValueChanged<PaymentMethod> onSelect;
-  final bool useKCoins;
-  final ValueChanged<bool> onUseKCoinsChanged;
   final VoidCallback onClose;
   const PaymentModal(
       {super.key,
       required this.selected,
       required this.onSelect,
-      required this.useKCoins,
-      required this.onUseKCoinsChanged,
       required this.onClose});
 
   @override
@@ -1178,89 +1174,6 @@ class PaymentModal extends StatelessWidget {
                     ),
                   );
                 }),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () => onUseKCoinsChanged(!useKCoins),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: useKCoins ? kOrangeLight : kGray,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                          color: useKCoins ? kOrange : Colors.transparent,
-                          width: 2),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: kWhite,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.07),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: const Center(
-                            child: Text('🪙', style: TextStyle(fontSize: 22)),
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Use K Coins',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: kDark,
-                                ),
-                              ),
-                              Text(
-                                '100 coins = ₹10 discount',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: kMuted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: 44,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: useKCoins ? kOrange : Colors.grey[300],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: AnimatedAlign(
-                            duration: const Duration(milliseconds: 200),
-                            alignment: useKCoins
-                                ? Alignment.centerRight
-                                : Alignment.centerLeft,
-                            child: Container(
-                              margin: const EdgeInsets.all(3),
-                              width: 18,
-                              height: 18,
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -5009,376 +4922,440 @@ class _WhereToScreenState extends State<WhereToScreen>
   }
 
   Widget _buildInputStep() {
-    final bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
-    final double topPadding = MediaQuery.of(context).padding.top + 8;
-
-    return Container(
-      color: kWhite,
-      child: SafeArea(
-        top: false,
-        bottom: false,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(20, topPadding, 20, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    if (widget.genericMode) ...[
-                      Container(
-                          width: 64,
-                          height: 64,
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: MapplsMap(
+            initialCameraPosition: CameraPosition(
+              target: LatLng(_pickupLat, _pickupLng),
+              zoom: 15.0,
+            ),
+            onMapCreated: (MapplsMapController controller) {
+              _mapController = controller;
+            },
+            onStyleLoadedCallback: () async {
+              if (_mapController == null) return;
+              try {
+                await _registerCustomIcons(_mapController!);
+                // Add Pickup marker
+                await _mapController!.addSymbol(SymbolOptions(
+                  geometry: LatLng(_pickupLat, _pickupLng),
+                  iconImage: 'marker-15',
+                  iconSize: 2.0,
+                  iconColor: '#FF6B00',
+                  textField: 'Pickup',
+                  textOffset: const Offset(0, 1.5),
+                  textColor: '#FF6B00',
+                  textSize: 12.0,
+                ));
+              } catch (_) {}
+            },
+            myLocationEnabled: true,
+          ),
+        ),
+        DraggableScrollableSheet(
+          initialChildSize: 0.52,
+          minChildSize: 0.28,
+          maxChildSize: 0.90,
+          snap: true,
+          snapSizes: const [0.28, 0.52, 0.90],
+          builder: (sheetCtx, scrollController) {
+            final bool isKeyboardOpen = MediaQuery.of(sheetCtx).viewInsets.bottom > 0;
+            return Container(
+              decoration: const BoxDecoration(
+                color: kWhite,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 32,
+                    offset: Offset(0, -8),
+                  )
+                ],
+              ),
+              child: Column(
+                children: [
+                  // Drag handle
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10, bottom: 4),
+                    child: Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDDDDDD),
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView(
+                      controller: scrollController,
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                      children: [
+                        // Header
+                        Row(
+                          children: [
+                            if (widget.genericMode) ...[
+                              Container(
+                                  width: 64,
+                                  height: 64,
+                                  decoration: BoxDecoration(
+                                      color: kOrangeLight,
+                                      borderRadius: BorderRadius.circular(16)),
+                                  child: const Center(
+                                      child: ServiceIconWidget(
+                                          icon: 'ac_cab', size: 44))),
+                              const SizedBox(width: 12),
+                              const Text('Book Your Ride',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w800,
+                                      color: kDark)),
+                            ] else ...[
+                              Container(
+                                  width: 64,
+                                  height: 64,
+                                  decoration: BoxDecoration(
+                                      color: widget.service.color.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(16)),
+                                  child: Center(
+                                      child: ServiceIconWidget(
+                                          icon: widget.service.icon, size: 44))),
+                              const SizedBox(width: 12),
+                              const Text('Book Your Ride',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w800,
+                                      color: kDark)),
+                            ],
+                            if (widget.service.bikeOnly) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                    color: kOrangeLight,
+                                    borderRadius: BorderRadius.circular(99),
+                                    border:
+                                        Border.all(color: kOrange.withValues(alpha: 0.2))),
+                                child: const Text('🏍️ Bike only',
+                                    style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700,
+                                        color: kOrange)),
+                              ),
+                            ],
+                          ],
+                        ),
+                        SizedBox(height: isKeyboardOpen ? 16 : 28),
+                        Container(
+                          height: 54,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           decoration: BoxDecoration(
                               color: kOrangeLight,
-                              borderRadius: BorderRadius.circular(16)),
-                          child: const Center(
-                              child: ServiceIconWidget(
-                                  icon: 'ac_cab', size: 44))),
-                      const SizedBox(width: 12),
-                      const Text('Book Your Ride',
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: kDark)),
-                    ] else ...[
-                      Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                              color: widget.service.color.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(16)),
-                          child: Center(
-                              child: ServiceIconWidget(
-                                  icon: widget.service.icon, size: 44))),
-                      const SizedBox(width: 12),
-                      const Text('Book Your Ride',
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: kDark)),
-                    ],
-                    if (widget.service.bikeOnly) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                            color: kOrangeLight,
-                            borderRadius: BorderRadius.circular(99),
-                            border:
-                                Border.all(color: kOrange.withValues(alpha: 0.2))),
-                        child: const Text('🏍️ Bike only',
-                            style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                                color: kOrange)),
-                      ),
-                    ],
-                  ],
-                ),
-                SizedBox(height: isKeyboardOpen ? 16 : 28),
-                Container(
-                  height: 54,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                      color: kOrangeLight,
-                      borderRadius: BorderRadius.circular(99)),
-                  child: Row(
-                    children: [
-                      Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                              shape: BoxShape.circle, color: kOrange)),
-                      const SizedBox(width: 12),
-                      Expanded(
-                          child: TextField(
-                              controller: _pickupCtrl,
-                              focusNode: _pickupFocus,
-                              decoration: const InputDecoration(
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.zero,
-                                  hintText: 'Pickup location'),
-                              style:
-                                  const TextStyle(fontSize: 14, color: kDark))),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                StatefulBuilder(
-                  builder: (_, ss) => Container(
-                    height: 54,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                        color: kGray,
-                        borderRadius: BorderRadius.circular(99)),
-                    child: Row(
-                      children: [
-                        Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                                color: kDark,
-                                borderRadius: BorderRadius.circular(1.5))),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            controller: _destCtrl,
-                            focusNode: _destFocus,
-                            autofocus: true,
-                            onChanged: (_) => ss(() {}),
-                            decoration: InputDecoration(
-                                border: InputBorder.none,
-                                isDense: true,
-                                contentPadding: EdgeInsets.zero,
-                                hintText: widget.service.category == 'delivery'
-                                    ? 'Delivery address...'
-                                    : 'Where to?'),
-                            style: const TextStyle(fontSize: 14, color: kDark),
-                          ),
-                        ),
-                        if (_destCtrl.text.isNotEmpty)
-                          GestureDetector(
-                              onTap: () {
-                                _setDestText('');
-                                setState(() {
-                                  _suggestions = [];
-                                });
-                                ss(() {});
-                              },
-                              child: const Text('✕',
-                                  style:
-                                      TextStyle(color: kMuted, fontSize: 14))),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          if (_destCtrl.text.isEmpty) {
-                            _setDestText("Map Selected Location");
-                          }
-                          setState(() {
-                            _dropLat = 22.5850;
-                            _dropLng = 88.3950;
-                            _step = 'confirm';
-                          });
-                          _loadFare();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Confirm your location on the map')),
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                          decoration: BoxDecoration(
-                            color: kWhite,
-                            border: Border.all(color: const Color(0xFFE4E7EC)),
-                            borderRadius: BorderRadius.circular(99),
-                          ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                              borderRadius: BorderRadius.circular(99)),
+                          child: Row(
                             children: [
-                              Icon(Icons.map_rounded, size: 15, color: kDark),
-                              SizedBox(width: 6),
-                              Text('Select from map',
-                                  style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: kDark)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Stops feature is coming soon!')),
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                          decoration: BoxDecoration(
-                            color: kWhite,
-                            border: Border.all(color: const Color(0xFFE4E7EC)),
-                            borderRadius: BorderRadius.circular(99),
-                          ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.add_rounded, size: 15, color: kDark),
-                              SizedBox(width: 6),
-                              Text('Add stops',
-                                  style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: kDark)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _suggestionsLoading
-                    ? const Center(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20),
-                          child: CircularProgressIndicator(color: kOrange),
-                        ),
-                      )
-                    : _suggestions.isNotEmpty
-                        ? ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            padding: const EdgeInsets.only(top: 8),
-                            itemCount: _suggestions.length,
-                            itemBuilder: (context, index) {
-                              final suggestion = _suggestions[index];
-                              String? distanceStr;
-                              if (suggestion.latitude != null && suggestion.longitude != null) {
-                                try {
-                                  final distMeters = Geolocator.distanceBetween(
-                                    _pickupLat,
-                                    _pickupLng,
-                                    suggestion.latitude!,
-                                    suggestion.longitude!,
-                                  );
-                                  final distKm = distMeters / 1000.0;
-                                  distanceStr = "${distKm.toStringAsFixed(1)} km";
-                                } catch (_) {}
-                              } else {
-                                distanceStr = "${(8.0 + index * 1.2).toStringAsFixed(1)} km";
-                              }
-
-                              return GestureDetector(
-                                onTap: () => _selectSuggestion(suggestion),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                              Container(
+                                  width: 8,
+                                  height: 8,
                                   decoration: const BoxDecoration(
-                                    border: Border(bottom: BorderSide(color: Color(0xFFF2F4F7), width: 1)),
+                                      shape: BoxShape.circle, color: kOrange)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                  child: TextField(
+                                      controller: _pickupCtrl,
+                                      focusNode: _pickupFocus,
+                                      decoration: const InputDecoration(
+                                          border: InputBorder.none,
+                                          isDense: true,
+                                          contentPadding: EdgeInsets.zero,
+                                          hintText: 'Pickup location'),
+                                      style:
+                                          const TextStyle(fontSize: 14, color: kDark))),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        StatefulBuilder(
+                          builder: (_, ss) => Container(
+                            height: 54,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                                color: kGray,
+                                borderRadius: BorderRadius.circular(99)),
+                            child: Row(
+                              children: [
+                                Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                        color: kDark,
+                                        borderRadius: BorderRadius.circular(1.5))),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _destCtrl,
+                                    focusNode: _destFocus,
+                                    autofocus: true,
+                                    onChanged: (_) => ss(() {}),
+                                    decoration: InputDecoration(
+                                        border: InputBorder.none,
+                                        isDense: true,
+                                        contentPadding: EdgeInsets.zero,
+                                        hintText: widget.service.category == 'delivery'
+                                            ? 'Delivery address...'
+                                            : 'Where to?'),
+                                    style: const TextStyle(fontSize: 14, color: kDark),
                                   ),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                ),
+                                if (_destCtrl.text.isNotEmpty)
+                                  GestureDetector(
+                                      onTap: () {
+                                        _setDestText('');
+                                        setState(() {
+                                          _suggestions = [];
+                                        });
+                                        ss(() {});
+                                      },
+                                      child: const Text('✕',
+                                          style:
+                                              TextStyle(color: kMuted, fontSize: 14))),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  if (_destCtrl.text.isEmpty) {
+                                    _setDestText("Map Selected Location");
+                                  }
+                                  setState(() {
+                                    _dropLat = 22.5850;
+                                    _dropLng = 88.3950;
+                                    _step = 'confirm';
+                                  });
+                                  _loadFare();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Confirm your location on the map')),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                  decoration: BoxDecoration(
+                                    color: kWhite,
+                                    border: Border.all(color: const Color(0xFFE4E7EC)),
+                                    borderRadius: BorderRadius.circular(99),
+                                  ),
+                                  child: const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      SizedBox(
-                                        width: 38,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(
-                                              Icons.location_on_rounded,
-                                              color: Color(0xFF667085),
-                                              size: 16,
-                                            ),
-                                            if (distanceStr != null) ...[
-                                              const SizedBox(height: 1),
-                                              Text(
-                                                distanceStr,
-                                                style: const TextStyle(
-                                                  fontSize: 8.0,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Color(0xFF667085),
-                                                ),
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              suggestion.placeName,
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w500,
-                                                color: kDark,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            if (suggestion.placeAddress.isNotEmpty) ...[
-                                              const SizedBox(height: 1),
-                                              Text(
-                                                suggestion.placeAddress,
-                                                style: const TextStyle(
-                                                  fontSize: 11,
-                                                  color: kMuted,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      const Icon(
-                                        Icons.favorite_border_rounded,
-                                        color: Color(0xFF98A2B3),
-                                        size: 15,
-                                      ),
-                                      const SizedBox(width: 4),
+                                      Icon(Icons.map_rounded, size: 15, color: kDark),
+                                      SizedBox(width: 6),
+                                      Text('Select from map',
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: kDark)),
                                     ],
                                   ),
                                 ),
-                              );
-                            },
-                          )
-                        : const SizedBox.shrink(),
-                const SizedBox(height: 20),
-                StatefulBuilder(
-                  builder: (_, ss) {
-                    final hasText = _destCtrl.text.isNotEmpty;
-                    return ElevatedButton(
-                      onPressed: hasText
-                          ? () {
-                              setState(() => _step = 'confirm');
-                              _loadAllVehicleFares();
-                            }
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: hasText
-                            ? widget.service.accent
-                            : const Color(0xFFEEEEEE),
-                        foregroundColor: hasText ? kWhite : kMuted,
-                        disabledBackgroundColor: const Color(0xFFEEEEEE),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
-                        elevation: hasText ? 8 : 0,
-                        shadowColor: widget.service.accent.withOpacity(0.27),
-                      ),
-                      child: SizedBox(
-                          width: double.infinity,
-                          child: Center(
-                              child: Text(
-                                  hasText
-                                      ? 'Find ${widget.service.name} →'
-                                      : 'Enter a destination',
-                                  style: const TextStyle(
-                                      fontSize: 16, fontWeight: FontWeight.w700)))),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Stops feature is coming soon!')),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                  decoration: BoxDecoration(
+                                    color: kWhite,
+                                    border: Border.all(color: const Color(0xFFE4E7EC)),
+                                    borderRadius: BorderRadius.circular(99),
+                                  ),
+                                  child: const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.add_rounded, size: 15, color: kDark),
+                                      SizedBox(width: 6),
+                                      Text('Add stops',
+                                          style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: kDark)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _suggestionsLoading
+                            ? const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 20),
+                                  child: CircularProgressIndicator(color: kOrange),
+                                ),
+                              )
+                            : _suggestions.isNotEmpty
+                                ? ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    padding: const EdgeInsets.only(top: 8),
+                                    itemCount: _suggestions.length,
+                                    itemBuilder: (context, index) {
+                                      final suggestion = _suggestions[index];
+                                      String? distanceStr;
+                                      if (suggestion.latitude != null && suggestion.longitude != null) {
+                                        try {
+                                          final distMeters = Geolocator.distanceBetween(
+                                            _pickupLat,
+                                            _pickupLng,
+                                            suggestion.latitude!,
+                                            suggestion.longitude!,
+                                          );
+                                          final distKm = distMeters / 1000.0;
+                                          distanceStr = "${distKm.toStringAsFixed(1)} km";
+                                        } catch (_) {}
+                                      } else {
+                                        distanceStr = "${(8.0 + index * 1.2).toStringAsFixed(1)} km";
+                                      }
+
+                                      return GestureDetector(
+                                        onTap: () => _selectSuggestion(suggestion),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(vertical: 8),
+                                          decoration: const BoxDecoration(
+                                            border: Border(bottom: BorderSide(color: Color(0xFFF2F4F7), width: 1)),
+                                          ),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            children: [
+                                              SizedBox(
+                                                width: 38,
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.location_on_rounded,
+                                                      color: Color(0xFF667085),
+                                                      size: 16,
+                                                    ),
+                                                    if (distanceStr != null) ...[
+                                                      const SizedBox(height: 1),
+                                                      Text(
+                                                        distanceStr,
+                                                        style: const TextStyle(
+                                                          fontSize: 8.0,
+                                                          fontWeight: FontWeight.w500,
+                                                          color: Color(0xFF667085),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      suggestion.placeName,
+                                                      style: const TextStyle(
+                                                        fontSize: 13,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: kDark,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                    if (suggestion.placeAddress.isNotEmpty) ...[
+                                                      const SizedBox(height: 1),
+                                                      Text(
+                                                        suggestion.placeAddress,
+                                                        style: const TextStyle(
+                                                          fontSize: 11,
+                                                          color: kMuted,
+                                                        ),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
+                                                    ],
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              const Icon(
+                                                Icons.favorite_border_rounded,
+                                                color: Color(0xFF98A2B3),
+                                                size: 15,
+                                              ),
+                                              const SizedBox(width: 4),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  )
+                                : const SizedBox.shrink(),
+                        const SizedBox(height: 20),
+                        StatefulBuilder(
+                          builder: (_, ss) {
+                            final hasText = _destCtrl.text.isNotEmpty;
+                            return ElevatedButton(
+                              onPressed: hasText
+                                  ? () {
+                                      setState(() => _step = 'confirm');
+                                      _loadAllVehicleFares();
+                                    }
+                                  : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: hasText
+                                    ? widget.service.accent
+                                    : const Color(0xFFEEEEEE),
+                                foregroundColor: hasText ? kWhite : kMuted,
+                                disabledBackgroundColor: const Color(0xFFEEEEEE),
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16)),
+                                elevation: hasText ? 8 : 0,
+                                shadowColor: widget.service.accent.withOpacity(0.27),
+                              ),
+                              child: SizedBox(
+                                  width: double.infinity,
+                                  child: Center(
+                                      child: Text(
+                                          hasText
+                                              ? 'Find ${widget.service.name} →'
+                                              : 'Enter a destination',
+                                          style: const TextStyle(
+                                              fontSize: 16, fontWeight: FontWeight.w700)))),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
-      ),
+      ],
     );
   }
 
@@ -5664,16 +5641,12 @@ class _WhereToScreenState extends State<WhereToScreen>
                                                       overflow: TextOverflow.ellipsis,
                                                     ),
                                                   ),
-                                                  if (_useKCoins) ...[
-                                                    const SizedBox(width: 4),
-                                                    const Text('🪙', style: TextStyle(fontSize: 12)),
-                                                  ],
                                                   const SizedBox(width: 2),
                                                   const Icon(Icons.keyboard_arrow_right_rounded, size: 14, color: kMuted),
                                                 ],
                                               ),
                                               Text(
-                                                _useKCoins ? 'K Coins applied' : _paymentMethod.sub,
+                                                _paymentMethod.sub,
                                                 style: const TextStyle(
                                                   fontSize: 9.5,
                                                   color: kMuted,
@@ -5749,6 +5722,95 @@ class _WhereToScreenState extends State<WhereToScreen>
                               ),
                             ],
                           ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Spacer(),
+                            const SizedBox(width: 1),
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _useKCoins = !_useKCoins;
+                                  });
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                                  decoration: BoxDecoration(
+                                    color: _useKCoins ? kOrange : kOrangeLight,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: kOrange,
+                                      width: 2.0,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: kOrange.withOpacity(0.08),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Text('🪙', style: TextStyle(fontSize: 20)),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              'K Coins',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w800,
+                                                color: _useKCoins ? Colors.white : kOrangeDark,
+                                              ),
+                                            ),
+                                            Text(
+                                              'Use for discount',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w600,
+                                                color: _useKCoins ? Colors.white.withOpacity(0.9) : kMuted,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Container(
+                                        width: 38,
+                                        height: 20,
+                                        decoration: BoxDecoration(
+                                          color: _useKCoins ? Colors.white : Colors.grey[300],
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: AnimatedAlign(
+                                          duration: const Duration(milliseconds: 200),
+                                          alignment: _useKCoins
+                                              ? Alignment.centerRight
+                                              : Alignment.centerLeft,
+                                          child: Container(
+                                            margin: const EdgeInsets.all(2),
+                                            width: 16,
+                                            height: 16,
+                                            decoration: BoxDecoration(
+                                              color: _useKCoins ? kOrange : Colors.white,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         if (widget.service.tag == 'Emergency') ...[
                           const SizedBox(height: 4),
@@ -5862,8 +5924,6 @@ class _WhereToScreenState extends State<WhereToScreen>
             child: PaymentModal(
               selected: _paymentMethod,
               onSelect: (pm) => setState(() => _paymentMethod = pm),
-              useKCoins: _useKCoins,
-              onUseKCoinsChanged: (val) => setState(() => _useKCoins = val),
               onClose: () => setState(() => _showPaymentModal = false),
             ),
           ),

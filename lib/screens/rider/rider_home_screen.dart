@@ -3632,6 +3632,21 @@ class _WhereToScreenState extends State<WhereToScreen>
             lineWidth: 5.0,
             lineOpacity: 0.8,
           ));
+
+          // Auto-zoom to fit the route
+          _mapController!.animateCamera(CameraUpdate.newLatLngBounds(
+            LatLngBounds(
+              southwest: LatLng(
+                source.latitude < destination.latitude ? source.latitude : destination.latitude,
+                source.longitude < destination.longitude ? source.longitude : destination.longitude,
+              ),
+              northeast: LatLng(
+                source.latitude > destination.latitude ? source.latitude : destination.latitude,
+                source.longitude > destination.longitude ? source.longitude : destination.longitude,
+              ),
+            ),
+            left: 50, right: 50, top: 120, bottom: 280,
+          ));
         }
       } catch (e) {
         debugPrint('Error drawing trip route: $e');
@@ -4578,6 +4593,23 @@ class _WhereToScreenState extends State<WhereToScreen>
                   textColor: '#FF6B00',
                   textSize: 12.0,
                 ));
+
+                // Add Drop marker
+                try {
+                  await _mapController!.addSymbol(SymbolOptions(
+                    geometry: LatLng(_dropLat, _dropLng),
+                    iconImage: 'marker-15',
+                    iconSize: 2.0,
+                    iconColor: '#1A1A1A',
+                    textField: 'Drop',
+                    textOffset: const Offset(0, 1.5),
+                    textColor: '#1A1A1A',
+                    textSize: 12.0,
+                  ));
+                } catch (_) {}
+
+                // Draw route line and fit camera bounds
+                await _drawRiderTripRoute();
                 
                 final iconName = _getVehicleIconName();
                 final useIcon = _registeredIcons.contains(iconName);

@@ -6822,22 +6822,33 @@ class _WhereToScreenState extends State<WhereToScreen>
   }
 
   String _getVehicleLabel(String type) {
+    String label;
     switch (type) {
       case 'ac_cab':
-        return 'AC Cab';
+        label = 'AC Cab';
+        break;
       case 'non_ac_cab':
-        return 'Non-AC Cab';
+        label = 'Non-AC Cab';
+        break;
       case 'bike':
-        return 'Bike';
+        label = 'Bike';
+        break;
       case 'auto':
-        return 'Auto';
+        label = 'Auto';
+        break;
       case 'toto':
-        return 'Toto';
+        label = 'Toto';
+        break;
       case 'ambulance':
-        return 'Ambulance';
+        label = 'Ambulance';
+        break;
       default:
-        return 'Ride';
+        label = 'Ride';
     }
+    if (widget.service.isEV) {
+      return 'EV $label';
+    }
+    return label;
   }
 
   String _getVehicleEmoji(String type) {

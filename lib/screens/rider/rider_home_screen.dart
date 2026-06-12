@@ -5312,42 +5312,44 @@ class _WhereToScreenState extends State<WhereToScreen>
                                     },
                                   )
                                 : const SizedBox.shrink(),
-                        const SizedBox(height: 20),
-                        StatefulBuilder(
-                          builder: (_, ss) {
-                            final hasText = _destCtrl.text.isNotEmpty;
-                            return ElevatedButton(
-                              onPressed: hasText
-                                  ? () {
-                                      setState(() => _step = 'confirm');
-                                      _loadAllVehicleFares();
-                                    }
-                                  : null,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: hasText
-                                    ? widget.service.accent
-                                    : const Color(0xFFEEEEEE),
-                                foregroundColor: hasText ? kWhite : kMuted,
-                                disabledBackgroundColor: const Color(0xFFEEEEEE),
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16)),
-                                elevation: hasText ? 8 : 0,
-                                shadowColor: widget.service.accent.withOpacity(0.27),
-                              ),
-                              child: SizedBox(
-                                  width: double.infinity,
-                                  child: Center(
-                                      child: Text(
-                                          hasText
-                                              ? 'Find ${widget.service.name} →'
-                                              : 'Enter a destination',
-                                          style: const TextStyle(
-                                              fontSize: 16, fontWeight: FontWeight.w700)))),
-                            );
-                          },
-                        ),
                       ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(20, 8, 20, MediaQuery.of(sheetCtx).padding.bottom > 0 ? MediaQuery.of(sheetCtx).padding.bottom + 8 : 20),
+                    child: StatefulBuilder(
+                      builder: (_, ss) {
+                        final hasText = _destCtrl.text.isNotEmpty;
+                        return ElevatedButton(
+                          onPressed: hasText
+                              ? () {
+                                  setState(() => _step = 'confirm');
+                                  _loadAllVehicleFares();
+                                }
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: hasText
+                                ? widget.service.accent
+                                : const Color(0xFFEEEEEE),
+                            foregroundColor: hasText ? kWhite : kMuted,
+                            disabledBackgroundColor: const Color(0xFFEEEEEE),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                            elevation: hasText ? 8 : 0,
+                            shadowColor: widget.service.accent.withOpacity(0.27),
+                          ),
+                          child: SizedBox(
+                              width: double.infinity,
+                              child: Center(
+                                  child: Text(
+                                      hasText
+                                          ? 'Find ${widget.service.name} →'
+                                          : 'Enter a destination',
+                                      style: const TextStyle(
+                                          fontSize: 16, fontWeight: FontWeight.w700)))),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -5834,84 +5836,79 @@ class _WhereToScreenState extends State<WhereToScreen>
                           ),
                         ],
                         const SizedBox(height: 8),
-                        // Confirm button inside the scrollable list
-                        Padding(
-                          padding: EdgeInsets.only(
-                            bottom: MediaQuery.of(context).padding.bottom > 0
-                                ? MediaQuery.of(context).padding.bottom
-                                : 12,
-                          ),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                final body = {
-                                  "pickup_address": _pickupCtrl.text,
-                                  "drop_address": _destCtrl.text,
-                                  "pickup_lat": _pickupLat,
-                                  "pickup_lng": _pickupLng,
-                                  "drop_lat": _dropLat,
-                                  "drop_lng": _dropLng,
-                                  "vehicle_type": _selectedVehicleType,
-                                  "service_type":
-                                      widget.service.category == 'delivery'
-                                          ? widget.service.name.toLowerCase()
-                                          : 'ride',
-                                  "payment_method": _paymentMethod.id,
-                                  "use_kcoins": _useKCoins,
-                                  "is_ev_request": widget.service.isEV,
-                                  "promo_code": _appliedPromoCode,
-                                };
-                                try {
-                                  final result = await ApiService.bookTrip(body);
-                                  if (result["success"] == true) {
-                                    final bookedTrip =
-                                        result["data"] as Map<String, dynamic>? ??
-                                            const {};
-                                    final tripId =
-                                        (bookedTrip["trip_id"] as num?)?.toInt() ??
-                                            (result["trip_id"] as num?)?.toInt();
-                                    setState(() {
-                                      _booked = true;
-                                      _searching = true;
-                                      _tripId = tripId;
-                                    });
-                                    _startSearchPolling();
-                                    final riderId = AuthService.riderId;
-                                    final token = AuthService.token;
-                                    if (riderId != null && token != null) {
-                                      _connectSocket(riderId, token);
-                                    }
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                            content: Text(result["error"] ??
-                                                "Booking failed")));
-                                  }
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text("Booking error: $e")));
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: widget.service.accent,
-                                  foregroundColor: kWhite,
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14)),
-                                  elevation: 8,
-                                  shadowColor:
-                                      widget.service.accent.withOpacity(0.27)),
-                              child: Text(
-                                  _fareLoading
-                                      ? 'Getting fare...'
-                                      : 'Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹${(_estimatedFare - _promoDiscount).toStringAsFixed(0)}',
-                                  style: const TextStyle(
-                                      fontSize: 15, fontWeight: FontWeight.w700)),
-                            ),
-                          ),
-                        ),
                       ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16, 8, 16, MediaQuery.of(sheetCtx).padding.bottom > 0 ? MediaQuery.of(sheetCtx).padding.bottom + 8 : 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final body = {
+                            "pickup_address": _pickupCtrl.text,
+                            "drop_address": _destCtrl.text,
+                            "pickup_lat": _pickupLat,
+                            "pickup_lng": _pickupLng,
+                            "drop_lat": _dropLat,
+                            "drop_lng": _dropLng,
+                            "vehicle_type": _selectedVehicleType,
+                            "service_type":
+                                widget.service.category == 'delivery'
+                                    ? widget.service.name.toLowerCase()
+                                    : 'ride',
+                            "payment_method": _paymentMethod.id,
+                            "use_kcoins": _useKCoins,
+                            "is_ev_request": widget.service.isEV,
+                            "promo_code": _appliedPromoCode,
+                          };
+                          try {
+                            final result = await ApiService.bookTrip(body);
+                            if (result["success"] == true) {
+                              final bookedTrip =
+                                  result["data"] as Map<String, dynamic>? ??
+                                      const {};
+                              final tripId =
+                                  (bookedTrip["trip_id"] as num?)?.toInt() ??
+                                      (result["trip_id"] as num?)?.toInt();
+                              setState(() {
+                                _booked = true;
+                                _searching = true;
+                                _tripId = tripId;
+                              });
+                              _startSearchPolling();
+                              final riderId = AuthService.riderId;
+                              final token = AuthService.token;
+                              if (riderId != null && token != null) {
+                                _connectSocket(riderId, token);
+                              }
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(result["error"] ??
+                                          "Booking failed")));
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Booking error: $e")));
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: widget.service.accent,
+                            foregroundColor: kWhite,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                            elevation: 8,
+                            shadowColor:
+                                widget.service.accent.withOpacity(0.27)),
+                        child: Text(
+                            _fareLoading
+                                ? 'Getting fare...'
+                                : 'Confirm ${_getVehicleLabel(_selectedVehicleType)} · ₹${(_estimatedFare - _promoDiscount).toStringAsFixed(0)}',
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w700)),
+                      ),
                     ),
                   ),
                 ],

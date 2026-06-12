@@ -6,6 +6,7 @@ import '../utils/constants.dart';
 
 class RiderSocketService {
   static WebSocketChannel? _channel;
+  static StreamSubscription? _subscription;
   static Function(Map<String, dynamic>)? onMessage;
   static Function()? onReconnect;
   static Function()? onDisconnect;
@@ -29,6 +30,10 @@ class RiderSocketService {
         _isReconnecting = false;
       }
 
+      if (_subscription != null) {
+        await _subscription!.cancel();
+        _subscription = null;
+      }
       if (_channel != null) {
         _channel!.sink.close(status.normalClosure);
         _channel = null;
@@ -41,7 +46,7 @@ class RiderSocketService {
       _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
       _isConnected = true;
 
-      _channel!.stream.listen(
+      _subscription = _channel!.stream.listen(
         (message) {
           try {
             final data = jsonDecode(message);
@@ -132,6 +137,10 @@ class RiderSocketService {
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
     _isConnected = false;
+    if (_subscription != null) {
+      _subscription!.cancel();
+      _subscription = null;
+    }
     _channel?.sink.close(status.normalClosure);
     _channel = null;
   }

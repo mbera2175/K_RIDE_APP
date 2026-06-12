@@ -74,6 +74,19 @@ class KRideApp extends StatelessWidget {
                 },
               );
             },
+            '/rider_chat': (context) {
+              final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+              final tripId = args?['trip_id'] as int?;
+              return TripChatScreen(
+                tripId: tripId ?? 0,
+                driverName: args?['driver_name'] as String? ?? 'Driver',
+                driverPhone: args?['driver_phone'] as String? ?? '',
+                driverPhotoUrl: args?['driver_photo_url'] as String? ?? '',
+                onClose: () {
+                  Navigator.of(context).pop();
+                },
+              );
+            },
           },
         );
       },

@@ -4273,7 +4273,7 @@ class _WhereToScreenState extends State<WhereToScreen>
               backgroundColor: Colors.red));
         }
       } else if (type == "chat_message") {
-        if (_tripId != null && !_isChatScreenOpen) {
+        if (_tripId != null && !_isChatScreenOpen && !RiderSocketService.isChatOpen) {
           _openChatScreen();
         }
       }
@@ -6541,9 +6541,10 @@ class _WhereToScreenState extends State<WhereToScreen>
 
   void _openChatScreen() {
     if (_tripId == null) return;
-    if (_isChatScreenOpen) return;
+    if (_isChatScreenOpen || RiderSocketService.isChatOpen) return;
     setState(() {
       _isChatScreenOpen = true;
+      RiderSocketService.isChatOpen = true;
     });
     final driverName = _assignedDriver?['name'] ?? 'Driver';
     final driverPhone = _assignedDriver?['phone'] ?? '';
@@ -6567,6 +6568,7 @@ class _WhereToScreenState extends State<WhereToScreen>
       if (mounted) {
         setState(() {
           _isChatScreenOpen = false;
+          RiderSocketService.isChatOpen = false;
         });
       }
     });

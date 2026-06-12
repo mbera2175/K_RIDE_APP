@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
 import '../utils/constants.dart';
+import '../main.dart';
 
 class RiderSocketService {
   static WebSocketChannel? _channel;
@@ -13,6 +14,8 @@ class RiderSocketService {
 
   static bool _isConnected = false;
   static bool get isConnected => _isConnected;
+
+  static bool isChatOpen = false;
 
   static bool _isExplicitDisconnect = false;
   static Timer? _reconnectTimer;
@@ -50,6 +53,20 @@ class RiderSocketService {
         (message) {
           try {
             final data = jsonDecode(message);
+            if (data['type'] == 'chat_message') {
+              if (data['open_chat'] == true && !isChatOpen) {
+                isChatOpen = true;
+                navigatorKey.currentState?.pushNamed(
+                  '/rider_chat',
+                  arguments: {
+                    'trip_id': data['trip_id'],
+                    'driver_name': data['sender_name'],
+                  },
+                ).then((_) {
+                  isChatOpen = false;
+                });
+              }
+            }
             if (onMessage != null) onMessage!(data);
           } catch (e) {
             print('Rider socket parse error: $e');

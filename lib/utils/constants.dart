@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppConstants {
   // ── API ──────────────────────────────────────────────
-  static const String baseUrl = 'http://localhost:8000';
+  static const String baseUrl = 'http://13.232.171.208:8000';
 
   // ── App Info ─────────────────────────────────────────
   static const String appName    = 'KRide';
@@ -55,7 +55,7 @@ class AppConstants {
   static const List<int> bonusOptions = [10, 20, 30, 40, 50, 100];
 
   // ── WebSocket ────────────────────────────────────────
-  static const String wsBaseUrl = 'ws://localhost:8000';
+  static const String wsBaseUrl = 'ws://13.232.171.208:8000';
 
   // ── Services ──────────────────────────────────────────
   static const List<Map<String, dynamic>> services = [

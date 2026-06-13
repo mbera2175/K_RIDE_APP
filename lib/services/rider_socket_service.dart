@@ -46,6 +46,8 @@ class RiderSocketService {
       final wsUrl =
           '${AppConstants.wsBaseUrl}/ws/rider/$riderId?token=$token';
 
+      print('Rider socket connecting to: $wsUrl');
+
       _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
       await _channel!.ready;
       _isConnected = true;
@@ -75,14 +77,14 @@ class RiderSocketService {
         },
         onDone: () {
           _isConnected = false;
-          print('Rider WebSocket disconnected');
+          print('Rider WebSocket disconnected. Close code: ${_channel?.closeCode}, Reason: ${_channel?.closeReason}');
           if (!_isExplicitDisconnect) {
             _startReconnection(riderId, token);
           }
         },
         onError: (e) {
           _isConnected = false;
-          print('Rider WebSocket error: $e');
+          print('Rider WebSocket error: $e. Close code: ${_channel?.closeCode}, Reason: ${_channel?.closeReason}');
           if (!_isExplicitDisconnect) {
             _startReconnection(riderId, token);
           }

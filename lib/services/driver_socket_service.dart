@@ -23,6 +23,8 @@ class DriverSocketService {
       final wsUrl =
     '${AppConstants.wsBaseUrl}/ws/driver/$driverId?token=$token';
 
+      print('Driver socket connecting to: $wsUrl');
+
       _channel = WebSocketChannel.connect(
         Uri.parse(wsUrl),
       );
@@ -58,15 +60,15 @@ class DriverSocketService {
         },
         onDone: () {
           _isConnected = false;
-          print('WebSocket disconnected');
+          print('Driver WebSocket disconnected. Close code: ${_channel?.closeCode}, Reason: ${_channel?.closeReason}');
         },
         onError: (e) {
           _isConnected = false;
-          print('WebSocket error: $e');
+          print('Driver WebSocket error: $e. Close code: ${_channel?.closeCode}, Reason: ${_channel?.closeReason}');
         },
       );
 
-      print('WebSocket connected');
+      print('Driver WebSocket connected');
     } catch (e) {
       print('Socket connection error: $e');
     }

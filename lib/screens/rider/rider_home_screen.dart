@@ -17,6 +17,7 @@ import '../../services/map_service.dart';
 import '../auth/role_selection_screen.dart';
 import 'package:geocoding/geocoding.dart' as geo;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
 
 // ── Constants ──
 const kOrange = Color(0xFFFF6B00);
@@ -7250,6 +7251,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
   Timer? _activeTripTimer;
   late PageController _promoPageCtrl;
   int? _restoredTripId;
+  final TextEditingController _walletAmountController = TextEditingController();
+  bool _walletLoading = false;
 
   @override
   void initState() {
@@ -7326,6 +7329,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     _promoTimer?.cancel();
     _activeTripTimer?.cancel();
     _promoPageCtrl.dispose();
+    _walletAmountController.dispose();
     super.dispose();
   }
 
@@ -7813,6 +7817,13 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               gradient: const LinearGradient(
                   colors: [Color(0xFFFF6B35), Color(0xFFFF8C42)]),
               borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF6B35).withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -7832,9 +7843,249 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               ),
             ]),
           ),
+          const SizedBox(height: 24),
+          const Text('Add Money',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A2E))),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [100, 200, 500].map((amt) {
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: OutlinedButton(
+                    onPressed: () {
+                      _walletAmountController.text = amt.toString();
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFFFF6B35),
+                      side: const BorderSide(color: Color(0xFFFF6B35), width: 1.5),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text('+₹$amt',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 15)),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _walletAmountController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+            ],
+            decoration: InputDecoration(
+              prefixText: '₹ ',
+              prefixStyle: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A2E)),
+              hintText: 'Enter custom amount',
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFFEEEEEE)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFFEEEEEE)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFFFF6B35), width: 2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _walletLoading ? null : _handleTopUp,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF6B35),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+              ),
+              child: _walletLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Add Money to Wallet',
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w700)),
+            ),
+          ),
+          const SizedBox(height: 32),
+          const Text('Recent Transactions',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A2E))),
+          const SizedBox(height: 12),
+          FutureBuilder<Map<String, dynamic>>(
+            future: ApiService.getWalletTransactions(),
+            builder: (ctx, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF6B35))),
+                  ),
+                );
+              }
+              final txns = snap.data?['data']?['transactions'] as List?;
+              if (txns == null || txns.isEmpty) {
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: kGray,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Center(
+                    child: Text('No transactions yet',
+                        style: TextStyle(color: kMuted, fontSize: 15)),
+                  ),
+                );
+              }
+
+              return ListView.separated(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: txns.length,
+                separatorBuilder: (c, i) => const SizedBox(height: 10),
+                itemBuilder: (c, i) {
+                  final t = txns[i];
+                  final bool isCredit = t['type'] == 'credit' || t['type'] == 'bonus' || t['type'] == 'refund';
+                  final amt = t['amount'] ?? 0.0;
+                  final desc = t['description'] ?? 'Transaction';
+                  final rawDate = t['created_at'];
+                  String formattedDate = '';
+                  if (rawDate != null) {
+                    try {
+                      final dt = DateTime.parse(rawDate);
+                      formattedDate = DateFormat('dd MMM yyyy, hh:mm a').format(dt);
+                    } catch (_) {
+                      formattedDate = rawDate.toString();
+                    }
+                  }
+
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFEEEEEE)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: isCredit ? const Color(0xFFF0F7EE) : const Color(0xFFFFF0F0),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            isCredit ? Icons.add_circle_outline_rounded : Icons.remove_circle_outline_rounded,
+                            color: isCredit ? const Color(0xFF2E7D32) : const Color(0xFFE53935),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(desc,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15,
+                                      color: Color(0xFF1A1A2E))),
+                              const SizedBox(height: 4),
+                              Text(formattedDate,
+                                  style: const TextStyle(
+                                      color: kMuted, fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          '${isCredit ? "+" : "-"} ₹${amt.toStringAsFixed(2)}',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                              color: isCredit ? const Color(0xFF2E7D32) : const Color(0xFFE53935)),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> _handleTopUp() async {
+    final amtText = _walletAmountController.text.trim();
+    if (amtText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter an amount')),
+      );
+      return;
+    }
+    final amt = double.tryParse(amtText);
+    if (amt == null || amt < 10.0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Minimum deposit amount is ₹10')),
+      );
+      return;
+    }
+
+    setState(() => _walletLoading = true);
+
+    try {
+      final res = await ApiService.addMoneyToWallet(amt);
+      if (res['success'] == true) {
+        _walletAmountController.clear();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(res['data']?['message'] ?? 'Money added successfully!'),
+            backgroundColor: const Color(0xFF2E7D32),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(res['error'] ?? 'Deposit failed'),
+            backgroundColor: const Color(0xFFE53935),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() => _walletLoading = false);
+    }
   }
 
   Widget _profileOptionTile({

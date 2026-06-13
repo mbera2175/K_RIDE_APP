@@ -4454,19 +4454,21 @@ class _WhereToScreenState extends State<WhereToScreen>
       } catch (_) {}
       _driverSymbol = null;
     }
-    for (final sym in _driverSymbols) {
-      try {
-        await _mapController!.removeSymbol(sym);
-      } catch (_) {}
-    }
+    final List<Symbol> driverSyms = List.from(_driverSymbols);
     _driverSymbols.clear();
-
-    for (final sym in _mockSearchSymbols) {
+    for (final sym in driverSyms) {
       try {
         await _mapController!.removeSymbol(sym);
       } catch (_) {}
     }
+
+    final List<Symbol> mockSyms = List.from(_mockSearchSymbols);
     _mockSearchSymbols.clear();
+    for (final sym in mockSyms) {
+      try {
+        await _mapController!.removeSymbol(sym);
+      } catch (_) {}
+    }
 
     // 4. Draw step-specific elements dynamically
     if (_step == 'input' && !_booked) {

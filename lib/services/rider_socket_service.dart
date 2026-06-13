@@ -47,6 +47,7 @@ class RiderSocketService {
           '${AppConstants.wsBaseUrl}/ws/rider/$riderId?token=$token';
 
       _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
+      await _channel!.ready;
       _isConnected = true;
 
       _subscription = _channel!.stream.listen(

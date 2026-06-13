@@ -3855,12 +3855,6 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       }
       if (points.isNotEmpty && _mapController != null) {
         _mapController!.clearLines();
-        _mapController!.addLine(LineOptions(
-          geometry: points,
-          lineColor: status == 'started' ? "#00C853" : "#FF6B00",
-          lineWidth: 5.0,
-          lineOpacity: 0.8,
-        ));
 
         // Auto-zoom to fit the route
         _mapController!.animateCamera(CameraUpdate.newLatLngBounds(

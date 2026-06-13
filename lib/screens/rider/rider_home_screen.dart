@@ -3666,12 +3666,6 @@ class _WhereToScreenState extends State<WhereToScreen>
         }
         if (points.isNotEmpty && mounted) {
           _mapController!.clearLines();
-          await _mapController!.addLine(LineOptions(
-            geometry: points,
-            lineColor: status == 'started' ? "#00C853" : "#FF6B00",
-            lineWidth: 5.0,
-            lineOpacity: 0.8,
-          ));
 
           // Auto-zoom to fit the route
           _mapController!.animateCamera(CameraUpdate.newLatLngBounds(
@@ -4211,12 +4205,14 @@ class _WhereToScreenState extends State<WhereToScreen>
               _drawRiderTripRoute();
             }
           } else {
-            setState(() {
-              _booked = false;
-              _searching = false;
-              _step = 'input';
-              _tripId = null;
-            });
+            if (_step == 'tracking' || _searching || _booked) {
+              setState(() {
+                _booked = false;
+                _searching = false;
+                _step = 'input';
+                _tripId = null;
+              });
+            }
           }
         }
       } catch (e) {

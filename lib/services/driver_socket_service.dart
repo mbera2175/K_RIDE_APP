@@ -27,6 +27,7 @@ class DriverSocketService {
         Uri.parse(wsUrl),
       );
 
+      await _channel!.ready;
       _isConnected = true;
 
       _channel!.stream.listen(
